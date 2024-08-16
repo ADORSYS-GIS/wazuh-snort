@@ -3,7 +3,7 @@ name: Test Script
 on: [ push, pull_request ]
 
 jobs:
-  test_yara:
+  test_script:
     runs-on: ubuntu-latest
     strategy:
       matrix:
