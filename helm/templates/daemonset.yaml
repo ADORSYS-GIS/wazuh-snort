@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "snort-ips.fullname" . }}
+  labels:
+    {{- include "snort-ips.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "snort-ips.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "snort-ips.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "snort-ips.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-create-dir
+          image: busybox
+          command: [ 'sh', '-c', 'mkdir -p /var/log/snort/$NODE_NAME && chown -R 1000:1000 /var/log/snort/$NODE_NAME' ]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: snort-alerts
+              mountPath: /var/log/snort
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          command: [ "sh", "-c", "snort -c /usr/local/etc/snort/custom-fast-path.lua -R usr/local/etc/snort/snort3.rules -l /var/log/snort/$NODE_NAME -i eth0" ]
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: snort-alerts
+              mountPath: /var/log/snort
+            - name: snort-config
+              mountPath: /usr/local/etc/snort/custom-fast-path.lua
+              readOnly: true
+              subPath: "custom-fast-path.lua"
+            - name: host-interfaces
+              mountPath: /host-interfaces
+              readOnly: true
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: snort-alerts
+          persistentVolumeClaim:
+            claimName: {{ include "snort-ips.volumeName" . }}
+        - name: snort-config
+          configMap:
+            name: {{ include "snort-ips.fullname" . }}-snortconfig
+        - name: host-interfaces
+          hostPath:
+            path: /sys/class/net
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

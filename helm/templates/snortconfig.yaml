@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "snort-ips.fullname" . }}-snortconfig
+  labels:
+    {{- include "snort-ips.labels" . | nindent 4 }}
+data:
+  "custom-fast-path.lua": |
+    dofile('/usr/local/etc/snort/snort_defaults.lua')
+    dofile('/usr/local/etc/snort/snort.lua')
+
+    local node_name = os.getenv("NODE_NAME")
+
+    alert_json = {
+      file = true,
+      limit = 100,
+      fields = 'timestamp iface src_addr src_port dst_addr dst_port proto action msg priority class sid'
+    }
+
+    output = {
+      logdir = "/var/log/snort/" .. node_name,
+    }

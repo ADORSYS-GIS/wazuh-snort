@@ -1,0 +1,68 @@
+# Default values for snort-ips.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+podAnnotations: { }
+podLabels: { }
+
+image:
+  repository: ghcr.io/adorsys-gis/wazuh-snort
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: [ ]
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: { }
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podSecurityContext: { }
+# fsGroup: 2000
+
+securityContext:
+  capabilities:
+    add:
+      - NET_ADMIN
+  #runAsUser: 1000
+  #runAsGroup: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+#  limits:
+#    cpu: 500m
+#    memory: 512Mi
+  # This is a sane default value. If you want to increase the number of threads, you should increase the memory limit.
+#  requests:
+#    cpu: 300m
+#    memory: 256Mi
+
+# Additional volumes on the output Deployment definition.
+volumes: [ ]
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: [ ]
+
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }
+
+externalPvcName: ""
+
+persistence:
+  enabled: true
+  size: "1Gi"
+  storageClassName:

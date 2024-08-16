@@ -1,0 +1,75 @@
+name: Helm Publish
+
+on:
+  push:
+    branches:
+      - '*'  # Matches all branches
+      - '!main'  # Excludes the main branch
+    paths:
+      - 'charts/**/Chart.yaml'
+      - '.github/workflows/helm-publish.yml'
+
+jobs:
+
+  helm-publish:
+    runs-on: ubuntu-latest
+    name: Publish Helm Chart ${{ matrix.chart }}
+    strategy:
+      matrix:
+        chart:
+          - snort-ips
+        include:
+          - chart: snort-ips
+            path: helm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Cache Helm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/helm
+          key: ${{ runner.os }}-helm-${{ hashFiles('**/Chart.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-helm-
+
+      - name: Add Helm repo
+        if: github.ref == 'refs/heads/develop'
+        run: helm repo add chartmuseum ${{ vars.HELM_URL }} --username ${{ secrets.HELM_USER }} --password ${{ secrets.HELM_PASS }}
+
+      - name: Helm dependency update
+        run: helm dependency update ${{ matrix.path }}
+
+      - name: Helm lint
+        run: helm lint ${{ matrix.path }}
+
+      - name: Install Helm push plugin
+        if: github.ref == 'refs/heads/develop'
+        run: helm plugin install https://github.com/chartmuseum/helm-push
+
+      - name: Fetch existing charts
+        if: github.ref == 'refs/heads/develop'
+        id: fetch-charts
+        run: |
+          helm repo update
+          CHART_VERSION=$(awk '/^version:/ {print $2}' ${{ matrix.path }}/Chart.yaml | tr -d '"')
+          echo "CHART_VERSION=${CHART_VERSION}" >> $GITHUB_ENV
+          helm search repo chartmuseum/${{ matrix.chart }} --version ${CHART_VERSION} --output json > search_result.json
+          cat search_result.json
+
+      - name: Check chart version existence
+        if: github.ref == 'refs/heads/develop'
+        id: check-version
+        run: |
+          if jq -e 'length > 0' search_result.json > /dev/null; then
+            echo "CHART_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "CHART_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Publish Helm chart
+        if: github.ref == 'refs/heads/develop' && env.CHART_EXISTS == 'false'
+        run: helm cm-push ${{ matrix.path }} chartmuseum
