@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Set shell options for strict error handling
-set -euo pipefail
+# Check if we're running in bash; if not, adjust behavior
+if [ -n "$BASH_VERSION" ]; then
+    set -euo pipefail
+else
+    set -eu
+fi
 
 # Define text formatting
 RED='\033[0;31m'
@@ -148,7 +152,7 @@ configure_snort_linux() {
     echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules > /dev/null
 
     info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -L -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
+    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
     maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
     maybe_sudo rm community-rules.tar.gz
 
@@ -160,15 +164,13 @@ configure_snort_linux() {
 
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
-    local content_to_add="<!-- snort -->
-    <localfile>
-        <log_format>snort-full<\/log_format>
-        <location>\/var\/log\/snort\/snort.alert.fast<\/location>
-    <\/localfile>"
-
     info_message "Updating $OSSEC_CONF_PATH"
-    maybe_sudo sed -i "/<\/ossec_config>/i\\
-    $content_to_add" "$OSSEC_CONF_PATH"
+    maybe_sudo sed -i '/<\/ossec_config>/i\
+        <!-- snort -->\
+        <localfile>\
+            <log_format>snort-full<\/log_format>\
+            <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
+        <\/localfile>' "$OSSEC_CONF_PATH"
     success_message "ossec.conf updated on Linux"
 }
 
