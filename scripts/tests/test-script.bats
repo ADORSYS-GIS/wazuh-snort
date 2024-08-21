@@ -25,7 +25,7 @@ chmod +x /app/scripts/install.sh
 
 # Test if the script runs without errors
 @test "script runs without errors" {
-  run /usr/local/bin/test-script.sh
+  run /app/scripts/install.sh
   [ "$status" -eq 0 ]
 }
 
@@ -37,27 +37,27 @@ chmod +x /app/scripts/install.sh
 
 # Test if Snort directories were created
 @test "Snort directories were created" {
-  /usr/local/bin/test-script.sh
+  /app/scripts/install.sh
   [ -d "/var/log/snort" ]
   [ -d "/etc/snort/rules" ]
 }
 
 # Test if Snort local rules file was created
 @test "Snort local rules file created" {
-  /usr/local/bin/test-script.sh
+  /app/scripts/install.sh
   [ -f "/etc/snort/rules/local.rules" ]
 }
 
 # Test if ossec.conf was updated
 @test "ossec.conf updated" {
-  /usr/local/bin/test-script.sh
+  /app/scripts/install.sh
   grep -q '<log_format>snort-full<\/log_format>' "$OSSEC_CONF_PATH"
   grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' "$OSSEC_CONF_PATH"
 }
 
 # Test if Snort was started
 @test "Snort started" {
-  /usr/local/bin/test-script.sh
+  /app/scripts/install.sh
   run systemctl status snort
   [ "$status" -eq 0 ]
 }
