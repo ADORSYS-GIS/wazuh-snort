@@ -6,7 +6,12 @@ if [ "$(uname -o)" = "GNU/Linux" ] && command -v groupadd >/dev/null 2>&1; then
     apt-get update && apt-get install -y curl gnupg2
     (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
     chmod 644 /usr/share/keyrings/wazuh.gpg
-    echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
+
+    # Check if the repository is already added
+    if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list 2>/dev/null; then
+        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
+    fi
+
     apt-get update
     apt-get install wazuh-agent -y
     sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" /var/ossec/etc/ossec.conf
@@ -23,41 +28,53 @@ fi
 
 chmod +x /app/scripts/install.sh
 
-# Test if the script runs without errors
-@test "script runs without errors" {
+# Function to run the install script and check its status
+run_install_script() {
   run /app/scripts/install.sh
-  [ "$status" -eq 0 ]
+  if [ "$status" -ne 0 ]; then
+    echo "Install script failed with status: $status"
+    echo "Output: $output"
+    return 1
+  fi
+  return 0
+}
+
+# Test if the script runs without errors
+@test "Script runs without errors" {
+  run_install_script
 }
 
 # Test if Snort is installed
 @test "Snort is installed" {
-  run dpkg -l | grep -q snort
+  run dpkg -l snort
   [ "$status" -eq 0 ]
 }
 
 # Test if Snort directories were created
 @test "Snort directories were created" {
-  /app/scripts/install.sh
+  
   [ -d "/var/log/snort" ]
   [ -d "/etc/snort/rules" ]
 }
 
 # Test if Snort local rules file was created
 @test "Snort local rules file created" {
-  /app/scripts/install.sh
+ 
   [ -f "/etc/snort/rules/local.rules" ]
 }
 
 # Test if ossec.conf was updated
 @test "ossec.conf updated" {
-  /app/scripts/install.sh
-  grep -q '<log_format>snort-full<\/log_format>' "$OSSEC_CONF_PATH"
-  grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' "$OSSEC_CONF_PATH"
+
+  run grep -q '<log_format>snort-full<\/log_format>' /var/ossec/etc/ossec.conf
+  [ "$status" -eq 0 ]
+  run grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' /var/ossec/etc/ossec.conf
+  [ "$status" -eq 0 ]
 }
 
 # Test if Snort was started
 @test "Snort started" {
-  /app/scripts/install.sh
-  run systemctl status snort
+  
+  run systemctl is-active --quiet snort
   [ "$status" -eq 0 ]
 }
