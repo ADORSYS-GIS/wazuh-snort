@@ -102,10 +102,3 @@ RUN cd /work && wget https://github.com/snort3/snort3/archive/refs/tags/${SNORT_
 
 # Move Snort rules to appropriate directory
 RUN mv /work/snort3.rules /usr/local/etc/snort
-
-# Create tar archives of libraries and Snort
-RUN tar -zcvpf /packages/libpcre.tar.gz /usr/local/lib/libpcre.so* && \
-    tar -zcvpf /packages/libluajit.tar.gz /usr/local/lib/libluajit*.so* && \
-    tar -zcvpf /packages/libhwloc.tar.gz /usr/local/lib/libhwloc.so* && \
-    tar -zcvpf /packages/libdnet.tar.gz /usr/local/lib/libdnet.so* && \
-    tar -zcvpf /packages/snort3.tar.gz /usr/local/bin/snort /usr/local/lib/daq /usr/local/etc/snort /usr/local/lib/libdaq.so*
