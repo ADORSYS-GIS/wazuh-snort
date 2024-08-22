@@ -75,9 +75,11 @@ run_install_script() {
 @test "Snort is installed and running" {
   # Check if Snort is installed
   run which snort
+  echo "which snort output: $output"
   [ "$status" -eq 0 ]
 
   # Check if Snort process is running
   run pgrep snort
+  echo "pgrep snort output: $output"
   [ "$status" -eq 0 ]
 }
