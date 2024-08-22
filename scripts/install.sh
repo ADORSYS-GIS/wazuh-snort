@@ -91,6 +91,10 @@ install_snort_macos() {
     configure_snort_logging_macos
     update_ossec_conf_macos
     start_snort_macos
+
+    # Change ownership and set capabilities
+    maybe_sudo chown "$USER" /usr/local/bin/snort
+    maybe_sudo chmod u+s /usr/local/bin/snort
 }
 
 # Function to install Snort on Linux
@@ -107,6 +111,10 @@ install_snort_linux() {
     configure_snort_linux
     update_ossec_conf_linux
     start_snort_linux
+
+    # Change ownership and set capabilities
+    maybe_sudo chown "$USER" /usr/sbin/snort
+    maybe_sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/snort
 }
 
 # Function to configure Snort logging on macOS
@@ -188,7 +196,7 @@ start_snort_linux() {
 
 # Function to ensure the script runs with root privileges
 maybe_sudo() {
-    if [ "$(id -u)" -ne 0 ]; then
+    if [ "$(id -u)" -ne 0; then
         if command -v sudo >/dev/null 2>&1; then
             sudo "$@"
         else
@@ -218,4 +226,3 @@ install_snort() {
 
 # Run the main installation function
 install_snort
-
