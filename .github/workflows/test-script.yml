@@ -10,10 +10,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Bats
+    - name: Set up Docker
       run: |
-        sudo apt-get update
-        sudo apt-get install -y bats
+        docker pull ghcr.io/stephane-segning/bats-docker:ubuntu-latest
 
     - name: Run Bats tests
-      run: bats scripts/tests/test-script.bats
+      run: |
+        docker run --rm -it -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
