@@ -189,8 +189,6 @@ update_ossec_conf_linux() {
 # Function to start Snort on Linux
 start_snort_linux() {
     info_message "Restarting Snort"
-    maybe_sudo systemctl restart snort
-    #maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     success_message "Snort started on Linux"
 
     # Add the snort user to the adm group
@@ -201,6 +199,7 @@ start_snort_linux() {
 
     # Change ownership of the /var/log/snort directory
     maybe_sudo chown -R snort:adm /var/log/snort
+    maybe_sudo systemctl restart snort
 }
 
 # Function to ensure the script runs with root privileges
