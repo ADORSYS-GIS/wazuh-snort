@@ -95,8 +95,12 @@ install_snort_macos() {
 
 # Function to install Snort on Linux
 install_snort_linux() {
+    # Disable interactive prompts
+    export DEBIAN_FRONTEND=noninteractive
     print_step "Installing" "Snort for Linux"
     maybe_sudo apt-get update
+    maybe_sudo apt install net-tools -y
+
     echo "snort-prompt snort/install-setuid boolean true" | maybe_sudo debconf-set-selections
     maybe_sudo apt-get install snort -y
 
