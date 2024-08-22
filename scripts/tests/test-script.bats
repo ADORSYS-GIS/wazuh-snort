@@ -78,6 +78,10 @@ run_install_script() {
   echo "which snort output: $output"
   [ "$status" -eq 0 ]
 
+  # Attempt to start Snort if it is not running
+  run sudo snort -D -i eth0 -c /etc/snort/snort.conf
+  echo "Attempt to start Snort: $output"
+
   # Check if Snort process is running
   run pgrep snort
   echo "pgrep snort output: $output"
