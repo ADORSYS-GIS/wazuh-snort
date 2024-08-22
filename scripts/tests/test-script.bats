@@ -52,26 +52,24 @@ run_install_script() {
 
 # Test if Snort directories were created
 @test "Snort directories were created" {
-  
   [ -d "/var/log/snort" ]
   [ -d "/etc/snort/rules" ]
 }
 
 # Test if Snort local rules file was created
 @test "Snort local rules file created" {
- 
   [ -f "/etc/snort/rules/local.rules" ]
 }
 
 # Test if ossec.conf was updated
 @test "ossec.conf updated" {
-
   run grep -q '<log_format>snort-full<\/log_format>' /var/ossec/etc/ossec.conf
   [ "$status" -eq 0 ]
   run grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' /var/ossec/etc/ossec.conf
   [ "$status" -eq 0 ]
 }
 
+# Test if Snort is installed and running
 @test "Snort is installed and running" {
   # Check if the Snort service is present
   run systemctl status snort
@@ -82,4 +80,3 @@ run_install_script() {
   [ "$status" -eq 0 ]
   [ "$output" = "active" ]
 }
-
