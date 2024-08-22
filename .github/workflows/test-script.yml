@@ -1,24 +1,19 @@
-name: Test install script
+name: Bats Tests
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
-  test_script:
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v3
+    - name: Install Bats
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bats
 
-      - name: Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          platforms: ${{ steps.qemu.outputs.platforms }}
-
-      - name: Test script
-        run: |
-          docker run --rm -it -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
+    - name: Run Bats tests
+      run: bats scripts/tests/test-script.bats
