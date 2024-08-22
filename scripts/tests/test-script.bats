@@ -79,7 +79,7 @@ run_install_script() {
   [ "$status" -eq 0 ]
 
   # Attempt to start Snort if it is not running
-  run sudo snort -D -i eth0 -c /etc/snort/snort.conf
+  run snort -D -i eth0 -c /etc/snort/snort.conf
   echo "Attempt to start Snort: $output"
 
   # Check if Snort process is running
