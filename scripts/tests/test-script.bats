@@ -72,9 +72,14 @@ run_install_script() {
   [ "$status" -eq 0 ]
 }
 
-# Test if Snort was started
-@test "Snort started" {
-  
-  run systemctl is-active --quiet snort
+@test "Snort is installed and running" {
+  # Check if the Snort service is present
+  run systemctl status snort
   [ "$status" -eq 0 ]
+
+  # Check if Snort is active and running
+  run systemctl is-active snort
+  [ "$status" -eq 0 ]
+  [ "$output" = "active" ]
 }
+

@@ -190,7 +190,7 @@ update_ossec_conf_linux() {
 start_snort_linux() {
     info_message "Restarting Snort"
     maybe_sudo systemctl restart snort
-    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
+    #maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     success_message "Snort started on Linux"
 }
 
