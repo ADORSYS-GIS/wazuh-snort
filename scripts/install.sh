@@ -192,6 +192,15 @@ start_snort_linux() {
     maybe_sudo systemctl restart snort
     #maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     success_message "Snort started on Linux"
+
+    # Add the snort user to the adm group
+    maybe_sudo usermod -aG adm snort
+
+    # Change permissions of the /var/log/snort directory
+    maybe_sudo chmod 770 /var/log/snort
+
+    # Change ownership of the /var/log/snort directory
+    maybe_sudo chown -R snort:adm /var/log/snort
 }
 
 # Function to ensure the script runs with root privileges
