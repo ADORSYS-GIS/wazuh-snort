@@ -16,4 +16,4 @@ jobs:
 
     - name: Run Bats tests
       run: |
-        docker run --rm -it -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
+        docker run --rm -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
