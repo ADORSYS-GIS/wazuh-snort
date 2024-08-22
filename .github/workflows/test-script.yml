@@ -21,4 +21,4 @@ jobs:
 
       - name: Test script
         run: |
-          docker run --rm -it --network host -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
+          docker run --rm -it -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
