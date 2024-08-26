@@ -1,4 +1,5 @@
 #!/bin/bash
+# bash script to install Snort 3 and its dependencies
 
 set -e
 
@@ -134,21 +135,5 @@ sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldo
 sudo mv snort3_${SNORT_VER}-1_amd64.deb $PACKAGE_DIR
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
-
-# Create control file
-cat <<EOF > $DEBIAN_DIR/control
-Package: snort-package
-Version: 1.0
-Section: base
-Priority: optional
-Architecture: all
-Depends: libdaq (>= ${LIBDAQ_VERSION}), libdnet (>= ${LIBDNET_VERSION}), flex (>= ${FLEX_VERSION}), hwloc (>= ${HWLOC_VERSION}), pcre (>= ${PCRE_VERSION}), zlib (>= ${ZLIB_VERSION})
-Maintainer: Dylane Bengono <chaneldylanebengono@gmail.com>
-Description: Snort package with dependencies
- This package includes Snort and its required dependencies.
-EOF
-
-# Build the final package
-dpkg-deb --build $PACKAGE_DIR
 
 echo "Snort package with dependencies is created successfully."
