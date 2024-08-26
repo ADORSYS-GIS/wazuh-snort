@@ -108,6 +108,21 @@ install_snort_linux() {
     echo "snort-prompt snort/install-setuid boolean true" | maybe_sudo debconf-set-selections
     maybe_sudo apt-get install snort -y
 
+    # Identify the main network interface
+    INTERFACE=$(ip route | grep default | awk '{print $5}')
+
+    # Check if a main network interface was found
+    if [ -z "$INTERFACE" ]; then
+    echo "No main network interface detected."
+    exit 1
+    fi
+
+    # Configure Snort to use the main network interface
+    sudo sed -i "s/^ipvar HOME_NET .*/ipvar HOME_NET $INTERFACE/" /etc/snort/snort.conf
+
+    # Restart Snort to apply the new configurations
+    sudo systemctl restart snort
+
     configure_snort_linux
     update_ossec_conf_linux
     start_snort_linux
