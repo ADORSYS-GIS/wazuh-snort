@@ -1,30 +1,46 @@
-name: Build and Package Snort
+name: Package Snort
 
 on:
   push:
     branches:
       - "*"
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    env:
-      SNORT_VER: 3.2.2.0  # Set the Snort version here
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Install dependencies and build Snort
-        run: |
-          chmod +x ./scripts/snort3.sh
-          ./scripts/snort3.sh
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: snort-package
-          path: /work/snort3-3.2.2.0/build/snort3_3.2.2.0-1_${{ runner.os }}.deb
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+
+    - name: Run build script
+      run: |
+        chmod +x ./scripts/snort3.sh
+        ./scripts/snort3.sh
+
+    - name: Create .deb package
+      run: |
+        mkdir -p package/DEBIAN
+        echo "Package: snort3" > package/DEBIAN/control
+        echo "Version: 3.2.2.0" >> package/DEBIAN/control
+        echo "Section: base" >> package/DEBIAN/control
+        echo "Priority: optional" >> package/DEBIAN/control
+        echo "Architecture: $(dpkg --print-architecture)" >> package/DEBIAN/control
+        echo "Maintainer: Dylane Bengono <chaneldylanebengono@gmail.com>" >> package/DEBIAN/control
+        echo "Description: Snort 3" >> package/DEBIAN/control
+        dpkg-deb --build package snort3_3.2.2.0_$(dpkg --print-architecture).deb
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: snort3-deb
+        path: snort3_3.2.2.0_$(dpkg --print-architecture).deb
