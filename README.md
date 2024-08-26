@@ -1,3 +1,5 @@
+![Workflow Status](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)
+
 # Wazuh Snort 
 This repository contains several resources for installing and configuring Snort, as well as its integration with Wazuh. Here is a detailed description of each item:
 
