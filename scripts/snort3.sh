@@ -151,7 +151,4 @@ EOF
 # Build the final package
 dpkg-deb --build $PACKAGE_DIR
 
-# Clean up
-rm -rf $PACKAGE_DIR
-
 echo "Snort package with dependencies is created successfully."
