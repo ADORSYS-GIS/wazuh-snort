@@ -129,6 +129,10 @@ fi
 cd build
 make -j$(nproc)
 sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
+
+# Debug statement to check the current working directory
+echo "Current working directory after build: $(pwd)"
+
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
 
@@ -137,8 +141,9 @@ echo "Snort 3 installation and packaging is complete."
 # Debug statements
 echo "Current working directory: $(pwd)"
 echo "Checking if the .deb file exists..."
-if [ -f "/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb" ]; then
-    echo "File exists: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+DEB_FILE_PATH="/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+if [ -f "$DEB_FILE_PATH" ]; then
+    echo "File exists: $DEB_FILE_PATH"
 else
-    echo "File does not exist: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+    echo "File does not exist: $DEB_FILE_PATH"
 fi

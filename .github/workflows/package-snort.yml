@@ -24,10 +24,6 @@ jobs:
           chmod +x ./scripts/snort3.sh
           ./scripts/snort3.sh
 
-      - name: List build directory contents
-        run: ls -l /work/snort3-3.2.2.0/build
-        
-
       - name: Upload package artifact
         uses: actions/upload-artifact@v2
         with:
