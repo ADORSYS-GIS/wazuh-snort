@@ -1,9 +1,9 @@
 name: Build Snort3 Docker Multi Arch
 
 on:
-  push:
+  pull_request:
     branches:
-      - "*"
+      - main
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-snort
