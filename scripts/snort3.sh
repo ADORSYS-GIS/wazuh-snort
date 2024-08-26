@@ -117,6 +117,15 @@ tar -xvf ${SNORT_VER}.tar.gz
 cd snort3-${SNORT_VER}
 export my_path=/usr/local
 ./configure_cmake.sh --prefix=$my_path
+
+# Debug statement to check if the build directory is created
+echo "Checking if the build directory exists..."
+if [ -d "build" ]; then
+    echo "Build directory exists."
+else
+    echo "Build directory does not exist."
+fi
+
 cd build
 make -j$(nproc)
 sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
