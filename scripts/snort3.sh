@@ -122,5 +122,7 @@ make -j$(nproc)
 sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
+cd build && ls -la
+
 
 echo "Snort 3 installation and packaging is complete."
