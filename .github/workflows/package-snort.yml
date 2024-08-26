@@ -118,4 +118,11 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: snort3-deb
-          path: ./snort3_${SNORT_VER}_amd64.deb
+          path: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb
+
+      - name: Publish to GitHub Packages
+        run: |
+          curl -u ${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }} \
+            -H "Content-Type: $(file -b --mime-type /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb)" \
+            --data-binary @/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb \
+            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/latest/assets?name=snort3_${SNORT_VER}_amd64.deb"
