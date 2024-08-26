@@ -73,10 +73,9 @@ RUN cd /work && wget https://download.open-mpi.org/release/hwloc/v2.5/hwloc-${HW
 
 # Install LuaJIT
 ENV LUAJIT_VERSION=2.1.0-beta3
-RUN cd /work && wget https://luajit.org/download/LuaJIT-${LUAJIT_VERSION}.tar.gz && \
-    tar -xvf LuaJIT-${LUAJIT_VERSION}.tar.gz && \
-    cd LuaJIT-${LUAJIT_VERSION} && make && make install && \
-    cd /work && rm -rf LuaJIT-${LUAJIT_VERSION} LuaJIT-${LUAJIT_VERSION}.tar.gz
+RUN cd /work && git clone https://luajit.org/git/luajit.git && \
+    cd luajit && make && make install && \
+    cd /work && rm -rf luajit
 
 # Install PCRE
 ENV PCRE_VERSION=8.45
