@@ -30,9 +30,10 @@ jobs:
       - name: Build and Package Snort 3
         run: |
           ARCH=${{ matrix.arch }}
+          # Adjust the script path if necessary
           bash ./scripts/snort3.sh
           mkdir -p /work/packages/$ARCH
-          mv /work/*.deb /work/packages/$ARCH/
+          mv /work/snort-package.deb /work/packages/$ARCH/
 
       - name: Upload packages
         uses: actions/upload-artifact@v3
