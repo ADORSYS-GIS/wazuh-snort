@@ -63,6 +63,6 @@ jobs:
         for arch in amd64 arm64; do
           cd packages/$arch
           for deb in *.deb; do
-            gh release upload --repo <YOUR_REPO> ${{ github.ref_name }} $deb --clobber
+            gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} $deb --clobber
           done
         done
