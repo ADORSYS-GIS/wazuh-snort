@@ -1,4 +1,4 @@
-name: Package Snort
+name: Build and Package Snort 3
 
 on:
   push:
@@ -7,11 +7,16 @@ on:
 
 jobs:
   build:
+    name: Build and Package Snort 3
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -20,27 +25,44 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+      run: sudo apt-get update && sudo apt-get install -y git dpkg-dev
 
-    - name: Run build script
+    - name: Build and Package Snort 3
       run: |
-        chmod +x ./scripts/snort3.sh
-        ./scripts/snort3.sh
-
-    - name: Create .deb package
-      run: |
-        mkdir -p package/DEBIAN
-        echo "Package: snort3" > package/DEBIAN/control
-        echo "Version: 3.2.2.0" >> package/DEBIAN/control
-        echo "Section: base" >> package/DEBIAN/control
-        echo "Priority: optional" >> package/DEBIAN/control
-        echo "Architecture: $(dpkg --print-architecture)" >> package/DEBIAN/control
-        echo "Maintainer: Dylane Bengono <chaneldylanebengono@gmail.com>" >> package/DEBIAN/control
-        echo "Description: Snort 3" >> package/DEBIAN/control
-        dpkg-deb --build package snort3_3.2.2.0_$(dpkg --print-architecture).deb
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
+        ARCH=${{ matrix.arch }}
+        bash ./scripts/snort3.sh
+        mkdir -p packages/$ARCH
+        mv *.deb packages/$ARCH/
+      
+    - name: Upload packages
+      uses: actions/upload-artifact@v3
       with:
-        name: snort3-deb
-        path: snort3_3.2.2.0_$(dpkg --print-architecture).deb
+        name: snort3-packages-${{ matrix.arch }}
+        path: packages/${{ matrix.arch }}
+
+  deploy:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Download packages
+      uses: actions/download-artifact@v3
+      with:
+        name: snort3-packages-amd64
+        path: packages/amd64
+
+    - name: Download packages
+      uses: actions/download-artifact@v3
+      with:
+        name: snort3-packages-arm64
+        path: packages/arm64
+
+    - name: Publish .deb packages
+      run: |
+        for arch in amd64 arm64; do
+          cd packages/$arch
+          for deb in *.deb; do
+            gh release upload --repo <YOUR_REPO> ${{ github.ref_name }} $deb --clobber
+          done
+        done
