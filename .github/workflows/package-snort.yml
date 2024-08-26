@@ -51,11 +51,17 @@ jobs:
       - name: Create work directory
         run: sudo mkdir -p /work && sudo chmod -R 777 /work
 
-      - name: Download all packages
+      - name: Download amd64 packages
         uses: actions/download-artifact@v3
         with:
-          name: "snort3-packages-*"
-          path: /work/packages
+          name: snort3-packages-amd64
+          path: /work/packages/amd64
+
+      - name: Download arm64 packages
+        uses: actions/download-artifact@v3
+        with:
+          name: snort3-packages-arm64
+          path: /work/packages/arm64
 
       - name: Publish packages
         run: |
