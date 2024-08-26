@@ -1,4 +1,4 @@
-name: Build Snort
+name: Build Snort3 Docker Multi Arch
 
 on:
   push:

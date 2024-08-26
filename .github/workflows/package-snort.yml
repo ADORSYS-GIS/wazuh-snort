@@ -65,6 +65,6 @@ jobs:
         run: |
           for arch in amd64 arm64; do
             cd /work/packages/$arch
-            gh release create ${{ github.ref_name }} *.deb --repo github.com/ADORSYS-GIS/wazuh-snort --title "Snort 3 Packages for $arch" --notes "Automated release of Snort 3 packages for $arch" --clobber
+            gh release create ${{ github.ref_name }} *.deb --repo github.com/ADORSYS-GIS/wazuh-snort --title "Snort 3 Packages for $arch" --notes "Automated release of Snort 3 packages for $arch"
             cd ../../../
           done
