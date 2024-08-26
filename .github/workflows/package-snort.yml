@@ -51,36 +51,20 @@ jobs:
       - name: Create work directory
         run: sudo mkdir -p /work && sudo chmod -R 777 /work
 
-      - name: Download amd64 packages
+      - name: Download all packages
         uses: actions/download-artifact@v3
         with:
-          name: snort3-packages-amd64
-          path: /work/packages/amd64
+          name: "snort3-packages-*"
+          path: /work/packages
 
-      - name: Download arm64 packages
-        uses: actions/download-artifact@v3
-        with:
-          name: snort3-packages-arm64
-          path: /work/packages/arm64
-
-      - name: Publish amd64 package
+      - name: Publish packages
         run: |
-          cd /work/packages/amd64
-          for file in *.deb; do
-            curl -u ${{ secrets.GITHUB_TOKEN }} \
-              -X POST \
-              -H "Content-Type: $(file --mime-type -b $file)" \
-              --data-binary @$file \
-              "https://uploads.github.com/repos/ADORSYS-GIS/wazuh-snort/releases/assets?name=$(basename $file)"
-          done
-
-      - name: Publish arm64 package
-        run: |
-          cd /work/packages/arm64
-          for file in *.deb; do
-            curl -u ${{ secrets.GITHUB_TOKEN }} \
-              -X POST \
-              -H "Content-Type: $(file --mime-type -b $file)" \
-              --data-binary @$file \
-              "https://uploads.github.com/repos/ADORSYS-GIS/wazuh-snort/releases/assets?name=$(basename $file)"
+          for ARCH in amd64 arm64; do
+            cd /work/packages/$ARCH
+            for file in *.deb; do
+              curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: $(file --mime-type -b $file)" \
+                --data-binary @$file \
+                "https://uploads.github.com/repos/ADORSYS-GIS/wazuh-snort/releases/assets?name=$(basename $file)"
+            done
           done
