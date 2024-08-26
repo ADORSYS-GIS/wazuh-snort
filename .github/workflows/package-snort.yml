@@ -24,11 +24,6 @@ jobs:
           chmod +x ./scripts/snort3.sh
           ./scripts/snort3.sh
 
-      - name: Create Debian package
-        run: |
-          cd /work/snort3-${SNORT_VER}/build
-          sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
