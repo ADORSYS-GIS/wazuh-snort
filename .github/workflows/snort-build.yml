@@ -3,7 +3,7 @@ name: Build Snort
 on:
   pull_request:
     branches:
-      - 'develop'
+      - '*'
     paths:
       - 'snort/**'
       - '.github/workflows/snort-build.yml'
