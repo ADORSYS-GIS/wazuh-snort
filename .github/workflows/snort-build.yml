@@ -3,7 +3,7 @@ name: Build Snort
 on:
   push:
     branches:
-      - '*'
+      - "*"
     paths:
       - '.github/workflows/snort-build.yml'
 
