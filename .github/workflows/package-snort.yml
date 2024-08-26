@@ -1,31 +1,30 @@
 name: Build and Package Snort
 
 on:
-    push:
-      branches:
-        - "*"
-  
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      permissions:
-        contents: read
-        packages: write
-  
-      env:
-        SNORT_VER: 3.2.2.0  # Set the Snort version here
-  
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
-  
-        - name: Install dependencies and build Snort
-          run: |
-            chmod +x ./scripts/snort3.sh
-            ./scripts/snort3.sh
-  
-        - name: Upload package artifact
-          uses: actions/upload-artifact@v2
-          with:
-            name: snort-package
-            path: /work/snort3-3.2.2.0/build/snort3_3.2.2.0-1_${{ runner.os }}.deb
+  push:
+    branches:
+      - "*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      SNORT_VER: 3.2.2.0  # Set the Snort version here
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies and build Snort
+        run: |
+          chmod +x ./scripts/snort3.sh
+          ./scripts/snort3.sh
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: snort-package
+          path: /work/snort3-3.2.2.0/build/snort3_3.2.2.0-1_${{ runner.os }}.deb
