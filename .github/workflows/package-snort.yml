@@ -24,23 +24,8 @@ jobs:
           chmod +x ./scripts/snort3.sh
           ./scripts/snort3.sh
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v2
         with:
-          tag_name: v${{ env.SNORT_VER }}
-          release_name: Snort v${{ env.SNORT_VER }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb
-          asset_name: snort3_${SNORT_VER}_amd64.deb
-          asset_content_type: application/octet-stream
+          name: snort-package
+          path: /work/snort3-3.2.2.0/build/snort3_3.2.2.0-1_amd64.deb
