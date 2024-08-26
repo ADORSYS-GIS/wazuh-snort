@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v2
       
       - name: Set permissions for work directory
+        run: sudo mkdir -p /work && sudo chown -R $USER /work
         run: sudo chmod -R 777 /work
 
       - name: Clean up work directory
