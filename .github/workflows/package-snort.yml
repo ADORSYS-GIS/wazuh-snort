@@ -33,7 +33,8 @@ jobs:
           # Adjust the script path if necessary
           bash ./scripts/snort3.sh
           mkdir -p /work/packages/$ARCH
-          mv /work/snort-package.deb /work/packages/$ARCH/
+          # Move the package with the correct filename
+          mv /work/snort3_3.2.2.0-1_${ARCH}.deb /work/packages/$ARCH/
 
       - name: Upload packages
         uses: actions/upload-artifact@v3
