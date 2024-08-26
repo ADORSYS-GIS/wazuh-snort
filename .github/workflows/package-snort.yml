@@ -46,13 +46,13 @@ jobs:
     needs: build
 
     steps:
-    - name: Download packages
+    - name: Download amd64 packages
       uses: actions/download-artifact@v3
       with:
         name: snort3-packages-amd64
         path: packages/amd64
 
-    - name: Download packages
+    - name: Download arm64 packages
       uses: actions/download-artifact@v3
       with:
         name: snort3-packages-arm64
@@ -62,7 +62,6 @@ jobs:
       run: |
         for arch in amd64 arm64; do
           cd packages/$arch
-          for deb in *.deb; do
-            gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} $deb --clobber
-          done
+          gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} *.deb --clobber
+          cd ../../
         done
