@@ -20,7 +20,7 @@ sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     git libtool pkg-config autoconf gettext \
     libpcap-dev g++ vim make cmake wget libssl-dev \
     liblzma-dev python3-pip unzip protobuf-compiler \
-    golang nano net-tools automake
+    golang nano net-tools automake checkinstall
 
 # Install Go
 if [ "$ARCH" = "amd64" ]; then
@@ -47,13 +47,13 @@ WORK_DIR=/work
 sudo mkdir -p $WORK_DIR
 sudo chmod 777 $WORK_DIR
 
-
 # Install libdaq
 cd $WORK_DIR
 wget https://github.com/snort3/libdaq/archive/refs/tags/v${LIBDAQ_VERSION}.tar.gz
 tar -xvf v${LIBDAQ_VERSION}.tar.gz
 cd libdaq-${LIBDAQ_VERSION}
-./bootstrap && ./configure && make && sudo make install
+./bootstrap && ./configure && make
+sudo checkinstall --pkgname=libdaq --pkgversion=${LIBDAQ_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf v${LIBDAQ_VERSION}.tar.gz
 
@@ -61,7 +61,8 @@ rm -rf v${LIBDAQ_VERSION}.tar.gz
 wget https://github.com/ofalk/libdnet/archive/refs/tags/libdnet-${LIBDNET_VERSION}.tar.gz
 tar -xvf libdnet-${LIBDNET_VERSION}.tar.gz
 cd libdnet-libdnet-${LIBDNET_VERSION}
-./configure && make && sudo make install
+./configure && make
+sudo checkinstall --pkgname=libdnet --pkgversion=${LIBDNET_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf libdnet-${LIBDNET_VERSION} libdnet-${LIBDNET_VERSION}.tar.gz
 
@@ -69,7 +70,8 @@ rm -rf libdnet-${LIBDNET_VERSION} libdnet-${LIBDNET_VERSION}.tar.gz
 wget https://github.com/westes/flex/releases/download/v${FLEX_VERSION}/flex-${FLEX_VERSION}.tar.gz
 tar -xvf flex-${FLEX_VERSION}.tar.gz
 cd flex-${FLEX_VERSION}
-./configure && make && sudo make install
+./configure && make
+sudo checkinstall --pkgname=flex --pkgversion=${FLEX_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf flex-${FLEX_VERSION} flex-${FLEX_VERSION}.tar.gz
 
@@ -77,7 +79,8 @@ rm -rf flex-${FLEX_VERSION} flex-${FLEX_VERSION}.tar.gz
 wget https://download.open-mpi.org/release/hwloc/v2.5/hwloc-${HWLOC_VERSION}.tar.gz
 tar -xvf hwloc-${HWLOC_VERSION}.tar.gz
 cd hwloc-${HWLOC_VERSION}
-./configure && make && sudo make install
+./configure && make
+sudo checkinstall --pkgname=hwloc --pkgversion=${HWLOC_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf hwloc-${HWLOC_VERSION} hwloc-${HWLOC_VERSION}.tar.gz
 
@@ -85,7 +88,8 @@ rm -rf hwloc-${HWLOC_VERSION} hwloc-${HWLOC_VERSION}.tar.gz
 cd $WORK_DIR
 git clone https://luajit.org/git/luajit.git
 cd luajit
-make && sudo make install
+make
+sudo checkinstall --pkgname=luajit --pkgversion=2.1.0 --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf luajit
 
@@ -93,7 +97,8 @@ rm -rf luajit
 wget https://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz
 tar -xvf pcre-${PCRE_VERSION}.tar.gz
 cd pcre-${PCRE_VERSION}
-./configure && make && sudo make install
+./configure && make
+sudo checkinstall --pkgname=pcre --pkgversion=${PCRE_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf pcre-${PCRE_VERSION} pcre-${PCRE_VERSION}.tar.gz
 
@@ -101,7 +106,8 @@ rm -rf pcre-${PCRE_VERSION} pcre-${PCRE_VERSION}.tar.gz
 wget https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz
 tar -xvf zlib-${ZLIB_VERSION}.tar.gz
 cd zlib-${ZLIB_VERSION}
-./configure && make && sudo make install
+./configure && make
+sudo checkinstall --pkgname=zlib --pkgversion=${ZLIB_VERSION} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf zlib-${ZLIB_VERSION} zlib-${ZLIB_VERSION}.tar.gz
 
@@ -112,8 +118,9 @@ cd snort3-${SNORT_VER}
 export my_path=/usr/local
 ./configure_cmake.sh --prefix=$my_path
 cd build
-make -j$(nproc) install
+make -j$(nproc)
+sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
 
-echo "Snort 3 installation is complete."
+echo "Snort 3 installation and packaging is complete."
