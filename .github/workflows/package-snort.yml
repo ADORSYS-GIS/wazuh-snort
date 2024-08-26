@@ -16,13 +16,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y git dpkg-dev
@@ -35,7 +35,7 @@ jobs:
           mv /work/*.deb /work/packages/$ARCH/
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snort3-packages-${{ matrix.arch }}
           path: /work/packages/${{ matrix.arch }}
@@ -52,13 +52,13 @@ jobs:
         run: sudo mkdir -p /work && sudo chmod -R 777 /work
 
       - name: Download amd64 packages
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snort3-packages-amd64
           path: /work/packages/amd64
 
       - name: Download arm64 packages
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snort3-packages-arm64
           path: /work/packages/arm64
