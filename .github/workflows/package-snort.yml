@@ -34,7 +34,7 @@ jobs:
           bash ./scripts/snort3.sh
           mkdir -p /work/packages/$ARCH
           # Move the package with the correct filename
-          mv /work/*.deb /work/packages/$ARCH/
+            find /work -name "*.deb" -exec mv {} /work/packages/$ARCH/ \;
 
       - name: Upload packages
         uses: actions/upload-artifact@v3
