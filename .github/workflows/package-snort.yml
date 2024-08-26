@@ -15,30 +15,30 @@ jobs:
         arch: [amd64, arm64]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y git dpkg-dev
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y git dpkg-dev
 
-    - name: Build and Package Snort 3
-      run: |
-        ARCH=${{ matrix.arch }}
-        bash ./scripts/snort3.sh
-        mkdir -p packages/$ARCH
-        mv *.deb packages/$ARCH/
-      
-    - name: Upload packages
-      uses: actions/upload-artifact@v3
-      with:
-        name: snort3-packages-${{ matrix.arch }}
-        path: packages/${{ matrix.arch }}
+      - name: Build and Package Snort 3
+        run: |
+          ARCH=${{ matrix.arch }}
+          bash ./scripts/snort3.sh
+          mkdir -p packages/$ARCH
+          mv *.deb packages/$ARCH/
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: snort3-packages-${{ matrix.arch }}
+          path: packages/${{ matrix.arch }}
 
   deploy:
     name: Publish to GitHub Packages
@@ -46,22 +46,22 @@ jobs:
     needs: build
 
     steps:
-    - name: Download amd64 packages
-      uses: actions/download-artifact@v3
-      with:
-        name: snort3-packages-amd64
-        path: packages/amd64
+      - name: Download amd64 packages
+        uses: actions/download-artifact@v3
+        with:
+          name: snort3-packages-amd64
+          path: packages/amd64
 
-    - name: Download arm64 packages
-      uses: actions/download-artifact@v3
-      with:
-        name: snort3-packages-arm64
-        path: packages/arm64
+      - name: Download arm64 packages
+        uses: actions/download-artifact@v3
+        with:
+          name: snort3-packages-arm64
+          path: packages/arm64
 
-    - name: Publish .deb packages
-      run: |
-        for arch in amd64 arm64; do
-          cd packages/$arch
-          gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} *.deb --clobber
-          cd ../../
-        done
+      - name: Publish .deb packages
+        run: |
+          for arch in amd64 arm64; do
+            cd packages/$arch
+            gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} *.deb --clobber
+            cd ../../
+          done
