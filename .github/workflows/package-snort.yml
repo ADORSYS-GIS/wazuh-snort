@@ -23,8 +23,8 @@ jobs:
 
       - name: Install dependencies and build Snort
         run: |
-          chmod +x /scripts/snort3.sh
-          /scripts/snort3.sh
+          chmod +x ./scripts/snort3.sh
+          ./scripts/snort3.sh
 
       - name: Create Debian package
         run: |
