@@ -127,7 +127,7 @@ export my_path=/usr/local
 cd build
 make -j$(nproc)
 sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
-sudo cp *.deb $WORK_DIR
+
 
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz

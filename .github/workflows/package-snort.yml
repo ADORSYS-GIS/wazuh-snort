@@ -31,14 +31,14 @@ jobs:
         run: |
           ARCH=${{ matrix.arch }}
           bash ./scripts/snort3.sh
-          mkdir -p packages/$ARCH
-          mv *.deb packages/$ARCH/
+          mkdir -p /work/packages/$ARCH
+          mv /work/*.deb /work/packages/$ARCH/
 
       - name: Upload packages
         uses: actions/upload-artifact@v3
         with:
           name: snort3-packages-${{ matrix.arch }}
-          path: packages/${{ matrix.arch }}
+          path: /work/packages/${{ matrix.arch }}
 
   deploy:
     name: Publish to GitHub Packages
@@ -50,18 +50,18 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: snort3-packages-amd64
-          path: packages/amd64
+          path: /work/packages/amd64
 
       - name: Download arm64 packages
         uses: actions/download-artifact@v3
         with:
           name: snort3-packages-arm64
-          path: packages/arm64
+          path: /work/packages/arm64
 
       - name: Publish .deb packages
         run: |
           for arch in amd64 arm64; do
-            cd packages/$arch
+            cd /work/packages/$arch
             gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} *.deb --clobber
-            cd ../../
+            cd ../../../
           done
