@@ -16,15 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set permissions for download directory
-        run: |
-          mkdir -p /work/downloads
-          sudo chmod 777 /work/downloads
-
-      - name: Download libdaq
-        run: |
-          wget -P /work/downloads https://github.com/snort3/libdaq/archive/refs/tags/v3.0.15.tar.gz
-
       - name: Install dependencies and build Snort
         run: |
           chmod +x ./scripts/snort3.sh
