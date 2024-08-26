@@ -124,3 +124,12 @@ cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
 
 echo "Snort 3 installation and packaging is complete."
+
+# Debug statements
+echo "Current working directory: $(pwd)"
+echo "Checking if the .deb file exists..."
+if [ -f "/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb" ]; then
+    echo "File exists: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+else
+    echo "File does not exist: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+fi
