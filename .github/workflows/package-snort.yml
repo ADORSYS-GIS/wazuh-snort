@@ -39,10 +39,11 @@ jobs:
           PCRE_VERSION=8.45
           ZLIB_VERSION=1.2.13
           SNORT_VER=3.2.2.0
-          WORK_DIR=/work
+          WORK_DIR=/tmp/work
 
           # Create working directories
           sudo mkdir -p $WORK_DIR
+          sudo chown $USER:$USER $WORK_DIR
 
           # Install libdaq
           cd $WORK_DIR
