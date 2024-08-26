@@ -12,6 +12,9 @@ jobs:
       contents: read
       packages: write
 
+    env:
+      SNORT_VER: 3.2.2.0  # Set the Snort version here
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
