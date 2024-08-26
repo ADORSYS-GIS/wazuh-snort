@@ -118,13 +118,14 @@ install_snort_linux() {
     fi
 
     # Configure Snort to use the main network interface
-    sudo sed -i "s/^ipvar HOME_NET .*/ipvar HOME_NET $INTERFACE/" /etc/snort/snort.conf
+    sudo sed -i '/^ipvar HOME_NET/d' /etc/snort/snort.conf
+    sudo sed -i "1s/^/ipvar HOME_NET $INTERFACE\n/" /etc/snort/snort.conf
 
     # Restart Snort to apply the new configurations
     sudo systemctl restart snort
 
     configure_snort_linux
-    update_ossec_conf_linux
+    #update_ossec_conf_linux
     start_snort_linux
 
     # Change ownership and set capabilities

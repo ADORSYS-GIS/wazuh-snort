@@ -1,5 +1,4 @@
 #!/bin/bash
-# bash script to install Snort 3 and its dependencies
 
 set -e
 
@@ -29,7 +28,8 @@ if [ "$ARCH" = "amd64" ]; then
 elif [ "$ARCH" = "arm64" ]; then
     GO_BIN=go1.22.4.linux-arm64.tar.gz
 else
-    echo "Unsupported architecture"; exit 1
+    echo "Unsupported architecture"
+    exit 1
 fi
 wget https://go.dev/dl/${GO_BIN}
 tar -xvf ${GO_BIN}
@@ -45,11 +45,7 @@ sudo mv ~/go/bin/protoc-gen-go-grpc /usr/local/bin/
 
 # Create working directories
 WORK_DIR=/work
-PACKAGE_DIR=~/snort_package
-DEBIAN_DIR=$PACKAGE_DIR/DEBIAN
 sudo mkdir -p $WORK_DIR
-mkdir -p $PACKAGE_DIR
-mkdir -p $DEBIAN_DIR
 sudo chmod 777 $WORK_DIR
 
 # Install libdaq
@@ -59,7 +55,7 @@ tar -xvf v${LIBDAQ_VERSION}.tar.gz
 cd libdaq-${LIBDAQ_VERSION}
 ./bootstrap && ./configure && make
 sudo checkinstall --pkgname=libdaq --pkgversion=${LIBDAQ_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv libdaq_${LIBDAQ_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv libdaq_${LIBDAQ_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf v${LIBDAQ_VERSION}.tar.gz
 
@@ -69,7 +65,7 @@ tar -xvf libdnet-${LIBDNET_VERSION}.tar.gz
 cd libdnet-libdnet-${LIBDNET_VERSION}
 ./configure && make
 sudo checkinstall --pkgname=libdnet --pkgversion=${LIBDNET_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv libdnet_${LIBDNET_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv libdnet_${LIBDNET_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf libdnet-${LIBDNET_VERSION} libdnet-${LIBDNET_VERSION}.tar.gz
 
@@ -79,7 +75,7 @@ tar -xvf flex-${FLEX_VERSION}.tar.gz
 cd flex-${FLEX_VERSION}
 ./configure && make
 sudo checkinstall --pkgname=flex --pkgversion=${FLEX_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv flex_${FLEX_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv flex_${FLEX_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf flex-${FLEX_VERSION} flex-${FLEX_VERSION}.tar.gz
 
@@ -89,7 +85,7 @@ tar -xvf hwloc-${HWLOC_VERSION}.tar.gz
 cd hwloc-${HWLOC_VERSION}
 ./configure && make
 sudo checkinstall --pkgname=hwloc --pkgversion=${HWLOC_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv hwloc_${HWLOC_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv hwloc_${HWLOC_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf hwloc-${HWLOC_VERSION} hwloc-${HWLOC_VERSION}.tar.gz
 
@@ -99,7 +95,7 @@ git clone https://luajit.org/git/luajit.git
 cd luajit
 make
 sudo checkinstall --pkgname=luajit --pkgversion=2.1.0 --backup=no --deldoc=yes --fstrans=no --default
-sudo mv luajit_2.1.0-1_amd64.deb $PACKAGE_DIR
+sudo mv luajit_2.1.0-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf luajit
 
@@ -109,7 +105,7 @@ tar -xvf pcre-${PCRE_VERSION}.tar.gz
 cd pcre-${PCRE_VERSION}
 ./configure && make
 sudo checkinstall --pkgname=pcre --pkgversion=${PCRE_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv pcre_${PCRE_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv pcre_${PCRE_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf pcre-${PCRE_VERSION} pcre-${PCRE_VERSION}.tar.gz
 
@@ -119,7 +115,7 @@ tar -xvf zlib-${ZLIB_VERSION}.tar.gz
 cd zlib-${ZLIB_VERSION}
 ./configure && make
 sudo checkinstall --pkgname=zlib --pkgversion=${ZLIB_VERSION} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv zlib_${ZLIB_VERSION}-1_amd64.deb $PACKAGE_DIR
+sudo mv zlib_${ZLIB_VERSION}-1_amd64.deb $WORK_DIR
 cd $WORK_DIR
 rm -rf zlib-${ZLIB_VERSION} zlib-${ZLIB_VERSION}.tar.gz
 
@@ -132,8 +128,8 @@ export my_path=/usr/local
 cd build
 make -j$(nproc)
 sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
-sudo mv snort3_${SNORT_VER}-1_amd64.deb $PACKAGE_DIR
+
 cd $WORK_DIR
 rm -rf snort3-${SNORT_VER} ${SNORT_VER}.tar.gz
 
-echo "Snort package with dependencies is created successfully."
+echo "Snort 3 installation and packaging is complete."
