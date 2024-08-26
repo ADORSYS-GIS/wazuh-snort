@@ -141,7 +141,7 @@ echo "Snort 3 installation and packaging is complete."
 # Debug statements
 echo "Current working directory: $(pwd)"
 echo "Checking if the .deb file exists..."
-DEB_FILE_PATH="/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_amd64.deb"
+DEB_FILE_PATH="/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}-1_${ARCH}.deb"
 if [ -f "$DEB_FILE_PATH" ]; then
     echo "File exists: $DEB_FILE_PATH"
 else
