@@ -46,6 +46,9 @@ jobs:
     needs: build
 
     steps:
+      - name: Create work directory
+        run: sudo mkdir -p /work && sudo chmod -R 777 /work
+
       - name: Download amd64 packages
         uses: actions/download-artifact@v3
         with:
