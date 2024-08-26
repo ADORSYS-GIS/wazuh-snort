@@ -29,15 +29,23 @@ jobs:
           cd /work/snort3-${SNORT_VER}/build
           sudo checkinstall --pkgname=snort3 --pkgversion=${SNORT_VER} --backup=no --deldoc=yes --fstrans=no --default
 
-      - name: Upload Debian package
-        uses: actions/upload-artifact@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: snort3-deb
-          path: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb
+          tag_name: v${{ env.SNORT_VER }}
+          release_name: Snort v${{ env.SNORT_VER }}
+          draft: false
+          prerelease: false
 
-      - name: Publish to GitHub Packages
-        run: |
-          curl -u ${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }} \
-            -H "Content-Type: $(file -b --mime-type /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb)" \
-            --data-binary @/work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb \
-            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/latest/assets?name=snort3_${SNORT_VER}_amd64.deb"
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: /work/snort3-${SNORT_VER}/build/snort3_${SNORT_VER}_amd64.deb
+          asset_name: snort3_${SNORT_VER}_amd64.deb
+          asset_content_type: application/octet-stream
