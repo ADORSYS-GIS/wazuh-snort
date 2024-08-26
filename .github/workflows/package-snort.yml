@@ -15,13 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Set permissions for work directory
-        run: sudo mkdir -p /work && sudo chown -R $USER /work
-        run: sudo chmod -R 777 /work
-
-      - name: Clean up work directory
-        run: sudo rm -rf /work/*
 
       - name: Install dependencies and build Snort
         run: |

@@ -45,6 +45,8 @@ sudo mv ~/go/bin/protoc-gen-go-grpc /usr/local/bin/
 # Create working directories
 WORK_DIR=/work
 sudo mkdir -p $WORK_DIR
+sudo chmod 777 $WORK_DIR
+
 
 # Install libdaq
 cd $WORK_DIR
