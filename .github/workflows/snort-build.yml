@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - "*"
-    paths:
-      - '.github/workflows/snort-build.yml'
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-snort
@@ -17,7 +14,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - uses: actions/checkout@v4
 
