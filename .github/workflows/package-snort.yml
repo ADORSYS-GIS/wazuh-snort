@@ -61,10 +61,4 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
-      - name: Publish .deb packages
-        run: |
-          for arch in amd64 arm64; do
-            cd /work/packages/$arch
-            gh release upload --repo github.com/ADORSYS-GIS/wazuh-snort ${{ github.ref_name }} *.deb --clobber
-            cd ../../../
-          done
+ 
