@@ -51,11 +51,15 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - name: Define tag
+        id: define-tag
+        run: echo "RELEASE_TAG=v1.0.${{ github.run_number }}" >> $GITHUB_ENV
+
       - name: Create a release
         id: release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ env.RELEASE_TAG }}
           release_name: Snort 3 Release
           draft: false
           prerelease: false
