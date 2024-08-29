@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write  # Required to create releases and upload assets
+
 jobs:
   build:
     name: Build and Package Snort 3
@@ -65,15 +66,13 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
-      - name: Create Release
+      - name: Create Tag and Release
         id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.sha }}
-          release_name: "Snort 3 Release ${{ github.sha }}"
-          body: "Release for commit ${{ github.sha }}"
-          draft: false
-          prerelease: false
+        run: |
+          TAG_NAME="v1.0.${{ github.run_number }}-${{ github.sha::7 }}"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          gh release create $TAG_NAME --title "Snort 3 Release $TAG_NAME" --notes "Release for commit ${{ github.sha }}"
 
       - name: Upload amd64 packages to Release
         run: |
