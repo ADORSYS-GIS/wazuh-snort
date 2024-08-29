@@ -69,19 +69,20 @@ jobs:
       - name: Create Tag and Release
         id: create_release
         run: |
-          TAG_NAME="v1.0.${{ github.run_number }}-${{ github.sha::7 }}"
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          TAG_NAME="v1.0.${{ github.run_number }}-$SHORT_SHA"
           git tag $TAG_NAME
           git push origin $TAG_NAME
-          gh release create $TAG_NAME --title "Snort 3 Release $TAG_NAME" --notes "Release for commit ${{ github.sha }}"
+          gh release create $TAG_NAME --title "Snort 3 Release $TAG_NAME" --notes "Release for commit $GITHUB_SHA"
 
       - name: Upload amd64 packages to Release
         run: |
           for file in /work/packages/amd64/*.deb; do
-            gh release upload ${{ steps.create_release.outputs.id }} $file --clobber
+            gh release upload $TAG_NAME $file --clobber
           done
 
       - name: Upload arm64 packages to Release
         run: |
           for file in /work/packages/arm64/*.deb; do
-            gh release upload ${{ steps.create_release.outputs.id }} $file --clobber
+            gh release upload $TAG_NAME $file --clobber
           done
