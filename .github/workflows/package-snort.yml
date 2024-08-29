@@ -6,8 +6,7 @@ on:
       - "*"
 
 permissions:
-  contents: write  
-
+  contents: write  # Required to create releases and upload assets
 jobs:
   build:
     name: Build and Package Snort 3
@@ -44,34 +43,46 @@ jobs:
           path: /work/packages/${{ matrix.arch }}
 
   deploy:
-    name: Publish to GitHub Releases
+    name: Publish Release
     runs-on: ubuntu-latest
     needs: build
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - name: Create work directory
+        run: sudo mkdir -p /work && sudo chmod -R 777 /work
+
+      - name: Download amd64 packages
+        uses: actions/download-artifact@v4
+        with:
+          name: snort3-packages-amd64
+          path: /work/packages/amd64
+
+      - name: Download arm64 packages
+        uses: actions/download-artifact@v4
+        with:
+          name: snort3-packages-arm64
+          path: /work/packages/arm64
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.run_id }}
-          release_name: Snort 3 Packages ${{ github.run_id }}
+          tag_name: ${{ github.sha }}
+          release_name: "Snort 3 Release ${{ github.sha }}"
+          body: "Release for commit ${{ github.sha }}"
           draft: false
           prerelease: false
 
-      - name: Upload amd64 packages
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /work/packages/amd64/*.deb
-          asset_name: snort3-amd64.deb
-          asset_content_type: application/octet-stream
+      - name: Upload amd64 packages to Release
+        run: |
+          for file in /work/packages/amd64/*.deb; do
+            gh release upload ${{ steps.create_release.outputs.id }} $file --clobber
+          done
 
-      - name: Upload arm64 packages
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /work/packages/arm64/*.deb
-          asset_name: snort3-arm64.deb
-          asset_content_type: application/octet-stream
+      - name: Upload arm64 packages to Release
+        run: |
+          for file in /work/packages/arm64/*.deb; do
+            gh release upload ${{ steps.create_release.outputs.id }} $file --clobber
+          done
