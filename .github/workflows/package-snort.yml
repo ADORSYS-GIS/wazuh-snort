@@ -89,14 +89,14 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/amd64/snort3-amd64.deb
-          asset_name: snort3-amd64.deb
+          asset_path: /work/packages/amd64/snort3_3.2.2.0-1_amd64.deb
+          asset_name: snort3_3.2.2.0-1_amd64.deb
           asset_content_type: application/octet-stream
 
       - name: Upload arm64 package to GitHub Release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/arm64/snort3-arm64.deb
-          asset_name: snort3-arm64.deb
+          asset_path: /work/packages/arm64/snort3_3.2.2.0-1_arm64.deb
+          asset_name: snort3_3.2.2.0-1_arm64.deb
           asset_content_type: application/octet-stream
