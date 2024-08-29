@@ -55,8 +55,8 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.sha.substring(0, 7) }}
-          release_name: Snort 3 Packages ${{ github.sha.substring(0, 7) }}
+          tag_name: ${{ github.run_id }}
+          release_name: Snort 3 Packages ${{ github.run_id }}
           draft: false
           prerelease: false
 
