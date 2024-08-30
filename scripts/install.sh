@@ -162,7 +162,7 @@ install_snort_linux() {
     fi
 
     # Create the systemd service file
-cat > /etc/systemd/system/snort3.service << EOL
+maybe_sudo cat > /etc/systemd/system/snort3.service << EOL
 [Unit]
 Description=Set Snort 3 NIC in promiscuous mode and Disable GRO, LRO on boot
 After=network.target
