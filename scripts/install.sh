@@ -202,7 +202,7 @@ EOL
 
     configure_snort_linux
     #update_ossec_conf_linux
-    start_snort_linux
+    #start_snort_linux
 
 }
 
