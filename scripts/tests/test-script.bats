@@ -44,42 +44,35 @@ run_install_script() {
   run_install_script
 }
 
-# Test if Snort is installed
-@test "Snort is installed" {
-  run dpkg -l snort
+# Test if Snort is installed and running
+@test "Snort is installed and running" {
+  # Check if Snort is installed
+  run snort -V
+  echo "snort -V output: $output"
+  [ "$status" -eq 0 ]
+
+  # Check if Snort service is running
+  run systemctl status snort3
+  echo "systemctl status snort3 output: $output"
   [ "$status" -eq 0 ]
 }
 
 # Test if Snort directories were created
 @test "Snort directories were created" {
-  
   [ -d "/var/log/snort" ]
   [ -d "/etc/snort/rules" ]
 }
 
 # Test if Snort local rules file was created
 @test "Snort local rules file created" {
- 
   [ -f "/etc/snort/rules/local.rules" ]
 }
 
 # Test if ossec.conf was updated
 @test "ossec.conf updated" {
-
   run grep -q '<log_format>snort-full<\/log_format>' /var/ossec/etc/ossec.conf
   [ "$status" -eq 0 ]
   run grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' /var/ossec/etc/ossec.conf
   [ "$status" -eq 0 ]
 }
 
-@test "Snort is installed and running" {
-  # Check if Snort is installed
-  run which snort
-  echo "which snort output: $output"
-  [ "$status" -eq 0 ]
-
-# Check if Snort process is running
-  run pgrep snort
-  echo "pgrep snort output: $output"
-  [ "$status" -eq 0 ]
-}
