@@ -195,7 +195,7 @@ EOL
     # Show detailed status of the service
     systemctl status snort3.service
 
-    configure_snort_linux
+    #configure_snort_linux
     #update_ossec_conf_linux
     start_snort_linux
 
