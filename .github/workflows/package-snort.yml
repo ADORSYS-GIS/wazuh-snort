@@ -85,18 +85,24 @@ jobs:
       - name: List arm64 files
         run: ls -l /work/packages/arm64/
 
-      - name: Upload amd64 package to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/amd64/snort3_3.2.2.0-1_amd64.deb
-          asset_name: snort3_3.2.2.0-1_amd64.deb
-          asset_content_type: application/octet-stream
+      - name: Upload all amd64 packages to GitHub Release
+        run: |
+          for file in /work/packages/amd64/*.deb; do
+            echo "Uploading $file"
+            curl -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type $file)" \
+              --data-binary @$file \
+              "${{ steps.release.outputs.upload_url }}?name=$(basename $file)"
+          done
 
-      - name: Upload arm64 package to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/arm64/snort3_3.2.2.0-1_arm64.deb
-          asset_name: snort3_3.2.2.0-1_arm64.deb
-          asset_content_type: application/octet-stream
+      - name: Upload all arm64 packages to GitHub Release
+        run: |
+          for file in /work/packages/arm64/*.deb; do
+            echo "Uploading $file"
+            curl -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type $file)" \
+              --data-binary @$file \
+              "${{ steps.release.outputs.upload_url }}?name=$(basename $file)"
+          done
