@@ -66,6 +66,13 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
+      - name: Create ZIP archives
+        run: |
+          cd /work/packages/amd64
+          zip snort3-packages-amd64.zip *.deb
+          cd /work/packages/arm64
+          zip snort3-packages-arm64.zip *.deb
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -77,15 +84,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload packages to GitHub Release
+      - name: Upload ZIP files to GitHub Release
         run: |
           for ARCH in amd64 arm64; do
-            cd /work/packages/$ARCH
-            for file in *.deb; do
-              curl -X POST \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Content-Type: $(file --mime-type -b $file)" \
-                --data-binary @$file \
-                "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$(basename $file)"
-            done
+            file="/work/packages/$ARCH/snort3-packages-$ARCH.zip"
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/zip" \
+              --data-binary @$file \
+              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$(basename $file)"
           done
