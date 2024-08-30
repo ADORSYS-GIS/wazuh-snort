@@ -248,13 +248,16 @@ start_snort_macos() {
 # Function to configure Snort on Linux
 configure_snort_linux() {
     info_message "Configuring Snort"
-    create_dir_if_not_exists "/usr/local/etc/rules"
-    create_dir_if_not_exists "/usr/local/etc/so_rules/"
-    create_dir_if_not_exists "/usr/local/etc/lists/"
-    create_dir_if_not_exists "/var/log/snort"
 
-    create_file_if_not_exists "/usr/local/etc/rules/local.rules"
-    create_file_if_not_exists "/usr/local/etc/lists/default.blocklist"
+    create_snort_dirs_files \
+        "/usr/local/etc/rules" \
+        "/usr/local/etc/so_rules" \
+        "/usr/local/etc/lists" \
+        "/var/log/snort"
+
+    create_snort_files \
+        "/usr/local/etc/rules/local.rules" \
+        "/usr/local/etc/lists/default.blocklist"
 
     RULE="alert icmp any any -> any any ( msg:\"ICMP Traffic Detected\"; sid:10000001; metadata:policy security-ips alert; )"
     grep -qF "$RULE" /usr/local/etc/rules/local.rules || echo "$RULE" | maybe_sudo tee -a /usr/local/etc/rules/local.rules > /dev/null
@@ -262,7 +265,6 @@ configure_snort_linux() {
     snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
     snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none
 }
-
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
     info_message "Updating $OSSEC_CONF_PATH"
