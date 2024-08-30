@@ -1,12 +1,9 @@
-name: Build, Package, and Release Snort 3
+name: Build and Package Snort 3
 
 on:
   push:
     branches:
       - "*"
-
-permissions:
-  contents: write
 
 jobs:
   build:
@@ -37,42 +34,22 @@ jobs:
           mkdir -p /work/packages/$ARCH
           mv /work/*.deb /work/packages/$ARCH/
 
-      - name: Create ZIP archive of packages
-        run: |
-          cd /work/packages/$ARCH
-          if ls *.deb 1> /dev/null 2>&1; then
-            zip snort3-packages-${{ matrix.arch }}.zip *.deb
-          else
-            echo "No .deb files found to package"
-            exit 1
-          fi
-
-      - name: Upload packages as artifacts
+      - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: snort3-packages-${{ matrix.arch }}
-          path: /work/packages/${{ matrix.arch }}/snort3-packages-${{ matrix.arch }}.zip
+          path: /work/packages/${{ matrix.arch }}
 
   deploy:
-    name: Create GitHub Release and Upload Assets
+    name: Publish to GitHub Packages
     runs-on: ubuntu-latest
     needs: build
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Define tag
-        id: define-tag
-        run: echo "RELEASE_TAG=v1.0.${{ github.run_number }}" >> $GITHUB_ENV
-
-      - name: Create a release
-        id: release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          release_name: Snort 3 Release
-          draft: false
-          prerelease: false
+      - name: Create work directory
+        run: sudo mkdir -p /work && sudo chmod -R 777 /work
 
       - name: Download amd64 packages
         uses: actions/download-artifact@v4
@@ -86,18 +63,14 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
-      - name: Upload amd64 ZIP package to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/amd64/snort3-packages-amd64.zip
-          asset_name: snort3-packages-amd64.zip
-          asset_content_type: application/zip
-
-      - name: Upload arm64 ZIP package to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: /work/packages/arm64/snort3-packages-arm64.zip
-          asset_name: snort3-packages-arm64.zip
-          asset_content_type: application/zip
+      - name: Publish packages
+        run: |
+          for ARCH in amd64 arm64; do
+            cd /work/packages/$ARCH
+            for file in *.deb; do
+              curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: $(file --mime-type -b $file)" \
+                --data-binary @$file \
+                "https://uploads.github.com/repos/ADORSYS-GIS/wazuh-snort/releases/assets?name=$(basename $file)"
+            done
+          done
