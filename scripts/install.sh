@@ -195,9 +195,6 @@ EOL
     # Show detailed status of the service
     systemctl status snort3.service
 
-    # Restart Snort to apply the new configurations
-    sudo systemctl restart snort
-
     configure_snort_linux
     #update_ossec_conf_linux
     start_snort_linux
