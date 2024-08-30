@@ -134,10 +134,10 @@ install_snort_linux() {
     unzip $TEMP_DIR/snort3-packages.zip -d $TEMP_DIR
 
     # Make the .deb files executable
-    sudo chmod +x $TEMP_DIR/*.deb
+    maybe_sudo chmod +x $TEMP_DIR/*.deb
 
     # Install all .deb files
-    sudo dpkg -i $TEMP_DIR/*.deb
+    maybe_sudo dpkg -i $TEMP_DIR/*.deb
 
     # Check if /usr/local/lib is in the library path
     if ! grep -q "/usr/local/lib" /etc/ld.so.conf.d/*; then
@@ -145,7 +145,7 @@ install_snort_linux() {
     fi
 
     # Update the linker cache
-    sudo ldconfig
+    maybe_sudo ldconfig
 
     # Clean up the temporary directory
     rm -rf $TEMP_DIR
@@ -184,11 +184,11 @@ WantedBy=multi-user.target
 EOL
 
     # Enable and start the service
-    sudo systemctl enable snort3
+    maybe_sudo systemctl enable snort3
     #sudo systemctl start snort3
-    sudo service snort3 start
+    maybe_sudo service snort3 start
     # Check the status of the service
-    sudo service snort3 status
+    maybe_sudo service snort3 status
 
     # Check the status of the service
     if systemctl is-active --quiet snort3.service; then
@@ -308,19 +308,18 @@ if [ ! -f "$SNORT_LUA" ]; then
     echo "Error: $SNORT_LUA file not found."
     exit 1
 fi
-maybe_sudo 
+
 # Update the ips section to enable decoder and inspector alerts, include local and community rules
-sed -i '/ips = {/,/variables = default_variables/ s/^--\(enable_builtin_rules\s*=\s*true\)/\1/' "$SNORT_LUA"
-sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/local\.rules\"\)/\1/' "$SNORT_LUA"
-sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/snort3-community-rules\/snort3-community\.rules\"\)/\1/' "$SNORT_LUA"
+maybe_sudo sed -i '/ips = {/,/variables = default_variables/ s/^--\(enable_builtin_rules\s*=\s*true\)/\1/' "$SNORT_LUA"
+maybe_sudo  sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/local\.rules\"\)/\1/' "$SNORT_LUA"
+maybe_sudo sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/snort3-community-rules\/snort3-community\.rules\"\)/\1/' "$SNORT_LUA"
 
 # Ensure the HOME_NET and EXTERNAL_NET variables are set dynamically
-sed -i "s|HOME_NET = .*$|HOME_NET = \"$HOME_NET\"|" "$SNORT_LUA"
-sed -i 's|EXTERNAL_NET = .*$|EXTERNAL_NET = "!$HOME_NET"|' "$SNORT_LUA"
+maybe_sudo sed -i "s|HOME_NET = .*$|HOME_NET = \"$HOME_NET\"|" "$SNORT_LUA"
+maybe_sudo sed -i 's|EXTERNAL_NET = .*$|EXTERNAL_NET = "!$HOME_NET"|' "$SNORT_LUA"
 
 # Notify the user of success
 echo "Successfully configured Snort with community rules and updated HOME_NET to $HOME_NET and EXTERNAL_NET variables in $SNORT_LUA."
-
 
 success_message "Snort configured on Linux"
 }
