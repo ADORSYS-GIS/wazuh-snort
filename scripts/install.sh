@@ -326,17 +326,6 @@ update_ossec_conf_linux() {
 start_snort_linux() {
     info_message "Restarting Snort"
     success_message "Snort started on Linux"
-
-    # Add the snort user to the adm group
-    maybe_sudo usermod -aG adm snort
-
-    # Change permissions of the /var/log/snort directory
-    maybe_sudo chmod 770 /var/log/snort
-
-    # Change ownership of the /var/log/snort directory
-    maybe_sudo chown -R snort:adm /var/log/snort
-    maybe_sudo snort -q -c /etc/snort/snort.conf -i eth0 -l /var/log/snort -A fast &
-    maybe_sudo systemctl restart snort
 }
 
 # Function to ensure the script runs with root privileges
