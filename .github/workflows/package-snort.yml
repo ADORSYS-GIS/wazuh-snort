@@ -37,11 +37,16 @@ jobs:
           mkdir -p /work/packages/$ARCH
           mv /work/*.deb /work/packages/$ARCH/
 
+      - name: Create ZIP archive of packages
+        run: |
+          cd /work/packages/$ARCH
+          zip snort3-packages-${{ matrix.arch }}.zip *.deb
+
       - name: Upload packages as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: snort3-packages-${{ matrix.arch }}
-          path: /work/packages/${{ matrix.arch }}
+          path: /work/packages/${{ matrix.arch }}/snort3-packages-${{ matrix.arch }}.zip
 
   deploy:
     name: Create GitHub Release and Upload Assets
@@ -64,9 +69,6 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Create work directory
-        run: sudo mkdir -p /work && sudo chmod -R 777 /work
-
       - name: Download amd64 packages
         uses: actions/download-artifact@v4
         with:
@@ -79,24 +81,18 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
-      - name: Upload all amd64 packages to GitHub Release
-        run: |
-          for file in /work/packages/amd64/*.deb; do
-            echo "Uploading $file"
-            curl -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Content-Type: $(file -b --mime-type $file)" \
-              --data-binary @$file \
-              "${{ steps.release.outputs.upload_url }}?name=$(basename $file)"
-          done
+      - name: Upload amd64 ZIP package to GitHub Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: /work/packages/amd64/snort3-packages-amd64.zip
+          asset_name: snort3-packages-amd64.zip
+          asset_content_type: application/zip
 
-      - name: Upload all arm64 packages to GitHub Release
-        run: |
-          for file in /work/packages/arm64/*.deb; do
-            echo "Uploading $file"
-            curl -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Content-Type: $(file -b --mime-type $file)" \
-              --data-binary @$file \
-              "${{ steps.release.outputs.upload_url }}?name=$(basename $file)"
-          done
+      - name: Upload arm64 ZIP package to GitHub Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: /work/packages/arm64/snort3-packages-arm64.zip
+          asset_name: snort3-packages-arm64.zip
+          asset_content_type: application/zip
