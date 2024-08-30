@@ -86,7 +86,7 @@ install_snort_macos() {
     create_snort_dirs_files /usr/local/etc/rules /usr/local/etc/so_rules /usr/local/etc/lists /var/log/snort
     create_snort_files /usr/local/etc/rules/local.rules /usr/local/etc/lists/default.blocklist
 
-    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | maybe_sudo tee /usr/local/etc/rules/local.rules > /dev/null
+    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | maybe_sudo tee /usr/local/etc/rules/local.rules >/dev/null
 
     configure_snort_logging_macos
     update_ossec_conf_macos
@@ -105,21 +105,95 @@ install_snort_linux() {
     maybe_sudo apt-get update
     maybe_sudo apt install net-tools -y
 
-    echo "snort-prompt snort/install-setuid boolean true" | maybe_sudo debconf-set-selections
-    maybe_sudo apt-get install snort -y
+    # Determine the system architecture
+    ARCH=$(dpkg --print-architecture)
 
-    # Identify the main network interface
-    INTERFACE=$(ip route | grep default | awk '{print $5}')
-
-    # Check if a main network interface was found
-    if [ -z "$INTERFACE" ]; then
-    echo "No main network interface detected."
-    exit 1
+    # Define the URL of the archive based on the architecture
+    if [[ "$ARCH" == "amd64" ]]; then
+        URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/fix-scripts-tests/snort3-packages-amd64.zip" # to be updated
+    elif [[ "$ARCH" == "arm64" ]]; then
+        URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/fix-scripts-tests/snort3-packages-arm64.zip" # to be updated
+    else
+        echo "Unsupported architecture: $ARCH"
+        exit 1
     fi
 
-    # Configure Snort to use the main network interface
-    sudo sed -i '/^ipvar HOME_NET/d' /etc/snort/snort.conf
-    sudo sed -i "1s/^/ipvar HOME_NET $INTERFACE\n/" /etc/snort/snort.conf
+    # Install required packages if not already installed
+    if ! command -v unzip &>/dev/null; then
+        echo "unzip could not be found. Installing unzip..."
+        sudo apt-get update && sudo apt-get install -y unzip
+    fi
+
+    # Create a temporary directory
+    TEMP_DIR=$(mktemp -d)
+
+    # Download the archive to the temporary directory
+    curl -L $URL -o $TEMP_DIR/snort3-packages.zip
+
+    # Extract the archive
+    unzip $TEMP_DIR/snort3-packages.zip -d $TEMP_DIR
+
+    # Make the .deb files executable
+    sudo chmod +x $TEMP_DIR/*.deb
+
+    # Install all .deb files
+    sudo dpkg -i $TEMP_DIR/*.deb
+
+    # Check if /usr/local/lib is in the library path
+    if ! grep -q "/usr/local/lib" /etc/ld.so.conf.d/*; then
+        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local-lib.conf
+    fi
+
+    # Update the linker cache
+    sudo ldconfig
+
+    # Clean up the temporary directory
+    rm -rf $TEMP_DIR
+
+    echo "Installation completed for architecture $ARCH"
+
+  
+    # Get the default network interface
+    INTERFACE=$(ip route | grep default | awk '{print $5}')
+
+    # Check if the interface is found
+    if [ -z "$INTERFACE" ]; then
+        echo "Error: No network interface found."
+        exit 1
+    fi
+
+    # Create the systemd service file
+    cat >/etc/systemd/system/snort3.service <<EOL
+[Unit]
+Description=Set Snort 3 NIC in promiscuous mode and Disable GRO, LRO on boot
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ip link set dev $INTERFACE promisc on
+ExecStart=/usr/sbin/ethtool -K $INTERFACE gro off lro off
+TimeoutStartSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
+EOL
+
+    # Reload systemd configuration
+    systemctl daemon-reload
+
+    # Enable and start the service
+    systemctl enable --now snort3.service
+
+    # Check the status of the service
+    if systemctl is-active --quiet snort3.service; then
+        echo "Service 'snort3' is running."
+    else
+        echo "Service 'snort3' is not running."
+    fi
+
+    # Show detailed status of the service
+    systemctl status snort3.service
 
     # Restart Snort to apply the new configurations
     sudo systemctl restart snort
@@ -129,8 +203,7 @@ install_snort_linux() {
     start_snort_linux
 
     # Change ownership and set capabilities
-    maybe_sudo chown "$USER" /usr/sbin/snort
-    maybe_sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/snort
+    
 }
 
 # Function to configure Snort logging on macOS
@@ -140,7 +213,7 @@ configure_snort_logging_macos() {
 
     info_message "Configuring Snort logging"
     if ! grep -q "$content_to_add" "$config_file"; then
-        echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
+        echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" >/dev/null
         success_message "Snort logging configured in $config_file"
     else
         info_message "Snort logging is already configured in $config_file"
@@ -177,7 +250,7 @@ configure_snort_linux() {
     info_message "Configuring Snort"
     maybe_sudo sed -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
     maybe_sudo sed -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
-    echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules > /dev/null
+    echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules >/dev/null
 
     info_message "Downloading and configuring Snort rule files"
     maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
@@ -206,7 +279,7 @@ update_ossec_conf_linux() {
 start_snort_linux() {
     info_message "Restarting Snort"
     success_message "Snort started on Linux"
-    
+
     # Add the snort user to the adm group
     maybe_sudo usermod -aG adm snort
 
@@ -236,16 +309,16 @@ maybe_sudo() {
 # Main function to install and configure Snort
 install_snort() {
     case "$OSTYPE" in
-        darwin*)
-            install_snort_macos
-            ;;
-        linux-gnu*)
-            install_snort_linux
-            ;;
-        *)
-            error_message "Unsupported OS type: $OSTYPE"
-            exit 1
-            ;;
+    darwin*)
+        install_snort_macos
+        ;;
+    linux-gnu*)
+        install_snort_linux
+        ;;
+    *)
+        error_message "Unsupported OS type: $OSTYPE"
+        exit 1
+        ;;
     esac
 }
 
