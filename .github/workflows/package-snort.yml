@@ -1,9 +1,9 @@
 name: Build and Package Snort 3
 
 on:
-  push:
+  pull_request:
     branches:
-      - "*"
+      - "main"
 
 permissions:
   contents: write
