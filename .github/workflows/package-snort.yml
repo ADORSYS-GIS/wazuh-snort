@@ -79,12 +79,6 @@ jobs:
           name: snort3-packages-arm64
           path: /work/packages/arm64
 
-      - name: List amd64 files
-        run: ls -l /work/packages/amd64/
-
-      - name: List arm64 files
-        run: ls -l /work/packages/arm64/
-
       - name: Upload all amd64 packages to GitHub Release
         run: |
           for file in /work/packages/amd64/*.deb; do
