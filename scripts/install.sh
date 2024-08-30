@@ -303,11 +303,6 @@ sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH
 # Notify the user of success
 echo "Successfully updated $SNORT_LUA to enable decoder and inspector alerts and set the local rules path."
 
-
-# Run Snort
-snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
-snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none
-
 success_message "Snort configured on Linux"
 }
 # Function to update ossec.conf on Linux
@@ -325,6 +320,9 @@ update_ossec_conf_linux() {
 # Function to start Snort on Linux
 start_snort_linux() {
     info_message "Restarting Snort"
+    # Run Snort
+snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
+snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none 
     success_message "Snort started on Linux"
 }
 
