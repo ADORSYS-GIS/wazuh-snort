@@ -287,6 +287,23 @@ check_create_files "${files[@]}"
 RULE="alert icmp any any -> any any ( msg:\"ICMP Traffic Detected\"; sid:10000001; metadata:policy security-ips alert; )"
 grep -qF "$RULE" /usr/local/etc/rules/local.rules || echo "$RULE" | maybe_sudo tee -a /usr/local/etc/rules/local.rules > /dev/null
 
+# Path to the snort.lua file
+SNORT_LUA="/usr/local/etc/snort/snort.lua"
+
+# Check if the snort.lua file exists
+if [ ! -f "$SNORT_LUA" ]; then
+    echo "Error: $SNORT_LUA file not found."
+    exit 1
+fi
+
+# Uncomment the 'enable_builtin_rules' and 'include' lines within the ips section
+sed -i '/ips = {/,/variables = default_variables/ s/^--\(enable_builtin_rules\s*=\s*true\)/\1/' "$SNORT_LUA"
+sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/local\.rules\"\)/\1/' "$SNORT_LUA"
+
+# Notify the user of success
+echo "Successfully updated $SNORT_LUA to enable decoder and inspector alerts and set the local rules path."
+
+
 # Run Snort
 snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
 snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none
