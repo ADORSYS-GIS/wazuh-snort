@@ -28,6 +28,12 @@ fi
 
 chmod +x /app/scripts/install.sh
 
+# Test if the script runs without errors
+@test "script runs without errors" {
+  run /app/scripts/install.sh
+  [ "$status" -eq 0 ]
+}
+
 # Test if Snort is installed
 @test "Snort is installed" {
   run which snort
