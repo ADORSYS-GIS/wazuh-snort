@@ -114,7 +114,7 @@ install_snort_linux() {
     elif [[ "$ARCH" == "arm64" ]]; then
         URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/fix-scripts-tests/snort3-packages-arm64.zip" # to be updated
     else
-        echo "Unsupported architecture: $ARCH"
+        error_message "Unsupported architecture: $ARCH"
         exit 1
     fi
 
@@ -150,20 +150,19 @@ install_snort_linux() {
     # Clean up the temporary directory
     rm -rf $TEMP_DIR
 
-    echo "Installation completed for architecture $ARCH"
+    success_message "Installation completed for architecture $ARCH"
 
-  
     # Get the default network interface
     INTERFACE=$(ip route | grep default | awk '{print $5}')
 
     # Check if the interface is found
     if [ -z "$INTERFACE" ]; then
-        echo "Error: No network interface found."
+        error_message "No network interface found."
         exit 1
     fi
 
     # Create the systemd service file
-    cat >/etc/systemd/system/snort3.service <<EOL
+cat > /etc/systemd/system/snort3.service << EOL
 [Unit]
 Description=Set Snort 3 NIC in promiscuous mode and Disable GRO, LRO on boot
 After=network.target
@@ -179,6 +178,7 @@ RemainAfterExit=yes
 WantedBy=default.target
 EOL
 
+
     # Reload systemd configuration
     systemctl daemon-reload
 
@@ -187,9 +187,9 @@ EOL
 
     # Check the status of the service
     if systemctl is-active --quiet snort3.service; then
-        echo "Service 'snort3' is running."
+        success_message "Service 'snort3' is running."
     else
-        echo "Service 'snort3' is not running."
+        error_message "Service 'snort3' is not running."
     fi
 
     # Show detailed status of the service
@@ -203,7 +203,8 @@ EOL
     start_snort_linux
 
     # Change ownership and set capabilities
-    
+    maybe_sudo chown "$USER" /usr/sbin/snort
+    maybe_sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/snort
 }
 
 # Function to configure Snort logging on macOS
@@ -294,7 +295,7 @@ start_snort_linux() {
 
 # Function to ensure the script runs with root privileges
 maybe_sudo() {
-    if [ "$(id -u)" -ne 0; then
+    if [ "$(id -u)" -ne 0 ]; then
         if command -v sudo >/dev/null 2>&1; then
             sudo "$@"
         else
