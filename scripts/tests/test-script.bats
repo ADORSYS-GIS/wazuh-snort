@@ -28,51 +28,56 @@ fi
 
 chmod +x /app/scripts/install.sh
 
-# Function to run the install script and check its status
-run_install_script() {
-  run /app/scripts/install.sh
-  if [ "$status" -ne 0 ]; then
-    echo "Install script failed with status: $status"
-    echo "Output: $output"
-    return 1
-  fi
-  return 0
-}
+#!/usr/bin/env bats
 
-# Test if the script runs without errors
-@test "Script runs without errors" {
-  run_install_script
-}
-
-# Test if Snort is installed and running
-@test "Snort is installed and running" {
-  # Check if Snort is installed
-  run snort -V
-  echo "snort -V output: $output"
+# Test if Snort is installed
+@test "Snort is installed" {
+  run which snort
   [ "$status" -eq 0 ]
+  [ -x "$output" ]
+}
 
-  # Check if Snort service is running
-  run systemctl status snort3
-  echo "systemctl status snort3 output: $output"
+# Test if Snort service is active
+@test "Snort service is active" {
+  run systemctl is-active snort3
+  [ "$status" -eq 0 ]
+  [ "$output" = "active" ]
+}
+
+# Test if Snort configuration file exists
+@test "Snort configuration file exists" {
+  run test -f /usr/local/etc/snort/snort.lua
   [ "$status" -eq 0 ]
 }
 
-# Test if Snort directories were created
-@test "Snort directories were created" {
-  [ -d "/var/log/snort" ]
-  [ -d "/etc/snort/rules" ]
-}
-
-# Test if Snort local rules file was created
-@test "Snort local rules file created" {
-  [ -f "/etc/snort/rules/local.rules" ]
-}
-
-# Test if ossec.conf was updated
-@test "ossec.conf updated" {
-  run grep -q '<log_format>snort-full<\/log_format>' /var/ossec/etc/ossec.conf
-  [ "$status" -eq 0 ]
-  run grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' /var/ossec/etc/ossec.conf
+# Test if Snort configuration is valid
+@test "Snort configuration is valid" {
+  run snort -T -c /usr/local/etc/snort/snort.lua
   [ "$status" -eq 0 ]
 }
 
+# Test if Snort rules file exists
+@test "Snort rules file exists" {
+  run test -f /usr/local/etc/rules/local.rules
+  [ "$status" -eq 0 ]
+}
+
+# Test if Snort rules are loaded
+@test "Snort rules are loaded" {
+  run grep -q "ICMP Traffic Detected" /usr/local/etc/rules/local.rules
+  [ "$status" -eq 0 ]
+}
+
+# Test Snort log directory permissions
+@test "Snort log directory permissions" {
+  run stat -c "%a" /var/log/snort
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 5775 ]
+}
+
+# Test Snort log directory ownership
+@test "Snort log directory ownership" {
+  run stat -c "%U:%G" /var/log/snort
+  [ "$status" -eq 0 ]
+  [ "$output" = "snort:snort" ]
+}
