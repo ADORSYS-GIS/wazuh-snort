@@ -287,6 +287,19 @@ check_create_files "${files[@]}"
 RULE="alert icmp any any -> any any ( msg:\"ICMP Traffic Detected\"; sid:10000001; metadata:policy security-ips alert; )"
 grep -qF "$RULE" /usr/local/etc/rules/local.rules || echo "$RULE" | maybe_sudo tee -a /usr/local/etc/rules/local.rules > /dev/null
 
+
+# Get the IP address of the default network interface
+HOME_NET=$(ip -o -f inet addr show "$INTERFACE" | awk '{print $4}')
+
+# Download and extract Snort 3 community rules
+cd /usr/local/etc/rules || exit
+wget https://www.snort.org/downloads/community/snort3-community-rules.tar.gz
+tar xzf snort3-community-rules.tar.gz
+
+# Verify the extraction
+echo "Listing extracted files:"
+ls -l snort3-community-rules
+
 # Path to the snort.lua file
 SNORT_LUA="/usr/local/etc/snort/snort.lua"
 
@@ -296,12 +309,18 @@ if [ ! -f "$SNORT_LUA" ]; then
     exit 1
 fi
 
-# Uncomment the 'enable_builtin_rules' and 'include' lines within the ips section
+# Update the ips section to enable decoder and inspector alerts, include local and community rules
 sed -i '/ips = {/,/variables = default_variables/ s/^--\(enable_builtin_rules\s*=\s*true\)/\1/' "$SNORT_LUA"
 sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/local\.rules\"\)/\1/' "$SNORT_LUA"
+sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/snort3-community-rules\/snort3-community\.rules\"\)/\1/' "$SNORT_LUA"
+
+# Ensure the HOME_NET and EXTERNAL_NET variables are set dynamically
+sed -i "s|HOME_NET = .*$|HOME_NET = \"$HOME_NET\"|" "$SNORT_LUA"
+sed -i 's|EXTERNAL_NET = .*$|EXTERNAL_NET = "!$HOME_NET"|' "$SNORT_LUA"
 
 # Notify the user of success
-echo "Successfully updated $SNORT_LUA to enable decoder and inspector alerts and set the local rules path."
+echo "Successfully configured Snort with community rules and updated HOME_NET to $HOME_NET and EXTERNAL_NET variables in $SNORT_LUA."
+
 
 success_message "Snort configured on Linux"
 }
