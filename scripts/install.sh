@@ -161,29 +161,34 @@ install_snort_linux() {
         exit 1
     fi
 
+    # Create the snort system user
+    maybe_sudo useradd -r -s /usr/sbin/nologin -M -c SNORT_IDS snort
+
+    # Grant permissions to the log directory
+    maybe_sudo chmod -R 5775 /var/log/snort
+    maybe_sudo chown -R snort:snort /var/log/snort
+
     # Create the systemd service file
 maybe_sudo cat > /etc/systemd/system/snort3.service << EOL
 [Unit]
-Description=Set Snort 3 NIC in promiscuous mode and Disable GRO, LRO on boot
-After=network.target
+Description=Snort3 NIDS Daemon
+After=syslog.target network.target
 
 [Service]
-Type=oneshot
-ExecStart=/usr/sbin/ip link set dev $INTERFACE promisc on
-ExecStart=/usr/sbin/ethtool -K $INTERFACE gro off lro off
-TimeoutStartSec=0
-RemainAfterExit=yes
+Type=simple
+ExecStart=/usr/local/bin/snort -c /usr/local/etc/snort/snort.lua -s 65535 -k none -l /var/log/snort -D -u snort -g snort -i $INTERFACE -m 0x1b --create-pidfile
+ExecStop=/bin/kill -9 \$MAINPID
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 EOL
 
-
-    # Reload systemd configuration
-    systemctl daemon-reload
-
     # Enable and start the service
-    systemctl enable --now snort3.service
+    sudo systemctl enable snort3
+    #sudo systemctl start snort3
+    sudo service snort3 start
+    # Check the status of the service
+    sudo service snort3 status
 
     # Check the status of the service
     if systemctl is-active --quiet snort3.service; then
@@ -199,9 +204,6 @@ EOL
     #update_ossec_conf_linux
     start_snort_linux
 
-    # Change ownership and set capabilities
-    maybe_sudo chown "$USER" /usr/sbin/snort
-    maybe_sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/snort
 }
 
 # Function to configure Snort logging on macOS
@@ -246,19 +248,19 @@ start_snort_macos() {
 # Function to configure Snort on Linux
 configure_snort_linux() {
     info_message "Configuring Snort"
-    maybe_sudo sed -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
-    maybe_sudo sed -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
-    echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules >/dev/null
+    create_dir_if_not_exists "/usr/local/etc/rules"
+    create_dir_if_not_exists "/usr/local/etc/so_rules/"
+    create_dir_if_not_exists "/usr/local/etc/lists/"
+    create_dir_if_not_exists "/var/log/snort"
 
-    info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
-    maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
-    maybe_sudo rm community-rules.tar.gz
+    create_file_if_not_exists "/usr/local/etc/rules/local.rules"
+    create_file_if_not_exists "/usr/local/etc/lists/default.blocklist"
 
-    if ! grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
-        echo "include \$RULE_PATH/community.rules" | maybe_sudo tee -a /etc/snort/snort.conf
-        success_message "Snort rule files configured on Linux"
-    fi
+    RULE="alert icmp any any -> any any ( msg:\"ICMP Traffic Detected\"; sid:10000001; metadata:policy security-ips alert; )"
+    grep -qF "$RULE" /usr/local/etc/rules/local.rules || echo "$RULE" | maybe_sudo tee -a /usr/local/etc/rules/local.rules > /dev/null
+
+    snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
+    snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none
 }
 
 # Function to update ossec.conf on Linux
