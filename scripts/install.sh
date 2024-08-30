@@ -308,7 +308,7 @@ if [ ! -f "$SNORT_LUA" ]; then
     echo "Error: $SNORT_LUA file not found."
     exit 1
 fi
-
+maybe_sudo 
 # Update the ips section to enable decoder and inspector alerts, include local and community rules
 sed -i '/ips = {/,/variables = default_variables/ s/^--\(enable_builtin_rules\s*=\s*true\)/\1/' "$SNORT_LUA"
 sed -i '/ips = {/,/variables = default_variables/ s/^--\(include\s*=\s*RULE_PATH\s*\.\.\s*\"\/local\.rules\"\)/\1/' "$SNORT_LUA"
@@ -339,7 +339,7 @@ update_ossec_conf_linux() {
 # Function to start Snort on Linux
 start_snort_linux() {
     info_message "Restarting Snort"
-    # Run Snort
+# Run Snort
 snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules
 snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i "$INTERFACE" -A alert_fast -s 65535 -k none 
     success_message "Snort started on Linux"
