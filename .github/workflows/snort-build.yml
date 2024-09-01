@@ -1,13 +1,9 @@
-name: Build Snort
+name: Build Snort3 Docker Multi Arch
 
 on:
-  push:
+  pull_request:
     branches:
-      - '*'
-    paths:
-      - 'snort/**'
-      - '.github/workflows/snort-build.yml'
-
+      - main
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-snort
@@ -18,7 +14,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +55,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

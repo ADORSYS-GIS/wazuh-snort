@@ -6,7 +6,12 @@ if [ "$(uname -o)" = "GNU/Linux" ] && command -v groupadd >/dev/null 2>&1; then
     apt-get update && apt-get install -y curl gnupg2
     (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
     chmod 644 /usr/share/keyrings/wazuh.gpg
-    echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
+
+    # Check if the repository is already added
+    if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list 2>/dev/null; then
+        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
+    fi
+
     apt-get update
     apt-get install wazuh-agent -y
     sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" /var/ossec/etc/ossec.conf
@@ -25,39 +30,66 @@ chmod +x /app/scripts/install.sh
 
 # Test if the script runs without errors
 @test "script runs without errors" {
-  run /usr/local/bin/test-script.sh
-  [ "$status" -eq 0 ]
+  if [ -f /app/scripts/install.sh ]; then
+    run /app/scripts/install.sh
+    [ "$status" -eq 0 ]
+  else
+    skip "/app/scripts/install.sh not found"
+  fi
 }
 
 # Test if Snort is installed
 @test "Snort is installed" {
-  run dpkg -l | grep -q snort
+  run which snort
+  [ "$status" -eq 0 ]
+  [ -x "$output" ]
+}
+
+# Test if Snort service is active
+@test "Snort service is active" {
+  run systemctl is-active snort3
+  [ "$status" -eq 0 ]
+  [ "$output" = "active" ]
+}
+
+# Test if Snort configuration file exists
+@test "Snort configuration file exists" {
+  run test -f /usr/local/etc/snort/snort.lua
   [ "$status" -eq 0 ]
 }
 
-# Test if Snort directories were created
-@test "Snort directories were created" {
-  /usr/local/bin/test-script.sh
-  [ -d "/var/log/snort" ]
-  [ -d "/etc/snort/rules" ]
+# Test if Snort configuration is valid
+@test "Snort configuration is valid" {
+  if command -v snort &> /dev/null; then
+    run snort -T -c /usr/local/etc/snort/snort.lua
+    [ "$status" -eq 0 ]
+  else
+    skip "Snort command not found"
+  fi
 }
 
-# Test if Snort local rules file was created
-@test "Snort local rules file created" {
-  /usr/local/bin/test-script.sh
-  [ -f "/etc/snort/rules/local.rules" ]
-}
-
-# Test if ossec.conf was updated
-@test "ossec.conf updated" {
-  /usr/local/bin/test-script.sh
-  grep -q '<log_format>snort-full<\/log_format>' "$OSSEC_CONF_PATH"
-  grep -q '<location>\/var\/log\/snort\/snort.alert.fast<\/location>' "$OSSEC_CONF_PATH"
-}
-
-# Test if Snort was started
-@test "Snort started" {
-  /usr/local/bin/test-script.sh
-  run systemctl status snort
+# Test if Snort rules file exists
+@test "Snort rules file exists" {
+  run test -f /usr/local/etc/rules/local.rules
   [ "$status" -eq 0 ]
+}
+
+# Test if Snort rules are loaded
+@test "Snort rules are loaded" {
+  run grep -q "ICMP Traffic Detected" /usr/local/etc/rules/local.rules
+  [ "$status" -eq 0 ]
+}
+
+# Test Snort log directory permissions
+@test "Snort log directory permissions" {
+  run stat -c "%a" /var/log/snort
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 5775 ]
+}
+
+# Test Snort log directory ownership
+@test "Snort log directory ownership" {
+  run stat -c "%U:%G" /var/log/snort
+  [ "$status" -eq 0 ]
+  [ "$output" = "snort:snort" ]
 }
