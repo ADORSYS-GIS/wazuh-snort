@@ -9,13 +9,13 @@ This repository contains several resources for installing and configuring Snort,
 - `helm`: This folder contains a Helm chart for installing Snort in DaemonSet mode in a Kubernetes cluster and monitoring it.
 - `README.md`: This file provides general information about the project.
 - `rules`: This folder contains the rules for configuring Snort.
-- `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS.
+- `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions.
 
 ## Description
 
 1. **Helm Chart**: The Helm chart in the `helm` folder allows you to install Snort in DaemonSet mode in a Kubernetes cluster. This allows Snort to run on each node of the cluster, providing cluster-wide network monitoring.
 
-2. **Scripts**: The `scripts` folder contains a script that facilitates the installation and configuration of Snort on Linux and MacOS systems.
+2. **Scripts**: The `scripts` folder contains a script that facilitates the installation and configuration of Snort on Linux and MacOS systems. Additionally, it automates the process of building and packaging Snort 3 for `amd64` and `arm64` architectures using GitHub Actions.
 
 3. **Integration with Wazuh**: This repository also contains the necessary configurations for integrating Snort with Wazuh, an open-source security tool for intrusion detection, endpoint security, and compliance monitoring.
 
