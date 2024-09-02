@@ -61,6 +61,8 @@ setup() {
   [[ "$output" == *"$INTERFACE"* ]]
 }
 
+
+
 # Test to check if HOME_NET is correctly configured in snort.conf
 @test "HOME_NET should be correctly configured in snort.conf" {
   INTERFACE=$(ip route | grep default | awk '{print $5}')
