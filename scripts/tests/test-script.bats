@@ -53,17 +53,18 @@ install_dependencies() {
   [ "$status" -eq 0 ] || return 1
 }
 
-# Test to check Snort installation
+# Test to check if Snort is installed
 @test "Snort should be installed" {
   echo "Starting test: Snort should be installed"
   install_dependencies
   run which snort
+  echo "Snort path: $output"
   echo "Snort installation check status: $status"
   [ "$status" -eq 0 ]
   [ -x "$output" ]
 }
 
-# Test to check the existence of snort.conf file
+# Test to check if the snort.conf file exists
 @test "snort.conf should exist" {
   echo "Starting test: snort.conf should exist"
   install_dependencies
@@ -71,18 +72,19 @@ install_dependencies() {
   echo "snort.conf existence check status: $status"
 }
 
-# Test to check the default network interface configuration in snort.conf
+# Test to check if the default network interface is correctly configured in snort.conf
 @test "Default network interface should be correctly configured in snort.conf" {
   echo "Starting test: Default network interface should be correctly configured in snort.conf"
   install_dependencies
   local interface
   interface=$(ip route | grep default | awk '{print $5}')
   run grep -E "^ipvar HOME_NET" /etc/snort/snort.conf
+  echo "Interface: $interface"
   echo "Default network interface check status: $status"
   [[ "$output" == *"$interface"* ]]
 }
 
-# Test to check the HOME_NET configuration in snort.conf
+# Test to check if HOME_NET is correctly configured in snort.conf
 @test "HOME_NET should be correctly configured in snort.conf" {
   echo "Starting test: HOME_NET should be correctly configured in snort.conf"
   install_dependencies
@@ -90,10 +92,11 @@ install_dependencies() {
   interface=$(ip route | grep default | awk '{print $5}')
   home_net=$(ip -o -f inet addr show "$interface" | awk '/scope global/ {print $4}')
   run grep -E "^ipvar HOME_NET \[?$home_net\]?" /etc/snort/snort.conf
+  echo "HOME_NET: $home_net"
   echo "HOME_NET configuration check status: $status"
 }
 
-# Test to check the update of ossec.conf with Snort logging configuration
+# Test to check if ossec.conf is updated with Snort logging configuration
 @test "ossec.conf should be updated with Snort logging configuration" {
   echo "Starting test: ossec.conf should be updated with Snort logging configuration"
   install_dependencies
@@ -106,6 +109,7 @@ install_dependencies() {
 
   run grep -A 3 '<!-- snort -->' "$OSSEC_CONF_PATH"
   echo "ossec.conf update check status: $status"
+  echo "ossec.conf content: $output"
   [[ "$output" == *"<log_format>snort-full</log_format>"* ]]
   [[ "$output" == *"<location>/var/log/snort/snort.alert.fast</location>"* ]]
 }
