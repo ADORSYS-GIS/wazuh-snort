@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y curl gnupg2 iproute2 net-tools
+        sudo apt-get install -y curl gnupg2 iproute2 net-tools bats
 
     - name: Run Bats tests
       run: |
