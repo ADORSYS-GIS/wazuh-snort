@@ -27,10 +27,10 @@ install_dependencies() {
     return 1
   fi
 
-  chmod +x /app/scripts/install.sh
+  chmod +x scripts/install.sh
 
   # Run the Snort installation script with debugging
-  run /app/scripts/install.sh
+  run scripts/install.sh
   echo "Snort installation script output: $output"
   echo "Snort installation script status: $status"
   [ "$status" -eq 0 ] || return 1
