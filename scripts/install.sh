@@ -129,7 +129,6 @@ install_snort_linux() {
     # Restart Snort service
     maybe_sudo systemctl restart snort || {
         echo "Failed to restart Snort. Check the configuration."
-        maybe_sudo systemctl status snort
     }
 
     configure_snort_linux
