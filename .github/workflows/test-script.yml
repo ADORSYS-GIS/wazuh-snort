@@ -17,10 +17,6 @@ jobs:
     - name: Make install script executable
       run: chmod +x scripts/install.sh
 
-    - name: Run install script
-      run: |
-        scripts/install.sh
-
     - name: Install Bats
       run: |
         sudo apt-get update
