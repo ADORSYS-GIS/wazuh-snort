@@ -4,39 +4,47 @@ WAZUH_MANAGER="10.0.0.2"
 OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
 
 install_dependencies() {
-  if [ "$(uname -o)" = "GNU/Linux" ]; then
-    apt-get update && apt-get install -y curl gnupg2 iproute2
-    (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
-    chmod 644 /usr/share/keyrings/wazuh.gpg
+  local os
+  os=$(uname -o)
 
-    if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list 2>/dev/null; then
-      echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
-    fi
+  case "$os" in
+    "GNU/Linux")
+      apt-get update
+      apt-get install -y curl gnupg2 iproute2
+      curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import
+      chmod 644 /usr/share/keyrings/wazuh.gpg
+      
+      if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list; then
+        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee /etc/apt/sources.list.d/wazuh.list
+      fi
+      
+      apt-get update
+      apt-get install -y wazuh-agent
+      sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
+      ;;
 
-    apt-get update
-    apt-get install -y wazuh-agent
-    sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
-  elif [ "$(which apk)" = "/sbin/apk" ]; then
-    wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
-    echo "https://packages.wazuh.com/4.x/alpine/v3.12/main" | tee -a /etc/apk/repositories
-    apk update
-    apk add wazuh-agent
-    sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
-  else
-    echo "Unsupported OS for Wazuh installation." >&2
-    return 1
-  fi
+    "Alpine")
+      wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
+      echo "https://packages.wazuh.com/4.x/alpine/v3.12/main" | tee /etc/apk/repositories
+      apk update
+      apk add wazuh-agent
+      sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
+      ;;
+
+    *)
+      echo "Unsupported OS for Wazuh installation." >&2
+      return 1
+      ;;
+  esac
 
   chmod +x scripts/install.sh
-
-  # Run the Snort installation script with debugging
-  run scripts/install.sh
+  output=$(run scripts/install.sh)
+  status=$?
   echo "Snort installation script output: $output"
   echo "Snort installation script status: $status"
   [ "$status" -eq 0 ] || return 1
 }
 
-# Test to check if Snort is installed
 @test "Snort should be installed" {
   install_dependencies
   run which snort
@@ -44,32 +52,30 @@ install_dependencies() {
   [ -x "$output" ]
 }
 
-# Test to check if the snort.conf file exists
 @test "snort.conf should exist" {
   install_dependencies
   run test -f /etc/snort/snort.conf
   [ "$status" -eq 0 ]
 }
 
-# Test to check if the default network interface is correctly configured in snort.conf
 @test "Default network interface should be correctly configured in snort.conf" {
   install_dependencies
-  INTERFACE=$(ip route | grep default | awk '{print $5}')
+  local interface
+  interface=$(ip route | grep default | awk '{print $5}')
   run grep -E "^ipvar HOME_NET" /etc/snort/snort.conf
   [ "$status" -eq 0 ]
-  [[ "$output" == *"$INTERFACE"* ]]
+  [[ "$output" == *"$interface"* ]]
 }
 
-# Test to check if HOME_NET is correctly configured in snort.conf
 @test "HOME_NET should be correctly configured in snort.conf" {
   install_dependencies
-  INTERFACE=$(ip route | grep default | awk '{print $5}')
-  HOME_NET=$(ip -o -f inet addr show $INTERFACE | awk '/scope global/ {print $4}')
-  run grep -E "^ipvar HOME_NET \[?$HOME_NET\]?" /etc/snort/snort.conf
+  local interface home_net
+  interface=$(ip route | grep default | awk '{print $5}')
+  home_net=$(ip -o -f inet addr show "$interface" | awk '/scope global/ {print $4}')
+  run grep -E "^ipvar HOME_NET \[?$home_net\]?" /etc/snort/snort.conf
   [ "$status" -eq 0 ]
 }
 
-# Test to check if ossec.conf is updated correctly with Snort logging configuration
 @test "ossec.conf should be updated with Snort logging configuration" {
   install_dependencies
   sed -i '/<\/ossec_config>/i\
