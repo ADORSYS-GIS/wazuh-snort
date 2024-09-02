@@ -6,7 +6,7 @@ on:
       - develop
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -14,14 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Make install script executable
-      run: chmod +x scripts/install.sh
-
-    - name: Install Bats
+    - name: Run Bats tests in Docker
       run: |
-        sudo apt-get update
-        sudo apt-get install -y bats
-
-    - name: Run Bats tests
-      run: |
-        bats scripts/tests/test-script.bats
+        docker run --rm -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats

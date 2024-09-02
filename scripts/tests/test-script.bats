@@ -6,32 +6,34 @@ OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
 # setup_file runs once before all the tests in the file
 setup_file() {
   if [ "$(uname -o)" = "GNU/Linux" ]; then
-    sudo apt-get update && sudo apt-get install -y curl gnupg2
+    apt-get update && apt-get install -y curl gnupg2
     (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
-    sudo chmod 644 /usr/share/keyrings/wazuh.gpg
+    chmod 644 /usr/share/keyrings/wazuh.gpg
 
     if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list 2>/dev/null; then
-      echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
+      echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
     fi
 
-    sudo apt-get update
-    sudo apt-get install -y wazuh-agent
-    sudo sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
+    apt-get update
+    apt-get install -y wazuh-agent
+    sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
   elif [ "$(which apk)" = "/sbin/apk" ]; then
-    sudo wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
-    echo "https://packages.wazuh.com/4.x/alpine/v3.12/main" | sudo tee -a /etc/apk/repositories
-    sudo apk update
-    sudo apk add wazuh-agent
-    sudo sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
+    wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
+    echo "https://packages.wazuh.com/4.x/alpine/v3.12/main" | tee -a /etc/apk/repositories
+    apk update
+    apk add wazuh-agent
+    sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" "$OSSEC_CONF_PATH"
   else
     echo "Unsupported OS for Wazuh installation." >&2
     exit 1
   fi
 
-  sudo chmod +x scripts/install.sh
+  chmod +x /app/scripts/install.sh
 
-  # Run the Snort installation script
-  run sudo scripts/install.sh
+  # Run the Snort installation script with debugging
+  run /app/scripts/install.sh
+  echo "Snort installation script output: $output"
+  echo "Snort installation script status: $status"
   [ "$status" -eq 0 ] || skip "Snort installation failed"
 }
 
@@ -66,7 +68,7 @@ setup_file() {
 
 # Test to check if ossec.conf is updated correctly with Snort logging configuration
 @test "ossec.conf should be updated with Snort logging configuration" {
-  sudo sed -i '/<\/ossec_config>/i\
+   sed -i '/<\/ossec_config>/i\
         <!-- snort -->\
         <localfile>\
             <log_format>snort-full<\/log_format>\
