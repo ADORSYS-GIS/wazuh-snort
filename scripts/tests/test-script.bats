@@ -5,7 +5,7 @@ OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
 
 install_dependencies() {
   if [ "$(uname -o)" = "GNU/Linux" ]; then
-    apt-get update && apt-get install -y curl gnupg2
+    apt-get update && apt-get install -y curl gnupg2 iproute2
     (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
     chmod 644 /usr/share/keyrings/wazuh.gpg
 
