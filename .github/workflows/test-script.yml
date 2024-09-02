@@ -1,19 +1,31 @@
-name: Bats Tests
+name: Snort Install Script Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop
 
 jobs:
-  test:
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    - name: Set up Docker
+    - name: Make install script executable
+      run: chmod +x scripts/install.sh
+
+    - name: Run install script
       run: |
-        docker pull ghcr.io/stephane-segning/bats-docker:ubuntu-latest
+        scripts/install.sh
+
+    - name: Install Bats
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bats
 
     - name: Run Bats tests
       run: |
-        docker run --rm -v "$PWD:/app" ghcr.io/stephane-segning/bats-docker:ubuntu-latest bats /app/scripts/tests/test-script.bats
+        bats scripts/tests/test-script.bats

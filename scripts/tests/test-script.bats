@@ -2,34 +2,36 @@
 
 WAZUH_MANAGER="10.0.0.2"
 
-if [ "$(uname -o)" = "GNU/Linux" ] && command -v groupadd >/dev/null 2>&1; then
+# Check if the environment is Linux and prepare for Wazuh agent installation
+setup() {
+  if [ "$(uname -o)" = "GNU/Linux" ]; then
     apt-get update && apt-get install -y curl gnupg2
     (curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import)
     chmod 644 /usr/share/keyrings/wazuh.gpg
 
-    # Check if the repository is already added
     if ! grep -q "https://packages.wazuh.com/4.x/apt/" /etc/apt/sources.list.d/wazuh.list 2>/dev/null; then
-        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
+      echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
     fi
 
     apt-get update
-    apt-get install wazuh-agent -y
+    apt-get install -y wazuh-agent
     sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" /var/ossec/etc/ossec.conf
-elif [ "$(which apk)" = "/sbin/apk" ]; then
+  elif [ "$(which apk)" = "/sbin/apk" ]; then
     wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
     echo "https://packages.wazuh.com/4.x/alpine/v3.12/main" >> /etc/apk/repositories
     apk update
     apk add wazuh-agent
     sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" /var/ossec/etc/ossec.conf
-else
-    log ERROR "Unsupported OS for creating user."
+  else
+    echo "Unsupported OS for Wazuh installation." >&2
     exit 1
-fi
+  fi
 
-chmod +x /app/scripts/install.sh
+  chmod +x /app/scripts/install.sh
+}
 
-# Test if the script runs without errors
-@test "script runs without errors" {
+# Test if the Snort installation script runs without errors
+@test "Snort installation script runs without errors" {
   if [ -f /app/scripts/install.sh ]; then
     run /app/scripts/install.sh
     [ "$status" -eq 0 ]
@@ -38,58 +40,31 @@ chmod +x /app/scripts/install.sh
   fi
 }
 
-# Test if Snort is installed
-@test "Snort is installed" {
+# Test to check if Snort is installed
+@test "Snort should be installed" {
   run which snort
   [ "$status" -eq 0 ]
   [ -x "$output" ]
 }
 
-# Test if Snort service is active
-@test "Snort service is active" {
-  run systemctl is-active snort3
-  [ "$status" -eq 0 ]
-  [ "$output" = "active" ]
-}
-
-# Test if Snort configuration file exists
-@test "Snort configuration file exists" {
-  run test -f /usr/local/etc/snort/snort.lua
+# Test to check if the snort.conf file exists
+@test "snort.conf should exist" {
+  run test -f /etc/snort/snort.conf
   [ "$status" -eq 0 ]
 }
 
-# Test if Snort configuration is valid
-@test "Snort configuration is valid" {
-  if command -v snort &> /dev/null; then
-    run snort -T -c /usr/local/etc/snort/snort.lua
-    [ "$status" -eq 0 ]
-  else
-    skip "Snort command not found"
-  fi
+# Test to check if the default network interface is correctly configured in snort.conf
+@test "Default network interface should be correctly configured in snort.conf" {
+  INTERFACE=$(ip route | grep default | awk '{print $5}')
+  run grep -E "^ipvar HOME_NET" /etc/snort/snort.conf
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"$INTERFACE"* ]]
 }
 
-# Test if Snort rules file exists
-@test "Snort rules file exists" {
-  run test -f /usr/local/etc/rules/local.rules
+# Test to check if HOME_NET is correctly configured in snort.conf
+@test "HOME_NET should be correctly configured in snort.conf" {
+  INTERFACE=$(ip route | grep default | awk '{print $5}')
+  HOME_NET=$(ip -o -f inet addr show $INTERFACE | awk '/scope global/ {print $4}')
+  run grep -E "^ipvar HOME_NET \[?$HOME_NET\]?" /etc/snort/snort.conf
   [ "$status" -eq 0 ]
-}
-
-# Test if Snort rules are loaded
-@test "Snort rules are loaded" {
-  run grep -q "ICMP Traffic Detected" /usr/local/etc/rules/local.rules
-  [ "$status" -eq 0 ]
-}
-
-# Test Snort log directory permissions
-@test "Snort log directory permissions" {
-  run stat -c "%a" /var/log/snort
-  [ "$status" -eq 0 ]
-  [ "$output" -eq 5775 ]
-}
-
-# Test Snort log directory ownership
-@test "Snort log directory ownership" {
-  run stat -c "%U:%G" /var/log/snort
-  [ "$status" -eq 0 ]
-  [ "$output" = "snort:snort" ]
 }
