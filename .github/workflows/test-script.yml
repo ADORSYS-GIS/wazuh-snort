@@ -25,9 +25,6 @@ jobs:
 
     - name: Verify BATS installation
       run: which bats
-
-    - name: Verify BATS installation
-      run: which bats
             
     - name: Make test script executable
       run: chmod +x scripts/tests/test-script.bats
