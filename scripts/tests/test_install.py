@@ -46,6 +46,7 @@ def test_configure_snort_homenet(host):
     interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
     homenet = host.run(f"ip -4 addr show {interface} | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'").stdout.strip()
 
+
     snort_conf = host.file("/etc/snort/snort.conf")
     if not snort_conf.exists:
         # Create snort.conf with minimal configuration
@@ -61,11 +62,11 @@ def test_update_ossec_conf_linux(host):
     """Test if ossec.conf is updated on Linux."""
     ossec_conf_path = "/var/ossec/etc/ossec.conf"
     expected_content = """
-    <!-- snort -->
-    <localfile>
-        <log_format>snort-full</log_format>
-        <location>/var/log/snort/snort.alert.fast</location>
-    """
+        <!-- snort -->
+        <localfile>
+            <log_format>snort-full</log_format>
+            <location>/var/log/snort/snort.alert.fast</location>
+        """
 
     ossec_conf = host.file(ossec_conf_path)
     assert (
