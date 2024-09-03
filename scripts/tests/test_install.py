@@ -41,22 +41,15 @@ def test_snort_default_interface_configured(host):
     ), f"Interface {interface.name} should be configured in snort.conf"
 
 
-def test_configure_snort_homenet(host):
-    """Test if Snort is configured to set HomeNet."""
-    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
-    homenet = host.run(f"ip -4 addr show {interface} | grep -oP r'(?<=inet\s)\d+(\.\d+){3}'").stdout.strip()
-
-
-
+def test_snort_homenet_configuration(host):
+    """Test if Snort is configured with the correct homenet."""
+    interface = host.interface.default()
     snort_conf = host.file("/etc/snort/snort.conf")
-    if not snort_conf.exists:
-        # Create snort.conf with minimal configuration
-        expected_content = f"ipvar HOME_NET {homenet}/24"
-    else:
-        # Update existing snort.conf
-        expected_content = f"ipvar HOME_NET {homenet}/24"
+    homenet = host.run("ip -4 addr show {} | grep -oP '(?<=inet\s)\d+(\.\d+){3}'".format(interface.name)).stdout.strip()
 
-    assert expected_content.strip() in snort_conf.content_string.strip(), "Snort should be configured to set HomeNet"
+    assert (
+        "ipvar HOME_NET {}/24".format(homenet) in snort_conf.content_string
+    ), "Snort should be configured with the correct homenet"
 
 
 def test_update_ossec_conf_linux(host):
