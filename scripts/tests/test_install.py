@@ -32,32 +32,23 @@ def test_snort_conf_file_exists(host):
     assert snort_conf.exists, "snort.conf file should exist"
 
 
-def test_snort_default_interface_configured(host):
-    """Test if the default network interface is correctly configured in snort.conf."""
-    interface = host.interface.default()
-    snort_conf = host.file("/etc/snort/snort.conf")
-    assert (
-        interface.name in snort_conf.content_string
-    ), f"Interface {interface.name} should be configured in snort.conf"
+def test_default_network_interface(host):
+    # Check if the default network interface is correctly identified
+    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
+    assert interface != ""  # Ensure an interface is found
 
+def test_home_network_ip(host):
+    # Check if the HOME_NET is correctly set in the configuration file
+    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
+    homenet = host.run(f"ip -4 addr show {interface} | grep -oP '(?<=inet\s)\d+(\.\d+){3}'").stdout.strip()
+    conf_file = host.file("/etc/snort/snort.conf")
+    assert conf_file.contains(f"ipvar HOME_NET {homenet}/24")
 
-def test_snort_homenet_configuration(host):
-    """Test if Snort is configured with the correct HomeNet."""
-    interface = host.interface.default()
-    snort_conf = host.file("/etc/snort/snort.conf")
-    homenet_command = f"ip -4 addr show {interface.name} | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'"
-    homenet = host.run(homenet_command).stdout.strip()
-
-    if not snort_conf.exists:
-        # Create snort.conf with minimal configuration
-        expected_content = f"ipvar HOME_NET {homenet}/24"
-    else:
-        # Update existing snort.conf
-        expected_content = f"ipvar HOME_NET {homenet}/24"
-
-    assert expected_content.strip() in snort_conf.content_string.strip(), "Snort should be configured to set HomeNet"
-
-
+def test_snort_configuration_file(host):
+    # Verify the Snort configuration file contains the correct settings
+    conf_file = host.file("/etc/snort/snort.conf")
+    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
+    assert conf_file.contains(f"config interface: {interface}")
 
 def test_update_ossec_conf_linux(host):
     """Test if ossec.conf is updated on Linux."""
@@ -73,3 +64,7 @@ def test_update_ossec_conf_linux(host):
     assert (
         expected_content.strip() in ossec_conf.content_string.strip()
     ), "ossec.conf should be updated on Linux"
+
+
+
+    
