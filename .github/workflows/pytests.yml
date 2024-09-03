@@ -1,5 +1,3 @@
-name: Run Tests
-
 on: [push, pull_request]
 
 jobs:
@@ -32,6 +30,6 @@ jobs:
       run: |
         sudo bash scripts/install.sh
 
-    - name: Run tests
+    - name: Run tests with elevated permissions
       run: |
         sudo pytest scripts/tests/test_install.py
