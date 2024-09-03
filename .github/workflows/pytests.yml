@@ -32,6 +32,6 @@ jobs:
       run: |
         sudo bash scripts/install.sh
 
-    - name: Run tests with elevated permissions
+    - name: Run tests 
       run: |
         sudo $(which pytest) scripts/tests/test_install.py
