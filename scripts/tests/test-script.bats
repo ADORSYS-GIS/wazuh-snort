@@ -13,7 +13,7 @@ if [ "$(uname -o)" = "GNU/Linux" ] && command -v groupadd >/dev/null 2>&1; then
     fi
 
     apt-get update
-    apt-get install wazuh-agent -y
+    apt-get install wazuh-agent iproute2 -y 
     sed -i "s|MANAGER_IP|$WAZUH_MANAGER|g" /var/ossec/etc/ossec.conf
 elif [ "$(which apk)" = "/sbin/apk" ]; then
     wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub
