@@ -1,9 +1,6 @@
 import pytest
 import testinfra
 
-WAZUH_MANAGER = "10.0.0.2"
-OSSEC_CONF_PATH = "/var/ossec/etc/ossec.conf"
-
 @pytest.fixture(scope="module")
 def install_dependencies(host):
     """Install dependencies and run the install script."""
@@ -12,25 +9,13 @@ def install_dependencies(host):
     if os in ["ubuntu", "debian"]:
         host.run("apt-get update")
         host.run("apt-get install -y curl gnupg2 iproute2")
-        host.run("curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import")
-        host.run("chmod 644 /usr/share/keyrings/wazuh.gpg")
-        
-        if not host.file("/etc/apt/sources.list.d/wazuh.list").exists:
-            host.run("echo 'deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main' | tee /etc/apt/sources.list.d/wazuh.list")
-        
-        host.run("apt-get update")
-        host.run("apt-get install -y wazuh-agent")
-        host.run(f"sed -i 's|MANAGER_IP|{WAZUH_MANAGER}|g' {OSSEC_CONF_PATH}")
 
     elif os == "alpine":
-        host.run("wget -O /etc/apk/keys/alpine-devel@wazuh.com-633d7457.rsa.pub https://packages.wazuh.com/key/alpine-devel%40wazuh.com-633d7457.rsa.pub")
-        host.run("echo 'https://packages.wazuh.com/4.x/alpine/v3.12/main' | tee /etc/apk/repositories")
         host.run("apk update")
-        host.run("apk add wazuh-agent")
-        host.run(f"sed -i 's|MANAGER_IP|{WAZUH_MANAGER}|g' {OSSEC_CONF_PATH}")
+        host.run("apk add curl gnupg2 iproute2")
 
     else:
-        pytest.fail("Unsupported OS for Wazuh installation")
+        pytest.fail("Unsupported OS for dependency installation")
 
 @pytest.mark.usefixtures("install_dependencies")
 def test_snort_is_installed(host):
