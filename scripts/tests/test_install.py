@@ -47,7 +47,7 @@ def test_home_network_ip(host):
     assert conf_file.contains(f"ipvar HOME_NET {homenet}/24")
 
 def test_snort_configuration_file(host):
-    # Verify the Snort configuration file contains the correct settings
+    """Verify the Snort configuration file contains the correct settings."""
     conf_file = host.file("/etc/snort/snort.conf")
     interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
     print(f"Network Interface: {interface}")
