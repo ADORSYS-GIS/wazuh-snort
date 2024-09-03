@@ -44,7 +44,8 @@ def test_snort_default_interface_configured(host):
     def test_configure_snort_homenet(host):
         """Test if Snort is configured to set HomeNet."""
         interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
-        homenet = host.run(f"ip -4 addr show {interface} | grep -oP '(?<=inet\s)\d+(\.\d+){3}'").stdout.strip()
+        homenet = host.run(f"ip -4 addr show {interface} | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'").stdout.strip()
+
 
         snort_conf = host.file("/etc/snort/snort.conf")
         if not snort_conf.exists:
