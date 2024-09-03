@@ -30,7 +30,7 @@ chmod +x /app/scripts/install.sh
 
 # Setup: Run the install.sh script before tests
 setup() {
-  sudo bash /app/scripts/install.sh
+  bash /app/scripts/install.sh
 }
 
 # Test if Snort is installed
