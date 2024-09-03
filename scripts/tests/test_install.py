@@ -37,9 +37,9 @@ def test_snort_default_interface_configured(host):
 def test_home_net_configured_in_snort(host):
     """Test if HOME_NET is correctly configured in snort.conf."""
     interface = host.interface("default")
-    home_net = host.check_output(f"ip -o -f inet addr show {interface.name} | awk '/scope global/ {{print $4}}'")
+    home_net = host.check_output(f"ip -4 addr show {interface.name} | grep -oP '(?<=inet\s)\d+(\.\d+){3}'")
     snort_conf = host.file("/etc/snort/snort.conf")
-    assert f"ipvar HOME_NET [{home_net}]" in snort_conf.content_string, f"HOME_NET should be configured as {home_net} in snort.conf"
+    assert f"ipvar HOME_NET {home_net}/24" in snort_conf.content_string, f"HOME_NET should be configured as {home_net}/24 in snort.conf"
 
 def test_ossec_conf_updated_with_snort(host):
     """Test if ossec.conf is updated with Snort logging configuration."""
