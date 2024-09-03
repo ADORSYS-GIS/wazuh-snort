@@ -1,4 +1,5 @@
 import pytest
+import testinfra
 
 WAZUH_MANAGER = "10.0.0.2"
 OSSEC_CONF_PATH = "/var/ossec/etc/ossec.conf"
