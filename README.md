@@ -3,6 +3,21 @@
 # Wazuh Snort 
 This repository contains several resources for installing and configuring Snort, as well as its integration with Wazuh. Here is a detailed description of each item:
 
+
+# Overview
+**Wazuh snort**  is a project focused on integrating Snort with Wazuh to improve network security monitoring and threat detection. By combining Snort's network intrusion detection capabilities with Wazuh’s host-based security monitoring, this integration enhances overall security visibility and response.
+
+## Features
+- **Network Intrusion Detection**: Monitors network traffic for suspicious activity and potential threats.
+- **Signature-Based Detection**: Uses predefined rules (signatures) to identify known threats and malicious activities.
+- **Protocol Analysis**: Inspects and analyzes network protocols to detect anomalies and unauthorized activities.
+- **Real-Time Alerting**: Provides real-time alerts and notifications for detected threats and suspicious behavior.
+- **Customizable Rules**: Allows users to create and customize detection rules based on specific network environments and security needs.
+
+## Supported Operating Systems
+- **Ubuntu**
+- **macOS**
+
 ## Directory Contents
 
 - `Dockerfile`: A Docker file to create a Docker image.
@@ -10,6 +25,16 @@ This repository contains several resources for installing and configuring Snort,
 - `README.md`: This file provides general information about the project.
 - `rules`: This folder contains the rules for configuring Snort.
 - `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions.
+
+## Getting Started
+### Prerequisites
+- Wazuh Agent installed on endpoints
+
+### Installation
+Install using this command:
+   ```bash
+   sudo  curl -SL --progress-bar https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | sh
+   ```
 
 ## Description
 
