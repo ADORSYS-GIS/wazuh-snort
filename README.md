@@ -33,7 +33,10 @@ This repository contains several resources for installing and configuring Snort,
 ### Installation
 Install using this command:
    ```bash
-   sudo  curl -SL --progress-bar https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | sh
+   curl -SL --progress-bar https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/develop/scripts/install.sh -o install.sh
+chmod +x install.sh
+sudo ./install.sh
+
    ```
 
 ## Description
