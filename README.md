@@ -1,7 +1,22 @@
-![Workflow Status](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)
+[![Build Snort3 Docker Multi Arch](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)[![Run Pytest](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml)
 
 # Wazuh Snort 
 This repository contains several resources for installing and configuring Snort, as well as its integration with Wazuh. Here is a detailed description of each item:
+
+
+# Overview
+**Wazuh snort**  is a project focused on integrating Snort with Wazuh to improve network security monitoring and threat detection. By combining Snort's network intrusion detection capabilities with Wazuh’s host-based security monitoring, this integration enhances overall security visibility and response.
+
+## Features
+- **Network Intrusion Detection**: Monitors network traffic for suspicious activity and potential threats.
+- **Signature-Based Detection**: Uses predefined rules (signatures) to identify known threats and malicious activities.
+- **Protocol Analysis**: Inspects and analyzes network protocols to detect anomalies and unauthorized activities.
+- **Real-Time Alerting**: Provides real-time alerts and notifications for detected threats and suspicious behavior.
+- **Customizable Rules**: Allows users to create and customize detection rules based on specific network environments and security needs.
+
+## Supported Operating Systems
+- **Ubuntu**
+- **macOS**
 
 ## Directory Contents
 
@@ -10,6 +25,20 @@ This repository contains several resources for installing and configuring Snort,
 - `README.md`: This file provides general information about the project.
 - `rules`: This folder contains the rules for configuring Snort.
 - `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions.
+- `scripts/tests`: Additionally, for details on testing with Pytest, see [scripts/tests/README.md](scripts/tests/README.md)
+
+## Getting Started
+### Prerequisites
+- Wazuh Agent installed on endpoints
+
+### Installation
+Install using this command:
+   ```bash
+   curl -SL --progress-bar https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh -o install.sh
+chmod +x install.sh
+sudo ./install.sh
+
+   ```
 
 ## Description
 
@@ -19,4 +48,29 @@ This repository contains several resources for installing and configuring Snort,
 
 3. **Integration with Wazuh**: This repository also contains the necessary configurations for integrating Snort with Wazuh, an open-source security tool for intrusion detection, endpoint security, and compliance monitoring.
 
-For more information on using these resources, please refer to the specific instructions in each folder.
+## Snort 3 Build and Packaging
+
+This repository automates the process of building and packaging Snort 3 for `amd64` and `arm64` architectures using GitHub Actions.
+
+### Objective
+
+The goal of this project is to simplify the Snort 3 build and packaging process. By leveraging GitHub Actions, you can automatically generate `.deb` packages for Snort 3, eliminating the need for manual builds.
+
+### How to Use
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/ADORSYS-GIS/wazuh-snort.git
+   cd wazuh-snort
+   ```
+
+2. **Trigger a Build:**
+   - Push changes to the `main` branch or open a pull request to automatically trigger the build and packaging process.
+
+3. **Retrieve the Packages:**
+   - After the build completes, download the generated `.deb` packages from the corresponding GitHub Release.
+
+## License
+
+This project is licensed under the MIT License.
+
