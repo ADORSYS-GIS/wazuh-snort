@@ -1,6 +1,6 @@
 import pytest
 import testinfra
-import subprocess
+
 
 
 @pytest.fixture(scope="module")
@@ -33,28 +33,13 @@ def test_snort_conf_file_exists(host):
     assert snort_conf.exists, "snort.conf file should exist"
 
 
-def test_default_network_interface(host):
-    # Check if the default network interface is correctly identified
-    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
-    assert interface != ""  # Ensure an interface is found
-    print("Default network interface:", interface)
-
-
-
 def test_snort_interface_configuration(host):
-    # Read the interface value from the snort configuration file
-    snort_config = host.file("/etc/snort/snort.debian.conf").content_string
-    interface_line = [line for line in snort_config.split('\n') if line.startswith('DEBIAN_SNORT_INTERFACE=')]
+    # Retrieve the default network interface
+    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
     
-    # Ensure the interface line is found
-    assert len(interface_line) == 1
-    
-    # Extract the interface value
-    interface_value = interface_line[0].split('=')[1].strip().strip('"')
-    
-    # Check if the interface value is not empty
-    assert interface_value != ""
-
+    # Check if the interface is present in the snort.debian.conf file
+    snort_conf = host.file("/etc/snort/snort.debian.conf")
+    assert interface in snort_conf.content_string, "Interface should be present in snort.debian.conf"
 
 
 
