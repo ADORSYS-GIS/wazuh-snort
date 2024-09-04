@@ -99,7 +99,6 @@ install_snort_linux() {
 
     # Get the default network interface
     INTERFACE=$(ip route | grep default | awk '{print $5}')
-    HOMENET=$(ip -4 addr show $INTERFACE | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
     # Function to install Snort on Linux
     install_snort_apt() {
@@ -114,17 +113,15 @@ install_snort_linux() {
     configure_snort_interface_and_homenet() {
         if [ ! -f /etc/snort/snort.conf ]; then
             # Create snort.conf with minimal configuration
-            echo "ipvar HOME_NET $HOMENET/24" | sudo tee /etc/snort/snort.conf
             echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
         else
             # Update existing snort.conf
-            maybe_sudo sed -i "s/^ipvar HOME_NET .*/ipvar HOME_NET $HOMENET\/24/" /etc/snort/snort.conf
             maybe_sudo sed -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
         fi
     }
 
     # Run the configuration function
-    configure_snort_interface_and_homenet
+    configure_snort_interface
 
     # Restart Snort service
     maybe_sudo systemctl restart snort || {
