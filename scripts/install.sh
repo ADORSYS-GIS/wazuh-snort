@@ -46,16 +46,16 @@ print_step() {
     log "${BLUE}${BOLD}[STEP]${NORMAL}" "$1: $2"
 }
 
+# Determine OS-specific paths
 OS_NAME=$(uname)
-if [ "$OS_NAME" = "Linux" ]; then
+if [[ $OS_NAME == "Linux" ]]; then
     OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
-elif [ "$OS_NAME" = "Darwin" ]; then
+elif [[ $OS_NAME == "Darwin" ]]; then
     OSSEC_CONF_PATH="/Library/Ossec/etc/ossec.conf"
 else
-    echo "Unsupported operating system."
+    error_message "Unsupported operating system."
     exit 1
 fi
-
 
 # Function to create necessary directories and files for Snort
 create_snort_dirs_files() {
