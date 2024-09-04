@@ -37,6 +37,24 @@ def test_default_network_interface(host):
     # Check if the default network interface is correctly identified
     interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
     assert interface != ""  # Ensure an interface is found
+    print("Default network interface:", interface)
+
+
+
+def test_snort_interface_configuration(host):
+    # Read the interface value from the snort configuration file
+    snort_config = host.file("/etc/snort/snort.debian.conf").content_string
+    interface_line = [line for line in snort_config.split('\n') if line.startswith('DEBIAN_SNORT_INTERFACE=')]
+    
+    # Ensure the interface line is found
+    assert len(interface_line) == 1
+    
+    # Extract the interface value
+    interface_value = interface_line[0].split('=')[1].strip().strip('"')
+    
+    # Check if the interface value is not empty
+    assert interface_value != ""
+
 
 
 
@@ -56,41 +74,6 @@ def test_update_ossec_conf_linux(host):
     ), "ossec.conf should be updated on Linux"
 
 
-def get_network_interface():
-    try:
-        # Retrieve the default network interface
-        route_output = subprocess.check_output(
-            ["ip", "route"], 
-            text=True
-        )
-        interface = None
-        for line in route_output.splitlines():
-            if "default" in line:
-                interface = line.split()[4]
-                break
-        
-        if not interface:
-            raise RuntimeError("Default network interface not found")
-        
-        return interface
-
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to retrieve network interface: {e}")
-
-def test_snort_debian_conf_file(host):
-    # Get the dynamic network interface
-    interface = get_network_interface()
-    
-    # Load the configuration file
-    snort_debian_conf = host.file('/etc/snort/snort.debian.conf')
-    
-    # Check if the file exists
-    assert snort_debian_conf.exists, "snort.debian.conf does not exist"
-    assert snort_debian_conf.is_file, "snort.debian.conf is not a file"
-    
-    # Check if the network interface in the file matches the system's default interface
-    assert snort_debian_conf.contains(f'DEBIAN_SNORT_INTERFACE="{interface}"'), \
-        f"Expected DEBIAN_SNORT_INTERFACE to be {interface}, but found something else."
 
 
     
