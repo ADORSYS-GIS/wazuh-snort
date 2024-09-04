@@ -1,7 +1,6 @@
 import pytest
 import testinfra
 
-
 @pytest.fixture(scope="module")
 def install_dependencies(host):
     """Install dependencies and run the install script."""
@@ -32,11 +31,33 @@ def test_snort_conf_file_exists(host):
     assert snort_conf.exists, "snort.conf file should exist"
 
 
-def test_default_network_interface(host):
-    # Check if the default network interface is correctly identified
-    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
-    assert interface != ""  # Ensure an interface is found
+@pytest.fixture
+def host_interface_and_homenet(host):
+    # Récupérer l'interface réseau par défaut
+    interface = host.check_output("ip route | grep default | awk '{print $5}'")
+    
+    # Récupérer l'adresse IP associée à cette interface pour HOMENET
+    homenet = host.check_output(f"ip -4 addr show {interface} | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'")
+    
+    return interface, homenet
 
+
+def test_home_net_defined(snort_conf, host_interface_and_homenet):
+    """Test if HOME_NET is correctly defined in snort.conf."""
+    _, homenet = host_interface_and_homenet
+    assert snort_conf.contains(f"var HOME_NET {homenet}"), f"HOME_NET {homenet} n'est pas défini correctement dans snort.conf"
+
+
+def test_interface_defined(snort_conf, host_interface_and_homenet):
+    """Test if the network interface is correctly defined in snort.conf."""
+    interface, _ = host_interface_and_homenet
+    assert snort_conf.contains(f"interface: {interface}"), f"L'interface réseau {interface} n'est pas définie correctement dans snort.conf"
+
+
+def test_default_network_interface(host):
+    """Check if the default network interface is correctly identified."""
+    interface = host.run("ip route | grep default | awk '{print $5}'").stdout.strip()
+    assert interface != "", "A network interface should be found"
 
 
 def test_update_ossec_conf_linux(host):
@@ -54,6 +75,7 @@ def test_update_ossec_conf_linux(host):
         expected_content.strip() in ossec_conf.content_string.strip()
     ), "ossec.conf should be updated on Linux"
 
+@pytest.fixture
+def snort_conf(host):
+    return host.file("/etc/snort/snort.conf")
 
-
-    
