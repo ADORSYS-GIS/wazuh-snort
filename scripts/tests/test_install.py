@@ -1,5 +1,6 @@
 import pytest
 import testinfra
+import subprocess
 
 
 @pytest.fixture(scope="module")
