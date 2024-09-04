@@ -30,4 +30,4 @@ jobs:
 
     - name: Run tests 
       run: |
-        sudo $(which pytest) scripts/tests/test_install.py
+        sudo $(which pytest) -s scripts/tests/test_install.py
