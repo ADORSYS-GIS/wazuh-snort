@@ -230,7 +230,7 @@ install_snort() {
         darwin*)
             install_snort_macos
             ;;
-        linux-gnu*)
+        linux*)
             install_snort_linux
             ;;
         *)
