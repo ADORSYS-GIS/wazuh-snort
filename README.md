@@ -24,7 +24,7 @@ This repository contains several resources for installing and configuring Snort,
 - `helm`: This folder contains a Helm chart for installing Snort in DaemonSet mode in a Kubernetes cluster and monitoring it.
 - `README.md`: This file provides general information about the project.
 - `rules`: This folder contains the rules for configuring Snort.
-- `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions.
+- `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions, Additionally, for details on testing with Pytest, see [scripts/tests/README.md](scripts/tests/README.md).
 
 ## Getting Started
 ### Prerequisites
