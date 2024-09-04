@@ -129,7 +129,7 @@ install_snort_linux() {
     }
 
     configure_snort_linux
-    #update_ossec_conf_linux
+    update_ossec_conf_linux
     start_snort_linux
 }
 
