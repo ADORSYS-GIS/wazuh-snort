@@ -22,7 +22,7 @@ def install_dependencies(host):
 
 def test_install_script(host):
     """Test if the install script is executed successfully."""
-    result = host.run("sudo bash scripts/install.sh")
+    result = host.run("sudo bash scripts/install.sh", sudo=True)
     assert result.rc == 0, "Install script should execute successfully"
 
 
