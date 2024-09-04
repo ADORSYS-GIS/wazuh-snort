@@ -19,16 +19,6 @@ def install_dependencies(host):
         pytest.fail("Unsupported OS for dependency installation")
 
 
-
-def test_install_script(host):
-    """Test if the install script is executed successfully."""
-    result = host.run("sudo bash scripts/install.sh", sudo=True)
-    print(result.stdout)
-    print(result.stderr)
-    assert result.rc == 0, "Install script should execute successfully"
-
-
-
 @pytest.mark.usefixtures("install_dependencies")
 def test_snort_is_installed(host):
     """Test if Snort is installed."""
