@@ -55,5 +55,41 @@ def test_update_ossec_conf_linux(host):
     ), "ossec.conf should be updated on Linux"
 
 
+def get_network_interface():
+    try:
+        # Retrieve the default network interface
+        route_output = subprocess.check_output(
+            ["ip", "route"], 
+            text=True
+        )
+        interface = None
+        for line in route_output.splitlines():
+            if "default" in line:
+                interface = line.split()[4]
+                break
+        
+        if not interface:
+            raise RuntimeError("Default network interface not found")
+        
+        return interface
+
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to retrieve network interface: {e}")
+
+def test_snort_debian_conf_file(host):
+    # Get the dynamic network interface
+    interface = get_network_interface()
+    
+    # Load the configuration file
+    snort_debian_conf = host.file('/etc/snort/snort.debian.conf')
+    
+    # Check if the file exists
+    assert snort_debian_conf.exists, "snort.debian.conf does not exist"
+    assert snort_debian_conf.is_file, "snort.debian.conf is not a file"
+    
+    # Check if the network interface in the file matches the system's default interface
+    assert snort_debian_conf.contains(f'DEBIAN_SNORT_INTERFACE="{interface}"'), \
+        f"Expected DEBIAN_SNORT_INTERFACE to be {interface}, but found something else."
+
 
     
