@@ -110,7 +110,7 @@ install_snort_linux() {
     install_snort_apt
 
     # Function to configure Snort to use the main network interface and set HomeNet
-    configure_snort_interface_and_homenet() {
+    configure_snort_interface() {
         if [ ! -f /etc/snort/snort.conf ]; then
             # Create snort.conf with minimal configuration
             echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
@@ -129,7 +129,7 @@ install_snort_linux() {
     }
 
     configure_snort_linux
-    update_ossec_conf_linux
+    #update_ossec_conf_linux
     start_snort_linux
 }
 
