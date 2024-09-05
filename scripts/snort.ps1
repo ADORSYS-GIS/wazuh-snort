@@ -1,3 +1,4 @@
+# Function to install Snort
 function Install-Snort {
     # Define paths and URLs
     $tempDir = "C:\Temp"
@@ -5,8 +6,6 @@ function Install-Snort {
     $snortInstallerPath = "$tempDir\Snort_Installer.exe"
     $npcapInstallerUrl = "https://npcap.com/dist/npcap-1.79.exe"
     $npcapInstallerPath = "$tempDir\Npcap_Installer.exe"
-    $winpcapInstallerUrl = "https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe"
-    $winpcapInstallerPath = "$tempDir\WinPcap_Installer.exe"
     $snortBinPath = "C:\Snort\bin"
     $npcapPath = "C:\Program Files\Npcap"
     $rulesDir = "C:\Snort\rules"
@@ -22,7 +21,7 @@ function Install-Snort {
     # Function to download a file
     function Download-File($url, $outputPath) {
         try {
-            curl.exe -L -Uri $url -OutFile $outputPath
+            curl.exe -L $url -o $outputPath
             Write-Host "Downloaded $url to $outputPath"
         } catch {
             Write-Host "Failed to download $url"
@@ -33,10 +32,6 @@ function Install-Snort {
     # Download and install Snort
     Download-File $snortInstallerUrl $snortInstallerPath
     Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
-
-    # Download and install WinPcap
-    Download-File $winpcapInstallerUrl $winpcapInstallerPath
-    Start-Process -FilePath $winpcapInstallerPath -ArgumentList "/S" -Wait
 
     # Download Npcap (manual installation required)
     Download-File $npcapInstallerUrl $npcapInstallerPath
@@ -58,14 +53,12 @@ function Install-Snort {
         'alert tcp any any -> any 80 (msg:"HTTP traffic detected"; sid:1000020; rev:1;)',
         'alert tcp any any -> any 22 (msg:"SSH traffic detected"; sid:1000030; rev:1;)',
         'alert tcp any any -> any 21 (msg:"FTP traffic detected"; sid:1000040; rev:1;)',
-        'alert tcp any any -> any 25 (msg:"SMTP traffic detected"; sid:1000050; rev:1;)',
-        'alert icmp any any -> any any (msg:"ICMP Testing Rule"; sid:1000001; rev:1;)',
-        'alert tcp any any -> any 80 (msg:"TCP Testing Rule"; sid:1000002; rev:1;)',
-        'alert udp any any -> any any (msg:"UDP Testing Rule"; sid:1000003; rev:1;)'
+        'alert tcp any any -> any 25 (msg:"SMTP traffic detected"; sid:1000050; rev:1;)'
+        # Add more rules here...
     )
 
-    # Write the rules to the file, ensuring correct encoding
-    $rules | Set-Content -Path $rulesFile -Encoding UTF8
+    # Write the rules to the file
+    $rules | Set-Content -Path $rulesFile Encoding UTF8
 
     # Add Snort configuration to ossec.conf
     $snortConfig = @"
@@ -78,8 +71,7 @@ function Install-Snort {
 
     if (Test-Path $ossecConfigPath) {
         $ossecConfigContent = Get-Content $ossecConfigPath
-        $ossecConfigContent = $ossecConfigContent -replace "</ossec_config>", "$snortConfig</ossec_config>"
-        Set-Content -Path $ossecConfigPath -Value $ossecConfigContent
+        $ossecConfigContent -replace "</ossec_config>", "$snortConfig</ossec_config>" | Set-Content $ossecConfigPath
         Write-Host "Snort configuration added to ossec.conf."
     } else {
         Write-Host "ossec.conf file not found."
@@ -89,17 +81,7 @@ function Install-Snort {
     $snortAdditions = @"
 output alert_syslog: LOG_AUTH LOG_ALERT
 output alert_fast: snort.alert
-config logdir: C:\Snort\log
-var RULE_PATH C:\Snort\rules
-var PREPROC_RULE_PATH C:\Snort\preproc_rules
-var WHITE_LIST_PATH C:\Snort\rules
-var BLACK_LIST_PATH C:\Snort\rules
-dynamicpreprocessor directory C:\Snort\lib\snort_dynamicpreprocessor
-dynamicengine C:\Snort\lib\snort_dynamicengine\sf_engine.dll
-preprocessor sfportscan: proto { all } memcap { 10000000 } sense_level { low }
-include \$PREPROC_RULE_PATH\preprocessor.rules
-include \$PREPROC_RULE_PATH\decoder.rules
-include \$PREPROC_RULE_PATH\sensitive-data.rules
+
 "@
 
     if (Test-Path $snortConfigPath) {
