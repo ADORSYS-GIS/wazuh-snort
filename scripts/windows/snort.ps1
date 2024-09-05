@@ -58,7 +58,7 @@ function Install-Snort {
     )
 
     # Write the rules to the file
-    $rules | Out-File -FilePath $rulesFile -Encoding UTF8
+    $rules | Out-File -FilePath $rulesFile
 
     # Add Snort configuration to ossec.conf
     $snortConfig = @"
