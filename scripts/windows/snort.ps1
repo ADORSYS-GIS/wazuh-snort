@@ -89,7 +89,8 @@ function Install-Snort {
     } else {
         Write-Host "Failed to download snort.conf file."
     }
-
+    #delete temp directory
+    Remove-Item -Path $tempDir -Recurse -Force
 
     Write-Host "Installation and configuration completed!"
 }
