@@ -77,6 +77,19 @@ function Install-Snort {
         Write-Host "ossec.conf file not found."
     }
 
+    # Download the new snort.conf file
+    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/snort.conf"
+    $snortConfPath = "$tempDir\snort.conf"
+    Download-File $snortConfUrl $snortConfPath
+
+    # Replace the existing snort.conf file
+    if (Test-Path $snortConfPath) {
+        Copy-Item -Path $snortConfPath -Destination $snortConfigPath -Force
+        Write-Host "snort.conf file replaced."
+    } else {
+        Write-Host "Failed to download snort.conf file."
+    }
+
     # Add configurations to snort.conf
     $snortAdditions = @"
 output alert_syslog: LOG_AUTH LOG_ALERT
