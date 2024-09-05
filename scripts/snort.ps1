@@ -21,7 +21,7 @@ function Install-Snort {
     # Function to download a file
     function Download-File($url, $outputPath) {
         try {
-            curl.exe -L $url -o $outputPath
+            Invoke-WebRequest $url -o $outputPath
             Write-Host "Downloaded $url to $outputPath"
         } catch {
             Write-Host "Failed to download $url"
