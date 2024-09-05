@@ -90,6 +90,11 @@ output alert_fast: snort.alert
     } else {
         Write-Host "snort.conf file not found."
     }
+    # Retrieve the default network interface
+    $defaultInterface = (Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Where-Object {$_.InterfaceIndex -ne 0}).InterfaceAlias
+
+    # Launch Snort with the default network interface
+    Start-Process -FilePath "C:\Snort\bin\snort.exe" -ArgumentList "-i $defaultInterface -A fast" -Wait
 
     Write-Host "Installation and configuration completed!"
 }
