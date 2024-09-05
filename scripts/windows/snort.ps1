@@ -47,18 +47,18 @@ function Install-Snort {
         New-Item -ItemType Directory -Force -Path $rulesDir
     }
 
-    # Define the rules
-    $rules = @(
-        'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)',
-        'alert tcp any any -> any 80 (msg:"HTTP traffic detected"; sid:1000020; rev:1;)',
-        'alert tcp any any -> any 22 (msg:"SSH traffic detected"; sid:1000030; rev:1;)',
-        'alert tcp any any -> any 21 (msg:"FTP traffic detected"; sid:1000040; rev:1;)',
-        'alert tcp any any -> any 25 (msg:"SMTP traffic detected"; sid:1000050; rev:1;)'
-        # Add more rules here...
-    )
+    # Download the local.rules file
+    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/local.rules"
+    $localRulesPath = "$tempDir\local.rules"
+    Download-File $localRulesUrl $localRulesPath
 
-    # Write the rules to the file
-    $rules | Out-File -FilePath $rulesFile -Encoding UTF8
+    # Replace the existing local.rules file
+    if (Test-Path $localRulesPath) {
+        Copy-Item -Path $localRulesPath -Destination $rulesFile -Force
+        Write-Host "local.rules file replaced."
+    } else {
+        Write-Host "Failed to download local.rules file."
+    }
 
     # Add Snort configuration to ossec.conf
     $snortConfig = @"
