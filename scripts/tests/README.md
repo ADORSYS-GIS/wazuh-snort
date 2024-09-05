@@ -38,7 +38,7 @@ To run the tests locally, follow these steps:
    pip install pytest pytest-testinfra
    ```
 
-2. Ensure that all system dependencies are installed:
+2. Ensure that all system dependencies are installed. the wazuh agent should be already installed:
    ```bash
    sudo apt-get update
    sudo apt-get install -y curl gnupg2 iproute2
