@@ -1,4 +1,4 @@
-# Function to install Snort and WinPcap
+# Function to install Snort
 function Install-Snort {
     # Define paths and URLs
     $tempDir = "C:\Temp"
@@ -6,11 +6,8 @@ function Install-Snort {
     $snortInstallerPath = "$tempDir\Snort_Installer.exe"
     $npcapInstallerUrl = "https://npcap.com/dist/npcap-1.79.exe"
     $npcapInstallerPath = "$tempDir\Npcap_Installer.exe"
-    $winpcapInstallerUrl = "https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe"
-    $winpcapInstallerPath = "$tempDir\WinPcap_Installer.exe"
     $snortBinPath = "C:\Snort\bin"
     $npcapPath = "C:\Program Files\Npcap"
-    $winpcapPath = "C:\Program Files\WinPcap"
     $rulesDir = "C:\Snort\rules"
     $rulesFile = Join-Path -Path $rulesDir -ChildPath "local.rules"
     $ossecConfigPath = "C:\Program Files (x86)\ossec-agent\ossec.conf"
@@ -36,18 +33,14 @@ function Install-Snort {
     Download-File $snortInstallerUrl $snortInstallerPath
     Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
-    # Download and install Npcap (manual installation required)
+    # Download Npcap (manual installation required)
     Download-File $npcapInstallerUrl $npcapInstallerPath
     Start-Process -FilePath $npcapInstallerPath -Wait
     Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
 
-    # Download and install WinPcap
-    Download-File $winpcapInstallerUrl $winpcapInstallerPath
-    Start-Process -FilePath $winpcapInstallerPath -ArgumentList "/S" -Wait
-
     # Add environment variables
     $envPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-    [Environment]::SetEnvironmentVariable("Path", "$envPath;$snortBinPath;$npcapPath;$winpcapPath", "Machine")
+    [Environment]::SetEnvironmentVariable("Path", "$envPath;$snortBinPath;$npcapPath", "Machine")
 
     # Create the rules directory if it does not exist
     if (-Not (Test-Path -Path $rulesDir)) {
