@@ -90,19 +90,6 @@ function Install-Snort {
         Write-Host "Failed to download snort.conf file."
     }
 
-    # Add configurations to snort.conf
-    $snortAdditions = @"
-output alert_syslog: LOG_AUTH LOG_ALERT
-output alert_fast: snort.alert
-
-"@
-
-    if (Test-Path $snortConfigPath) {
-        Add-Content -Path $snortConfigPath -Value $snortAdditions
-        Write-Host "Configurations added to snort.conf."
-    } else {
-        Write-Host "snort.conf file not found."
-    }
 
     Write-Host "Installation and configuration completed!"
 }
