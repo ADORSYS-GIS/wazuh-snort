@@ -64,8 +64,8 @@ function Install-Snort {
     $snortConfig = @"
 <!-- snort -->
 <localfile>
-  <log_format>snort-full</log_format>
-  <location>/var/log/snort/snort.alert.fast</location>
+    <log_format>snort-full</log_format>
+    <location>C:\Snort\log\alert.ids</location>
 </localfile>
 "@
 
