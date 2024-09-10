@@ -18,10 +18,10 @@
 #-------------
 # LOCAL RULES
 #-------------
-alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)
-alert icmp any any -> 8.8.8.8 any (msg:"Pinging...";sid:1000004;)
-alert tcp any any -> any 6667 (msg:"IRC protocol traffic";sid:1000005;)
-alert tcp any 6667 -> any any (msg:"C&C Server sent netinfo command";content:"!netinfo";sid:1000006;)
-alert tcp any 6667 -> any any (msg:"C&C Server sent sysinfo command";content:"!sysinfo";sid:1000007;)
-alert tcp any 6667 -> any any (msg:"C&C Server sent port scan command";content:"!scan";sid:1000008;)
-alert tcp any 6667 -> any any (msg:"C&C Server sent download command";content:"!download";sid:1000009;)
+alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1; priority:3;)
+alert icmp any any -> 8.8.8.8 any (msg:"Pinging..."; sid:1000004; priority:3;)
+alert tcp any any -> any 6667 (msg:"IRC protocol traffic"; sid:1000005; priority:3;)
+alert tcp any 6667 -> any any (msg:"C&C Server sent netinfo command"; content:"!netinfo"; sid:1000006; priority:4;)
+alert tcp any 6667 -> any any (msg:"C&C Server sent sysinfo command"; content:"!sysinfo"; sid:1000007; priority:5;)
+alert tcp any 6667 -> any any (msg:"C&C Server sent port scan command"; content:"!scan"; sid:1000008; priority:3;)
+alert tcp any 6667 -> any any (msg:"C&C Server sent download command"; content:"!download"; sid:1000009; priority:7;)
