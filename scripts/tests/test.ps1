@@ -20,56 +20,56 @@ function Run-Test {
 $tests = @{
     "SnortInstalled" = { 
         if (Test-Path "C:\Snort\bin\snort.exe") { 
-            Write-Output "Snort is installed." 
+            Write-Host "Snort is installed." 
         } else { 
             throw "Snort is not installed." 
         }
     }
     "NpcapInstalled" = { 
         if (Test-Path "C:\Program Files\Npcap") { 
-            Write-Output "Npcap is installed." 
+            Write-Host "Npcap is installed." 
         } else { 
             throw "Npcap is not installed." 
         }
     }
     "RulesDirectoryExists" = { 
         if (Test-Path "C:\Snort\rules") { 
-            Write-Output "Rules directory exists." 
+            Write-Host "Rules directory exists." 
         } else { 
             throw "Rules directory does not exist." 
         }
     }
     "LocalRulesFileExists" = { 
         if (Test-Path "C:\Snort\rules\local.rules") { 
-            Write-Output "Local rules file exists." 
+            Write-Host "Local rules file exists." 
         } else { 
             throw "Local rules file does not exist." 
         }
     }
     "SnortConfFileExists" = { 
         if (Test-Path "C:\Snort\etc\snort.conf") { 
-            Write-Output "Snort configuration file exists." 
+            Write-Host "Snort configuration file exists." 
         } else { 
             throw "Snort configuration file does not exist." 
         }
     }
     "OssecConfFileExists" = { 
         if (Test-Path "C:\Program Files\Wazuh\ossec.conf") { 
-            Write-Output "OSSEC configuration file exists." 
+            Write-Host "OSSEC configuration file exists." 
         } else { 
             throw "OSSEC configuration file does not exist." 
         }
     }
     "SnortConfigInOssecConf" = { 
         if (Select-String -Path "C:\Program Files\Wazuh\ossec.conf" -Pattern "snort") { 
-            Write-Output "Snort is configured in OSSEC configuration." 
+            Write-Host "Snort is configured in OSSEC configuration." 
         } else { 
             throw "Snort is not configured in OSSEC configuration." 
         }
     }
     "EnvironmentVariables" = { 
         if ([System.Environment]::GetEnvironmentVariable("SNORT_PATH") -ne $null) { 
-            Write-Output "SNORT_PATH environment variable is set." 
+            Write-Host "SNORT_PATH environment variable is set." 
         } else { 
             throw "SNORT_PATH environment variable is not set." 
         }
@@ -77,7 +77,7 @@ $tests = @{
     "ScheduledTaskRegistered" = { 
         $task = Get-ScheduledTask | Where-Object { $_.TaskName -eq "SnortTask" }
         if ($task) { 
-            Write-Output "Scheduled task is registered." 
+            Write-Host "Scheduled task is registered." 
         } else { 
             throw "Scheduled task is not registered." 
         }
@@ -90,5 +90,5 @@ foreach ($test in $tests.GetEnumerator()) {
 }
 
 # Output the test results
-Write-Output "Test Results:"
+Write-Host "Test Results:"
 $testResults | Format-Table -AutoSize
