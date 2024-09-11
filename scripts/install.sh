@@ -156,14 +156,22 @@ update_ossec_conf_macos() {
     </localfile>"
 
     info_message "Updating $OSSEC_CONF_PATH"
+    
+    # Add the Snort configuration to ossec.conf
     if ! grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
-        maybe_sudo sed -i '' "/<\/ossec_config>/i\\
-    $content_to_add" "$OSSEC_CONF_PATH"
+        sudo sed -i '' -e "/<\/ossec_config>/i\\
+<!-- snort -->\\
+<localfile>\\
+    <log_format>snort-full</log_format>\\
+    <location>/var/log/snort/alert_fast.txt</location>\\
+</localfile>" "$OSSEC_CONF_PATH"
+        
         success_message "ossec.conf updated on macOS"
     else
         info_message "The content already exists in $OSSEC_CONF_PATH"
     fi
 }
+
 
 
 # Function to start Snort on macOS
