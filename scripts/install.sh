@@ -86,17 +86,17 @@ install_snort_macos() {
     print_step "Installing" "Snort for macOS ($ARCH)"
     
     if [[ $ARCH == "arm64" ]]; then
-        maybe_sudo brew install snort
+         brew install snort
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
     else
-        maybe_sudo brew install snort
+         brew install snort
         SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
     fi
 
     create_snort_dirs_files /usr/local/etc/rules /usr/local/etc/so_rules /usr/local/etc/lists /var/log/snort
     create_snort_files /usr/local/etc/rules/local.rules /usr/local/etc/lists/default.blocklist
 
-    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | maybe_sudo tee /usr/local/etc/rules/local.rules > /dev/null
+    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | sudo tee /usr/local/etc/rules/local.rules > /dev/null
 
     configure_snort_logging_macos
     update_ossec_conf_macos
