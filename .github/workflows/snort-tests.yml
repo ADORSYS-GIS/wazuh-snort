@@ -9,7 +9,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]  # Operating systems
-        python-version: ['3.9']
 
     steps:
     - name: Checkout code
@@ -20,7 +19,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.9'
 
     - name: Install dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
