@@ -81,7 +81,7 @@ create_snort_files() {
 # Function to install Snort on macOS
 install_snort_macos() {
     print_step "Installing" "Snort for macOS"
-    # Install brew
+    # Install brew if it doesn't exist
     if ! command -v brew &> /dev/null; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
