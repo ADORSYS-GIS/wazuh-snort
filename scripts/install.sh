@@ -81,7 +81,7 @@ create_snort_files() {
 # Function to install Snort on macOS
 install_snort_macos() {
     print_step "Installing" "Snort for macOS"
-    maybe_sudo brew install snort
+    brew install snort
 
     create_snort_dirs_files /usr/local/etc/rules /usr/local/etc/so_rules /usr/local/etc/lists /var/log/snort
     create_snort_files /usr/local/etc/rules/local.rules /usr/local/etc/lists/default.blocklist
