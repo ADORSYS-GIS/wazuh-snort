@@ -4,7 +4,12 @@ on: [push, pull_request]
 
 jobs:
   run-pytest:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Operating systems
+        python-version: ['3.9']
 
     steps:
     - name: Checkout code
@@ -13,25 +18,50 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
+    # Linux-specific steps
+    - name: Install dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -y curl gnupg2 iproute2
         pip install pytest pytest-testinfra
 
-    - name: Install wazuh-agent
+    - name: Install wazuh-agent (Linux)
+      if: matrix.os == 'ubuntu-latest'
       run: |
         curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo apt-key add -
         echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee /etc/apt/sources.list.d/wazuh.list
         sudo apt-get update
         sudo apt-get install -y wazuh-agent
 
-    - name: Run Snort install script
+    - name: Run Snort install script (Linux)
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo bash scripts/install.sh
 
-    - name: Run tests 
+    # Windows-specific steps
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
       run: |
-        sudo $(which pytest) -vv  scripts/tests/test_linux.py
+        python -m pip install --upgrade pip
+        pip install pytest pytest-testinfra
+
+    # Install Wazuh agent on Windows
+    - name: Install Wazuh agent (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.0-1.msi -OutFile $env:TEMP\wazuh-agent.msi
+        msiexec.exe /i $env:TEMP\wazuh-agent.msi /qn WAZUH_MANAGER='10.0.0.1' WAZUH_AGENT_NAME='test'
+
+    # Running tests
+    - name: Run tests (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo $(which pytest) -vv scripts/tests/test_linux.py
+
+    - name: Run tests (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        pytest -vv scripts/tests/test_windows.py
