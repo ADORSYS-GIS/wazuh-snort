@@ -3,7 +3,7 @@ name: Run Snort tests
 on: [push, pull_request]
 
 jobs:
-  run-pytest:
+  run-tests:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -69,4 +69,4 @@ jobs:
     - name: Run tests (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        & "C:\\Program Files\\PowerShell\\7\\pwsh.exe" -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/test_windows.ps1
+        Start-Process powershell -ArgumentList "-File scripts/tests/test.ps1" -Verb RunAs
