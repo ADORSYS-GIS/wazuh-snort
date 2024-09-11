@@ -16,6 +16,7 @@ This repository contains several resources for installing and configuring Snort,
 ## Supported Operating Systems
 - **Ubuntu**
 - **macOS**
+- **Windows**
 
 ## Directory Contents
 
