@@ -1,5 +1,6 @@
 import pytest
 import testinfra
+import os
 
 @pytest.fixture
 def host():
