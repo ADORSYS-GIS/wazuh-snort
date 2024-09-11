@@ -43,11 +43,17 @@ def test_snort_config_in_ossec_conf(host):
     assert ossec_conf.contains("<location>C:\\Snort\\log\\alert.ids</location>")
     assert ossec_conf.contains("</localfile>")
 
+# Updated test function with string decoding
 def test_environment_variables(host):
     env_path = host.check_output("echo %PATH%")
+    if isinstance(env_path, bytes):
+        env_path = env_path.decode("utf-8")  # Ensure it is a string
     assert "C:\\Snort\\bin" in env_path
     assert "C:\\Program Files\\Npcap" in env_path
 
+# Updated test function with string decoding
 def test_scheduled_task_registered(host):
     task_list = host.check_output("schtasks /Query /TN SnortStartup")
+    if isinstance(task_list, bytes):
+        task_list = task_list.decode("utf-8")  # Ensure it is a string
     assert "SnortStartup" in task_list
