@@ -38,11 +38,10 @@ Install using this command:
    sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
    ```
 ## Installation (MacOS)
-
    Install using this command:
-      ```bash
+   ```bash
       curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
-      ```
+   ```
 
 ## Description
 
