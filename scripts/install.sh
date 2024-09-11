@@ -158,7 +158,7 @@ update_ossec_conf_macos() {
     info_message "Updating $OSSEC_CONF_PATH"
     
     # Add the Snort configuration to ossec.conf
-    if ! grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
+    if !  sudo grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
         sudo sed -i '' -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
 <localfile>\\
