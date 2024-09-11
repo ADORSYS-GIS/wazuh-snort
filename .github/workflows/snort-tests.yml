@@ -48,12 +48,11 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.0-1.msi -OutFile $env:TEMP\wazuh-agent.msi
         msiexec.exe /i $env:TEMP\wazuh-agent.msi /qn WAZUH_MANAGER='10.0.0.1' WAZUH_AGENT_NAME='test'
-        
 
     - name: Install Snort (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        Start-Process powershell -ArgumentList "-File scripts/snort.ps1" -Verb RunAs
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1" -Verb RunAs
 
     # Running tests
     - name: Run tests (Linux)
@@ -69,4 +68,4 @@ jobs:
     - name: Run tests (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        Start-Process powershell -ArgumentList "-File scripts/tests/test.ps1" -Verb RunAs
+        pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/test_windows.ps1
