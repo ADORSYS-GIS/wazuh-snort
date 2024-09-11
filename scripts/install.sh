@@ -135,7 +135,7 @@ install_snort_linux() {
 
 # Function to configure Snort logging on macOS
 configure_snort_logging_macos() {
-    local config_file="/usr/local/etc/snort/snort.lua"
+    local config_file="/opt/homebrew/etc/snort/snort.lua"
     local content_to_add='alert_fast =\n{\n    file = true\n}'
 
     info_message "Configuring Snort logging"
@@ -168,7 +168,7 @@ update_ossec_conf_macos() {
 # Function to start Snort on macOS
 start_snort_macos() {
     info_message "Starting Snort"
-    maybe_sudo snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
+    maybe_sudo snort -c /opt/homebrew/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
