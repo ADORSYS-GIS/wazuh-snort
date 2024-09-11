@@ -48,6 +48,7 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.0-1.msi -OutFile $env:TEMP\wazuh-agent.msi
         msiexec.exe /i $env:TEMP\wazuh-agent.msi /qn WAZUH_MANAGER='10.0.0.1' WAZUH_AGENT_NAME='test'
+        
 
     - name: Install Snort (Windows)
       if: matrix.os == 'windows-latest'
@@ -59,6 +60,11 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo $(which pytest) -vv scripts/tests/test_linux.py
+
+    - name: List files (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        dir $env:GITHUB_WORKSPACE\scripts
 
     - name: Run tests (Windows)
       if: matrix.os == 'windows-latest'
