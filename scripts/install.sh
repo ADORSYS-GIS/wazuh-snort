@@ -161,15 +161,14 @@ configure_snort_logging_macos() {
 update_ossec_conf_macos() {
     info_message "Updating $OSSEC_CONF_PATH"
 
-    if [[ $ARCH == "arm64" ]]; then
-        # ARM (M1) specific Snort configuration
-        content_to_add="<!-- snort -->
+    content_to_add="<!-- snort -->
 <localfile>
     <log_format>snort-full</log_format>
     <location>/var/log/snort/alert_fast.txt</location>
 </localfile>"
 
-        # Check and add Snort config if not present
+    if [[ $ARCH == "arm64" ]]; then
+        # ARM (M1) specific Snort configuration
         if ! sudo grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
             sudo sed -i '' -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
@@ -183,22 +182,20 @@ update_ossec_conf_macos() {
         fi
     else
         # Intel specific Snort configuration
-        content_to_add="<!-- snort -->
-<localfile>
-    <log_format>snort-full<\/log_format>
-    <location>\/usr\/local\/var\/log\/snort\/alert_fast.txt<\/location>
-<\/localfile>"
-
-        # Check and add Snort config if not present
         if ! grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
             maybe_sudo sed -i '' "/<\/ossec_config>/i\\
-    $content_to_add" "$OSSEC_CONF_PATH"
+<!-- snort -->\\
+<localfile>\\
+    <log_format>snort-full</log_format>\\
+    <location>/var/log/snort/alert_fast.txt</location>\\
+</localfile>" "$OSSEC_CONF_PATH"
             success_message "ossec.conf updated on macOS Intel"
         else
             info_message "The content already exists in $OSSEC_CONF_PATH"
         fi
     fi
 }
+
 
 
 # Function to start Snort on macOS
