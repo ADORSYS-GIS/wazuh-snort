@@ -90,8 +90,14 @@ function Install-Snort {
         Write-Host "Failed to download snort.conf file."
     }
     
-    #delete temp directory
+    # Delete temp directory
     Remove-Item -Path $tempDir -Recurse -Force
+
+    # Register Snort as a scheduled task to run at startup
+    $taskName = "SnortStartup"
+    $taskAction = New-ScheduledTaskAction -Execute "C:\Snort\bin\snort.exe" -Argument "-c C:\Snort\etc\snort.conf -A full -l C:\Snort\log\ -i 5 -A console"
+    $taskTrigger = New-ScheduledTaskTrigger -AtStartup
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -RunLevel Highest
 
     Write-Host "Installation and configuration completed!"
 }
