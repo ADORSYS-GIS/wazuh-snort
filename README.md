@@ -1,4 +1,4 @@
-[![Build Snort3 Docker Multi Arch](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)[![Run Pytest](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml)
+[![Build Snort3 Docker Multi Arch](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)[![Run Snort-tests](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml)
 
 # Wazuh Snort 
 This repository contains several resources for installing and configuring Snort, as well as its integration with Wazuh. Here is a detailed description of each item:
@@ -25,7 +25,7 @@ This repository contains several resources for installing and configuring Snort,
 - `README.md`: This file provides general information about the project.
 - `rules`: This folder contains the rules for configuring Snort.
 - `scripts`: This folder contains a script for installing and configuring Snort on Linux and MacOS. It also includes a README with instructions for building and packaging Snort 3 using GitHub Actions.
-- `scripts/tests`: Additionally, for details on testing with Pytest, see [scripts/tests/README.md](scripts/tests/README.md)
+- `scripts/tests`: Additionally, for details on testing with Pytest and Powershell, see **[scripts/tests/README.md](scripts/tests/README.md)**
 
 ## Getting Started
 ### Prerequisites
@@ -34,10 +34,7 @@ This repository contains several resources for installing and configuring Snort,
 ### Installation
 Install using this command:
    ```bash
-   curl -SL --progress-bar https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh -o install.sh
-chmod +x install.sh
-sudo ./install.sh
-
+   sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
    ```
 
 ## Description

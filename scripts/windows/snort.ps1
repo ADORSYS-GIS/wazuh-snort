@@ -47,25 +47,25 @@ function Install-Snort {
         New-Item -ItemType Directory -Force -Path $rulesDir
     }
 
-    # Define the rules
-    $rules = @(
-        'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)',
-        'alert tcp any any -> any 80 (msg:"HTTP traffic detected"; sid:1000020; rev:1;)',
-        'alert tcp any any -> any 22 (msg:"SSH traffic detected"; sid:1000030; rev:1;)',
-        'alert tcp any any -> any 21 (msg:"FTP traffic detected"; sid:1000040; rev:1;)',
-        'alert tcp any any -> any 25 (msg:"SMTP traffic detected"; sid:1000050; rev:1;)'
-        # Add more rules here...
-    )
+    # Download the local.rules file
+    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/local.rules" #todo: update the URL
+    $localRulesPath = "$tempDir\local.rules"
+    Download-File $localRulesUrl $localRulesPath
 
-    # Write the rules to the file
-    $rules | Out-File -FilePath $rulesFile
+    # Replace the existing local.rules file
+    if (Test-Path $localRulesPath) {
+        Copy-Item -Path $localRulesPath -Destination $rulesFile -Force
+        Write-Host "local.rules file replaced."
+    } else {
+        Write-Host "Failed to download local.rules file."
+    }
 
     # Add Snort configuration to ossec.conf
     $snortConfig = @"
 <!-- snort -->
 <localfile>
-  <log_format>snort-full</log_format>
-  <location>/var/log/snort/snort.alert.fast</location>
+    <log_format>snort-full</log_format>
+    <location>C:\Snort\log\alert.ids</location>
 </localfile>
 "@
 
@@ -77,19 +77,28 @@ function Install-Snort {
         Write-Host "ossec.conf file not found."
     }
 
-    # Add configurations to snort.conf
-    $snortAdditions = @"
-output alert_syslog: LOG_AUTH LOG_ALERT
-output alert_fast: snort.alert
+    # Download the new snort.conf file
+    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/snort.conf" #todo: update the URL
+    $snortConfPath = "$tempDir\snort.conf"
+    Download-File $snortConfUrl $snortConfPath
 
-"@
-
-    if (Test-Path $snortConfigPath) {
-        Add-Content -Path $snortConfigPath -Value $snortAdditions
-        Write-Host "Configurations added to snort.conf."
+    # Replace the existing snort.conf file
+    if (Test-Path $snortConfPath) {
+        Copy-Item -Path $snortConfPath -Destination $snortConfigPath -Force
+        Write-Host "snort.conf file replaced."
     } else {
-        Write-Host "snort.conf file not found."
+        Write-Host "Failed to download snort.conf file."
     }
+    
+    # Delete temp directory
+    Remove-Item -Path $tempDir -Recurse -Force
+
+    # Register Snort as a scheduled task to run at startup
+    $taskName = "SnortStartup"
+    $taskAction = New-ScheduledTaskAction -Execute "C:\Snort\bin\snort.exe" -Argument "-c C:\Snort\etc\snort.conf -A full -l C:\Snort\log\ -i 5 -A console"
+    $taskTrigger = New-ScheduledTaskTrigger -AtStartup
+    $taskSettings = New-ScheduledTaskSettingsSet -Hidden
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest
 
     Write-Host "Installation and configuration completed!"
 }
