@@ -34,4 +34,4 @@ jobs:
 
     - name: Run tests 
       run: |
-        sudo $(which pytest) -vv  scripts/tests/test_install.py
+        sudo $(which pytest) -vv  scripts/tests/test_linux.py
