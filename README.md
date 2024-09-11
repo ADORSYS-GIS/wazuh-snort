@@ -1,5 +1,4 @@
-[![Build Snort3 Docker Multi Arch](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)[![Run Snort-tests](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/pytests.yml)
-
+[![Build Snort3 Docker Multi Arch](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-build.yml)[![Build and Package Snort 3](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/package-snort.yml)[![Run Snort tests](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-tests.yml/badge.svg)](https://github.com/ADORSYS-GIS/wazuh-snort/actions/workflows/snort-tests.yml)
 # Wazuh Snort 
 This repository contains several resources for installing and configuring Snort, as well as its integration with Wazuh. Here is a detailed description of each item:
 
