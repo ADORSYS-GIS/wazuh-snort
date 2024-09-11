@@ -151,9 +151,9 @@ configure_snort_logging_macos() {
 update_ossec_conf_macos() {
     local content_to_add="<!-- snort -->
     <localfile>
-        <log_format>snort-full<\/log_format>
-        <location>\/var\/log\/snort\/alert_fast.txt<\/location>
-    <\/localfile>"
+        <log_format>snort-full</log_format>
+        <location>/var/log/snort/alert_fast.txt</location>
+    </localfile>"
 
     info_message "Updating $OSSEC_CONF_PATH"
     if ! grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
@@ -164,6 +164,7 @@ update_ossec_conf_macos() {
         info_message "The content already exists in $OSSEC_CONF_PATH"
     fi
 }
+
 
 # Function to start Snort on macOS
 start_snort_macos() {
