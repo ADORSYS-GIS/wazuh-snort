@@ -52,7 +52,7 @@ jobs:
     - name: Install Snort (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1" -Verb RunAs
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1" -Verb RunAs -Wait
 
     # Running tests
     - name: Run tests (Linux)
