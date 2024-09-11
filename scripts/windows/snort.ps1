@@ -97,7 +97,8 @@ function Install-Snort {
     $taskName = "SnortStartup"
     $taskAction = New-ScheduledTaskAction -Execute "C:\Snort\bin\snort.exe" -Argument "-c C:\Snort\etc\snort.conf -A full -l C:\Snort\log\ -i 5 -A console"
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -RunLevel Highest
+    $taskSettings = New-ScheduledTaskSettingsSet -Hidden
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest
 
     Write-Host "Installation and configuration completed!"
 }
