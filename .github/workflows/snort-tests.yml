@@ -68,4 +68,4 @@ jobs:
     - name: Run tests (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/test_windows.ps1
+        pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/test.ps1
