@@ -54,12 +54,18 @@ jobs:
         Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1" -Verb RunAs -Wait
 
     # macOS-specific steps
+    - name: Set up Python (macOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
         brew update
         brew install curl iproute2mac
-        pip3 install pytest pytest-testinfra
+        pip install pytest pytest-testinfra
 
     - name: Install Wazuh agent (macOS)
       if: matrix.os == 'macos-latest'
@@ -92,4 +98,4 @@ jobs:
     - name: Run tests (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        sudo $(which pytest) -vv scripts/tests/test.py
+        sudo python -m pytest -vv scripts/tests/test.py
