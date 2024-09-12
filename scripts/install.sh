@@ -192,7 +192,6 @@ $content_to_add" "$OSSEC_CONF_PATH"
 
 
 
-
 # Function to start Snort on macOS
 start_snort_macos() {
     info_message "Starting Snort"
