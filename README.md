@@ -31,10 +31,16 @@ This repository contains several resources for installing and configuring Snort,
 ### Prerequisites
 - Wazuh Agent installed on endpoints
 
-### Installation
+### Installation 
+## Installation (Linux)
 Install using this command:
    ```bash
    sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
+   ```
+## Installation (MacOS)
+   Install using this command:
+   ```bash
+      curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
    ```
 
 ## Description

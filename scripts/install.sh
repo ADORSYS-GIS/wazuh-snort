@@ -80,13 +80,23 @@ create_snort_files() {
 
 # Function to install Snort on macOS
 install_snort_macos() {
-    print_step "Installing" "Snort for macOS"
-    maybe_sudo brew install snort
+    # Check if the architecture is M1/ARM or Intel
+    ARCH=$(uname -m)
+    
+    print_step "Installing" "Snort for macOS ($ARCH)"
+    
+    if [[ $ARCH == "arm64" ]]; then
+         brew install snort
+        SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
+    else
+         brew install snort
+        SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
+    fi
 
     create_snort_dirs_files /usr/local/etc/rules /usr/local/etc/so_rules /usr/local/etc/lists /var/log/snort
     create_snort_files /usr/local/etc/rules/local.rules /usr/local/etc/lists/default.blocklist
 
-    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | maybe_sudo tee /usr/local/etc/rules/local.rules > /dev/null
+    echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | sudo tee /usr/local/etc/rules/local.rules > /dev/null
 
     configure_snort_logging_macos
     update_ossec_conf_macos
@@ -135,7 +145,7 @@ install_snort_linux() {
 
 # Function to configure Snort logging on macOS
 configure_snort_logging_macos() {
-    local config_file="/usr/local/etc/snort/snort.lua"
+    local config_file="$SNORT_CONF_PATH"
     local content_to_add='alert_fast =\n{\n    file = true\n}'
 
     info_message "Configuring Snort logging"
@@ -147,28 +157,45 @@ configure_snort_logging_macos() {
     fi
 }
 
-# Function to update ossec.conf on macOS
+# Function to update ossec.conf on macOS (M1 and Intel)
 update_ossec_conf_macos() {
     local content_to_add="<!-- snort -->
     <localfile>
-        <log_format>snort-full<\/log_format>
-        <location>\/var\/log\/snort\/alert_fast.txt<\/location>
-    <\/localfile>"
+        <log_format>snort-full</log_format>
+        <location>/var/log/snort/alert_fast.txt</location>
+    </localfile>"
 
     info_message "Updating $OSSEC_CONF_PATH"
-    if ! grep -q "$content_to_add" "$OSSEC_CONF_PATH"; then
-        maybe_sudo sed -i '' "/<\/ossec_config>/i\\
-    $content_to_add" "$OSSEC_CONF_PATH"
+
+    # Check if the specific <location> tag exists in the configuration file
+    if ! sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
+        # Update ossec.conf based on the system architecture (M1 or Intel)
+        if [[ $(uname -m) == 'arm64' ]]; then
+            # macOS M1
+            sudo sed -i '' -e "/<\/ossec_config>/i\\
+<!-- snort -->\\
+<localfile>\\
+    <log_format>snort-full</log_format>\\
+    <location>/var/log/snort/alert_fast.txt</location>\\
+</localfile>" "$OSSEC_CONF_PATH"
+        else
+            # macOS Intel
+            sudo sed -i '' "/<\/ossec_config>/i\\
+$content_to_add" "$OSSEC_CONF_PATH"
+        fi
+
         success_message "ossec.conf updated on macOS"
     else
         info_message "The content already exists in $OSSEC_CONF_PATH"
     fi
 }
 
+
+
 # Function to start Snort on macOS
 start_snort_macos() {
     info_message "Starting Snort"
-    maybe_sudo snort -c /usr/local/etc/snort/snort.lua -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
+    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
@@ -210,13 +237,13 @@ start_snort_linux() {
     success_message "Snort started on Linux"
 }
 
-# Function to ensure the script runs with root privileges
+# Function to ensure the script runs with appropriate privileges
 maybe_sudo() {
-    if [ "$(id -u)" -ne 0 ]; then
-        if command -v sudo >/dev/null 2>&1; then
+    if [ "$EUID" -ne 0 ]; then
+        if command -v sudo &>/dev/null; then
             sudo "$@"
         else
-            error_message "This script requires root privileges. Please run with sudo or as root."
+            error_message "Please run the script as root or install sudo."
             exit 1
         fi
     else
@@ -224,22 +251,16 @@ maybe_sudo() {
     fi
 }
 
-# Main function to install and configure Snort
-install_snort() {
-    case "$OSTYPE" in
-        darwin*)
-            install_snort_macos
-            ;;
-        linux*)
-            install_snort_linux
-            ;;
-        *)
-            error_message "Unsupported OS type: $OSTYPE"
-            exit 1
-            ;;
-    esac
-}
-
-# Run the main installation function
-install_snort
-
+# Main logic: install Snort based on the operating system
+case "$OS_NAME" in
+    Linux)
+        install_snort_linux
+        ;;
+    Darwin)
+        install_snort_macos
+        ;;
+    *)
+        error_message "Unsupported OS: $OS_NAME"
+        exit 1
+        ;;
+esac
