@@ -99,7 +99,17 @@ install_snort_macos() {
     echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | sudo tee /usr/local/etc/rules/local.rules > /dev/null
 
     configure_snort_logging_macos
-    update_ossec_conf_macos
+
+    #update_ossec_conf_macos
+    if maybe_sudo [ -f "$OSSEC_CONF_PATH" ]; then
+        # Call the function to update OSSEC configuration
+        update_ossec_conf_macos
+    else
+        # Notify the user that the file is missing
+        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
+        # Exit the script with a non-zero status
+        exit 1
+    fi
     start_snort_macos
 }
 
@@ -139,7 +149,17 @@ install_snort_linux() {
     }
 
     configure_snort_linux
-    update_ossec_conf_linux
+    #update_ossec_conf_linux
+    if maybe_sudo [ -f "$OSSEC_CONF_PATH" ]; then
+        # Call the function to update OSSEC configuration
+        update_ossec_conf_linux
+    else
+        # Notify the user that the file is missing
+        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
+        # Exit the script with a non-zero status
+        exit 1
+    fi
+
     start_snort_linux
 }
 
