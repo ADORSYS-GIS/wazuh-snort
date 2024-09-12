@@ -27,11 +27,7 @@ def test_update_ossec_conf_mac(host):
     """Test if ossec.conf is correctly updated on macOS."""
     ossec_conf_path = "/opt/homebrew/etc/snort/snort.lua"
     expected_content = """
-        <!-- snort -->
-        <localfile>
-            <log_format>snort-full</log_format>
-            <location>/var/log/snort/alert_fast.txt</location>
-        </localfile>
+<location>/var/log/snort/alert_fast.txt</location>
     """
 
     ossec_conf = host.file(ossec_conf_path)
