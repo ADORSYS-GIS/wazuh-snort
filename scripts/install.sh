@@ -143,6 +143,20 @@ install_snort_linux() {
     start_snort_linux
 }
 
+# Function to configure Snort logging on macOS
+configure_snort_logging_macos() {
+    local config_file="$SNORT_CONF_PATH"
+    local content_to_add='alert_fast =\n{\n    file = true\n}'
+
+    info_message "Configuring Snort logging"
+    if ! grep -q "$content_to_add" "$config_file"; then
+        echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
+        success_message "Snort logging configured in $config_file"
+    else
+        info_message "Snort logging is already configured in $config_file"
+    fi
+}
+
 # Function to update ossec.conf on macOS (M1 and Intel)
 update_ossec_conf_macos() {
     local content_to_add="<!-- snort -->
