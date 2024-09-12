@@ -173,7 +173,7 @@ configure_snort_logging_macos() {
     local content_to_add='alert_fast =\n{\n    file = true\n}'
 
     info_message "Configuring Snort logging"
-    if ! grep -q "$content_to_add" "$config_file"; then
+    if ! maybe_sudo grep -q "$content_to_add" "$config_file"; then
         echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
         success_message "Snort logging configured in $config_file"
     else
@@ -235,7 +235,7 @@ configure_snort_linux() {
     maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
     maybe_sudo rm community-rules.tar.gz
 
-    if ! grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
+    if ! maybe_sudo grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
         echo "include \$RULE_PATH/community.rules" | maybe_sudo tee -a /etc/snort/snort.conf
         success_message "Snort rule files configured on Linux"
     fi
