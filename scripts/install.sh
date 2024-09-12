@@ -99,8 +99,21 @@ install_snort_macos() {
     echo 'alert icmp any any -> any any ( msg:"ICMP Traffic Detected"; sid:10000001; metadata:policy security-ips alert; )' | sudo tee /usr/local/etc/rules/local.rules > /dev/null
 
     configure_snort_logging_macos
-    update_ossec_conf_macos
+
+    #update_ossec_conf_macos
+    if maybe_sudo [ -f "$OSSEC_CONF_PATH" ]; then
+        # Call the function to update OSSEC configuration
+        update_ossec_conf_macos
+    else
+        # Notify the user that the file is missing
+        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
+        # Exit the script with a non-zero status
+        exit 1
+    fi
+
     start_snort_macos
+
+    success_message "Snort installed successfully"
 }
 
 # Function to install Snort on Linux
@@ -139,8 +152,19 @@ install_snort_linux() {
     }
 
     configure_snort_linux
-    update_ossec_conf_linux
+    #update_ossec_conf_linux
+    if maybe_sudo [ -f "$OSSEC_CONF_PATH" ]; then
+        # Call the function to update OSSEC configuration
+        update_ossec_conf_linux
+    else
+        # Notify the user that the file is missing
+        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
+        # Exit the script with a non-zero status
+        exit 1
+    fi
+
     start_snort_linux
+
 }
 
 # Function to configure Snort logging on macOS
@@ -149,7 +173,7 @@ configure_snort_logging_macos() {
     local content_to_add='alert_fast =\n{\n    file = true\n}'
 
     info_message "Configuring Snort logging"
-    if ! grep -q "$content_to_add" "$config_file"; then
+    if ! maybe_sudo grep -q "$content_to_add" "$config_file"; then
         echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
         success_message "Snort logging configured in $config_file"
     else
@@ -211,7 +235,7 @@ configure_snort_linux() {
     maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
     maybe_sudo rm community-rules.tar.gz
 
-    if ! grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
+    if ! maybe_sudo grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
         echo "include \$RULE_PATH/community.rules" | maybe_sudo tee -a /etc/snort/snort.conf
         success_message "Snort rule files configured on Linux"
     fi
@@ -233,8 +257,9 @@ update_ossec_conf_linux() {
 start_snort_linux() {
     info_message "Restarting Snort"
     maybe_sudo systemctl restart snort
-    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     success_message "Snort started on Linux"
+    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
+    
 }
 
 # Function to ensure the script runs with appropriate privileges

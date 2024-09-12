@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]  # Operating systems
+        os: [ubuntu-latest, windows-latest, macos-latest]  # Operating systems
 
     steps:
     - name: Checkout code
@@ -53,11 +53,36 @@ jobs:
       run: |
         Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1" -Verb RunAs -Wait
 
+    # macOS-specific steps
+    - name: Set up Python (macOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew update
+        brew install curl iproute2mac
+        pip install pytest pytest-testinfra
+
+    - name: Install Wazuh agent (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        curl -so wazuh-agent.pkg https://packages.wazuh.com/4.x/macos/wazuh-agent-4.9.0-1.intel64.pkg && echo "WAZUH_MANAGER='10.0.0.1' && WAZUH_AGENT_NAME='test'" > /tmp/wazuh_envs && sudo installer -pkg ./wazuh-agent.pkg -target /
+        sudo /Library/Ossec/bin/wazuh-control start
+
+    - name: Run Snort install script (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+         bash scripts/install.sh
+
     # Running tests
     - name: Run tests (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo $(which pytest) -vv scripts/tests/test_linux.py
+        sudo $(which pytest) -vv scripts/tests/test.py
 
     - name: List files (Windows)
       if: matrix.os == 'windows-latest'
@@ -68,3 +93,4 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/tests/test.ps1
+
