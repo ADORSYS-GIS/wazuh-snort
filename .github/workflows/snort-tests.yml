@@ -70,9 +70,8 @@ jobs:
     - name: Install Wazuh agent (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo tee /etc/apt/trusted.gpg.d/wazuh.asc
-        echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee /etc/apt/sources.list.d/wazuh.list
-        brew install wazuh-agent
+        curl -so wazuh-agent.pkg https://packages.wazuh.com/4.x/macos/wazuh-agent-4.9.0-1.intel64.pkg && echo "WAZUH_MANAGER='10.0.0.1' && WAZUH_AGENT_NAME='test'" > /tmp/wazuh_envs && sudo installer -pkg ./wazuh-agent.pkg -target /
+        sudo /Library/Ossec/bin/wazuh-control start
 
     - name: Run Snort install script (macOS)
       if: matrix.os == 'macos-latest'
