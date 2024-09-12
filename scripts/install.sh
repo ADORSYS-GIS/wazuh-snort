@@ -110,7 +110,10 @@ install_snort_macos() {
         # Exit the script with a non-zero status
         exit 1
     fi
+
     start_snort_macos
+
+    success_message "Snort installed successfully"
 }
 
 # Function to install Snort on Linux
@@ -161,6 +164,8 @@ install_snort_linux() {
     fi
 
     start_snort_linux
+    
+    success_message "Snort installed successfully"
 }
 
 # Function to configure Snort logging on macOS
