@@ -97,4 +97,4 @@ jobs:
     - name: Run tests (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        sudo python -m pytest -vv scripts/tests/test.py
+        sudo python -m pytest -vv scripts/tests/test_macos.py
