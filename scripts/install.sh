@@ -164,8 +164,7 @@ install_snort_linux() {
     fi
 
     start_snort_linux
-    
-    success_message "Snort installed successfully"
+
 }
 
 # Function to configure Snort logging on macOS
@@ -258,8 +257,9 @@ update_ossec_conf_linux() {
 start_snort_linux() {
     info_message "Restarting Snort"
     maybe_sudo systemctl restart snort
-    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     success_message "Snort started on Linux"
+    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
+    
 }
 
 # Function to ensure the script runs with appropriate privileges
