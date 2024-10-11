@@ -37,11 +37,19 @@ Install using this command:
    ```bash
    sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
    ```
-## Installation (MacOS)
+   ## Installation (MacOS)
    Install using this command:
-   ```bash
+      ```bash
       curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
-   ```
+      ```
+
+   ## Installation (Windows)
+   To install on Windows, follow these steps in PowerShell:
+
+    1. Execute the installation script directly:
+         ```powershell
+         Invoke-Expression (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.ps1).Content
+         ```
 
 ## Description
 
