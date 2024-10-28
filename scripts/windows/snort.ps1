@@ -48,7 +48,7 @@ function Install-Snort {
     }
 
     # Download the local.rules file
-    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/local.rules" #todo: update the URL
+    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules" #todo: update the URL
     $localRulesPath = "$tempDir\local.rules"
     Invoke-WebRequest -Uri $localRulesUrl -OutFile $localRulesPath
 
@@ -78,7 +78,7 @@ function Install-Snort {
     }
 
     # Download the new snort.conf file
-    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/snort.conf" #todo: update the URL
+    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf" #todo: update the URL
     $snortConfPath = "$tempDir\snort.conf"
     Invoke-WebRequest -Uri $snortConfUrl -OutFile $snortConfPath
 
