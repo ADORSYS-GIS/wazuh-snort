@@ -30,7 +30,7 @@ function Install-Snort {
     }
 
     # Download and install Snort
-    Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath
+    Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
     Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
     # Download Npcap (manual installation required)
