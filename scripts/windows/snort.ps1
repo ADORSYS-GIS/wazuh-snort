@@ -98,7 +98,14 @@ function Install-Snort {
     $taskAction = New-ScheduledTaskAction -Execute "C:\Snort\bin\snort.exe" -Argument "-c C:\Snort\etc\snort.conf -A full -l C:\Snort\log\ -i 5 -A console"
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     $taskSettings = New-ScheduledTaskSettingsSet -Hidden
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest
+
+    if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        Write-Host "Scheduled Task already exists, Unregisting to Update Scheduled Task"
+    }
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger - Settings $taskSettings -RunLevel Highest 
+    Write-Host "Registering Snort to Run at Startup"
+
 
     Write-Host "Installation and configuration completed!"
 }
