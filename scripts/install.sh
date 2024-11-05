@@ -121,7 +121,8 @@ install_snort_linux() {
     print_step "Installing" "Snort for Linux"
 
     # Get the default network interface
-    INTERFACE=$(ip route | grep default | awk '{print $5}')
+    # Get all network interface excluding virtual network interfaces
+    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|veth|virbr|vmnet)')
 
     # Function to install Snort on Linux
     install_snort_apt() {
@@ -143,7 +144,7 @@ install_snort_linux() {
         fi
     }
 
-    # Run the configuration function
+    # Run the configuration function    
     configure_snort_interface
 
     # Restart Snort service
