@@ -122,7 +122,7 @@ install_snort_linux() {
 
     # Get the default network interface
     # Get all network interface excluding virtual network interfaces
-    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|veth|virbr|vmnet)')
+    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|veth|virbr|vmnet)' | tr '\n' ' ')
 
     # Function to install Snort on Linux
     install_snort_apt() {
