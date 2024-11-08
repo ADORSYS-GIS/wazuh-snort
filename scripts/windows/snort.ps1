@@ -30,11 +30,11 @@ function Install-Snort {
     }
 
     # Download and install Snort
-    Download-File $snortInstallerUrl $snortInstallerPath
+    Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
     Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
     # Download Npcap (manual installation required)
-    Download-File $npcapInstallerUrl $npcapInstallerPath
+    Invoke-WebRequest $npcapInstallerUrl -OutFile $npcapInstallerPath
     Start-Process -FilePath $npcapInstallerPath -Wait
     Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
 
@@ -48,9 +48,9 @@ function Install-Snort {
     }
 
     # Download the local.rules file
-    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/local.rules" #todo: update the URL
+    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules" #todo: update the URL
     $localRulesPath = "$tempDir\local.rules"
-    Download-File $localRulesUrl $localRulesPath
+    Invoke-WebRequest -Uri $localRulesUrl -OutFile $localRulesPath
 
     # Replace the existing local.rules file
     if (Test-Path $localRulesPath) {
@@ -78,9 +78,9 @@ function Install-Snort {
     }
 
     # Download the new snort.conf file
-    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/snortwin/scripts/windows/snort.conf" #todo: update the URL
+    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf" #todo: update the URL
     $snortConfPath = "$tempDir\snort.conf"
-    Download-File $snortConfUrl $snortConfPath
+    Invoke-WebRequest -Uri $snortConfUrl -OutFile $snortConfPath
 
     # Replace the existing snort.conf file
     if (Test-Path $snortConfPath) {
