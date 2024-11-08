@@ -122,7 +122,7 @@ install_snort_linux() {
 
     # Get the default network interface
     # Get all network interface excluding virtual network interfaces
-    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|veth|virbr|vmnet)' | tr '\n' ' ')
+    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(en|eth|wl)' | tr '\n' ' ')
 
     # Function to install Snort on Linux
     install_snort_apt() {
@@ -135,12 +135,12 @@ install_snort_linux() {
 
     # Function to configure Snort to use the main network interface and set HomeNet
     configure_snort_interface() {
-        if [ ! -f /etc/snort/snort.conf ]; then
+        if [ ! -f /etc/snort/snort.debian.conf ]; then
             # Create snort.conf with minimal configuration
-            echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
+            echo "DEBIAN_SNORT_INTERFACE: $INTERFACE" | sudo tee -a /etc/snort/snort.debian.conf
         else
             # Update existing snort.conf
-            maybe_sudo sed -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
+            maybe_sudo sed -i "s/^DEBIAN_SNORT_INTERFACE: .*/DEBIAN_SNORT_INTERFACE: $INTERFACE/" /etc/snort/snort.debian.conf
         fi
     }
 
