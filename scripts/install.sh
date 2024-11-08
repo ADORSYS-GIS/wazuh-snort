@@ -137,10 +137,10 @@ install_snort_linux() {
     configure_snort_interface() {
         if [ ! -f /etc/snort/snort.debian.conf ]; then
             # Create snort.conf with minimal configuration
-            echo "DEBIAN_SNORT_INTERFACE: $INTERFACE" | sudo tee -a /etc/snort/snort.debian.conf
+            echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
         else
             # Update existing snort.conf
-            maybe_sudo sed -i "s/^DEBIAN_SNORT_INTERFACE: .*/DEBIAN_SNORT_INTERFACE: $INTERFACE/" /etc/snort/snort.debian.conf
+            maybe_sudo sed -i "s/^DEBIAN_SNORT_INTERFACE=.*/DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"/" /etc/snort/snort.debian.conf
         fi
     }
 
