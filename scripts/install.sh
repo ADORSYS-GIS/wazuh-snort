@@ -134,7 +134,7 @@ install_snort_linux() {
     install_snort_apt
 
     # Function to configure Snort to use the main network interface and set HomeNet
-    configure_snort_interface() {
+    configure_debian_snort_interface() {
         if [ ! -f /etc/snort/snort.debian.conf ]; then
             # Create snort.conf with minimal configuration
             echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
@@ -144,8 +144,26 @@ install_snort_linux() {
         fi
     }
 
-    # Run the configuration function    
-    configure_snort_interface
+    configure_snort_interface() {
+        if [ ! -f /etc/snort/snort.conf ]; then
+            # Create snort.conf with minimal configuration
+            echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
+        else
+            # Update existing snort.conf
+            maybe_sudo sed -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
+        fi
+    }
+
+    # Run the configuration function   
+    if [ -f /etc/debian_version ]; then
+        echo "This is a Debian-based OS. Configuring snort.debian.conf"
+        configure_debian_snort_interface
+    else
+        echo "This is not a Debian-based OS. Configuring snort.conf"
+        configure_snort_interface
+    fi
+ 
+    
 
     # Restart Snort service
     maybe_sudo systemctl restart snort || {
