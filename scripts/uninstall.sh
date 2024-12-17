@@ -95,7 +95,7 @@ revert_ossec_conf() {
 
     if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
         maybe_sudo sed -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
-        success_message "Reverted changes in $ossec_conf"
+        info_message "Reverted changes in $ossec_conf"
     else
         info_message "No Snort-related changes found in $ossec_conf"
     fi
@@ -130,12 +130,8 @@ uninstall_snort_linux() {
     fi
 
     remove_snort_dirs_files \
-        "/etc/snort/rules" \
+        "/etc/snort/" \
         "/var/log/snort"
-
-    remove_snort_files \
-        "/etc/snort/snort.conf" \
-        "/etc/snort/rules/local.rules"
 
     revert_ossec_conf "$OSSEC_CONF_PATH"
     success_message "Snort uninstalled on Linux"
