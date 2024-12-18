@@ -53,17 +53,30 @@ success_message() {
     log "${GREEN}${BOLD}[SUCCESS]${NORMAL}" "$*"
 }
 
-# Function to ensure the script runs with appropriate privileges
+# Check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Ensure root privileges, either directly or through sudo
 maybe_sudo() {
-    if [ "$EUID" -ne 0 ]; then
-        if command -v sudo &>/dev/null; then
+    if [ "$(id -u)" -ne 0 ]; then
+        if command_exists sudo; then
             sudo "$@"
         else
-            error_message "Please run the script as root or install sudo."
+            error_message "This script requires root privileges. Please run with sudo or as root."
             exit 1
         fi
     else
         "$@"
+    fi
+}
+
+sed_alternative() {
+    if command_exists gsed; then
+        gsed "$@"
+    else
+        sed "$@"
     fi
 }
 
