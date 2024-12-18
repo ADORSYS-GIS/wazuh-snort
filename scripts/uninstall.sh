@@ -74,9 +74,9 @@ maybe_sudo() {
 
 sed_alternative() {
     if command_exists gsed; then
-        gsed "$@"
+        maybe_sudo gsed "$@"
     else
-        sed "$@"
+        maybe_sudo sed "$@"
     fi
 }
 
@@ -107,7 +107,7 @@ revert_ossec_conf() {
     local snort_tag="<!-- snort -->"
 
     if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
-        maybe_sudo sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
+        sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
         info_message "Reverted changes in $ossec_conf"
     else
         info_message "No Snort-related changes found in $ossec_conf"
