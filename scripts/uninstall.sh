@@ -105,13 +105,17 @@ remove_snort_files() {
 revert_ossec_conf() {
     local ossec_conf="$1"
     local snort_tag="<!-- snort -->"
-
-    if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
-        sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
-        info_message "Reverted changes in $ossec_conf"
+    
+    if maybe_sudo [ -f "$ossec_conf" ]; then
+        if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
+            sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
+            info_message "Reverted changes in $ossec_conf"
+        else
+            info_message "No Snort-related changes found in $ossec_conf. Skipping"
+        fi
     else
-        info_message "No Snort-related changes found in $ossec_conf"
-    fi
+        warn_message "The file $ossec_conf no longer exists. Skipping"
+    fi    
 }
 
 # Function to uninstall Snort on macOS
