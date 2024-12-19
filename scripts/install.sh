@@ -277,6 +277,51 @@ maybe_sudo() {
     fi
 }
 
+# Function to validate the installation and configuration
+validate_installation() {
+    info_message "Validating the installation..."
+
+    # Check if Snort is installed (Linux)
+    if [[ $OS_NAME == "Linux" ]]; then
+        if ! command -v snort &>/dev/null; then
+            error_message "Snort is not installed on this system. Please install it and rerun the script."
+            exit 1
+        else
+            success_message "Snort is installed on Linux."
+        fi
+    fi
+
+    # Check if Snort is installed (macOS)
+    if [[ $OS_NAME == "Darwin" ]]; then
+        if ! command -v snort &>/dev/null; then
+            error_message "Snort is not installed on this system. Please install it and rerun the script."
+            exit 1
+        else
+            success_message "Snort is installed on macOS."
+        fi
+    fi
+
+    # Validate Snort rules and directories
+    if [[ ! -d "/usr/local/etc/rules" ]] || [[ ! -f "/usr/local/etc/rules/local.rules" ]]; then
+        warn_message "Snort rules or directories are missing. Please check the configuration."
+    else
+        success_message "Snort rules and directories are properly configured."
+    fi
+
+    # Validate logging configuration for Snort
+    if [[ $OS_NAME == "Darwin" && ! -f "$SNORT_CONF_PATH" ]]; then
+        error_message "Snort configuration file not found at $SNORT_CONF_PATH. Please ensure Snort is installed properly."
+        exit 1
+    elif [[ $OS_NAME == "Linux" && ! -f "/etc/snort/snort.conf" ]]; then
+        error_message "Snort configuration file not found at /etc/snort/snort.conf. Please ensure Snort is installed properly."
+        exit 1
+    else
+        success_message "Snort configuration file is present."
+    fi
+
+    success_message "Validation completed successfully."
+}
+
 # Main logic: install Snort based on the operating system
 case "$OS_NAME" in
     Linux)
