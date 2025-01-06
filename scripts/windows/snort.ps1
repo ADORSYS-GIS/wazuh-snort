@@ -103,7 +103,7 @@ function Install-Snort {
         Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
         Write-Host "Scheduled Task already exists, Unregisting to Update Scheduled Task"
     }
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger - Settings $taskSettings -RunLevel Highest 
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest 
     Write-Host "Registering Snort to Run at Startup"
 
 
