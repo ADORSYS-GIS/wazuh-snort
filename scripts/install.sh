@@ -202,30 +202,20 @@ configure_snort_logging_macos() {
 
 # Function to update ossec.conf on macOS (M1 and Intel)
 update_ossec_conf_macos() {
-    local content_to_add="<!-- snort -->
-    <localfile>
-        <log_format>snort-full</log_format>
-        <location>/var/log/snort/alert_fast.txt</location>
-    </localfile>"
-
+   
     info_message "Updating $OSSEC_CONF_PATH"
 
     # Check if the specific <location> tag exists in the configuration file
     if ! sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
-        # Update ossec.conf based on the system architecture (M1 or Intel)
-        if [[ $(uname -m) == 'arm64' ]]; then
-            # macOS M1
+        
+
             sudo sed -i '' -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
 <localfile>\\
     <log_format>snort-full</log_format>\\
     <location>/var/log/snort/alert_fast.txt</location>\\
 </localfile>" "$OSSEC_CONF_PATH"
-        else
-            # macOS Intel
-            sudo sed -i '' "/<\/ossec_config>/i\\
-$content_to_add" "$OSSEC_CONF_PATH"
-        fi
+    
 
         success_message "ossec.conf updated on macOS"
     else
