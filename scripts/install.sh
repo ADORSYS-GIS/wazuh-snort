@@ -57,6 +57,33 @@ else
     exit 1
 fi
 
+# Check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Check if sudo is available or if the script is run as root
+maybe_sudo() {
+    if [ "$(id -u)" -ne 0 ]; then
+        if command -v sudo >/dev/null 2>&1; then
+            sudo "$@"
+        else
+            error_message "This script requires root privileges. Please run with sudo or as root."
+            exit 1
+        fi
+    else
+        "$@"
+    fi
+}
+
+sed_alternative() {
+    if command_exists gsed; then
+        maybe_sudo gsed "$@"
+    else
+        maybe_sudo sed "$@"
+    fi
+}
+
 # Function to create necessary directories and files for Snort
 create_snort_dirs_files() {
     local dirs=("$@")
@@ -140,7 +167,7 @@ install_snort_linux() {
             echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
         else
             # Update existing snort.conf
-            maybe_sudo sed -i "s/^DEBIAN_SNORT_INTERFACE=.*/DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"/" /etc/snort/snort.debian.conf
+            sed_alternative -i "s/^DEBIAN_SNORT_INTERFACE=.*/DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"/" /etc/snort/snort.debian.conf
         fi
     }
 
@@ -150,7 +177,7 @@ install_snort_linux() {
             echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
         else
             # Update existing snort.conf
-            maybe_sudo sed -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
+            sed_alternative -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
         fi
     }
 
@@ -206,10 +233,10 @@ update_ossec_conf_macos() {
     info_message "Updating $OSSEC_CONF_PATH"
 
     # Check if the specific <location> tag exists in the configuration file
-    if ! sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
+    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
         
 
-            sudo sed -i '' -e "/<\/ossec_config>/i\\
+            sed_alternative -i -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
 <localfile>\\
     <log_format>snort-full</log_format>\\
@@ -235,8 +262,8 @@ start_snort_macos() {
 # Function to configure Snort on Linux
 configure_snort_linux() {
     info_message "Configuring Snort"
-    maybe_sudo sed -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
-    maybe_sudo sed -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
+    sed_alternative -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
+    sed_alternative -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
     echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules > /dev/null
 
     info_message "Downloading and configuring Snort rule files"
@@ -253,7 +280,7 @@ configure_snort_linux() {
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
     info_message "Updating $OSSEC_CONF_PATH"
-    maybe_sudo sed -i '/<\/ossec_config>/i\
+    sed_alternative -i '/<\/ossec_config>/i\
         <!-- snort -->\
         <localfile>\
             <log_format>snort-full<\/log_format>\
@@ -269,20 +296,6 @@ start_snort_linux() {
     success_message "Snort started on Linux"
     maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
     
-}
-
-# Function to ensure the script runs with appropriate privileges
-maybe_sudo() {
-    if [ "$EUID" -ne 0 ]; then
-        if command -v sudo &>/dev/null; then
-            sudo "$@"
-        else
-            error_message "Please run the script as root or install sudo."
-            exit 1
-        fi
-    else
-        "$@"
-    fi
 }
 
 # Function to validate the installation and configuration
