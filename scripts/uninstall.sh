@@ -141,7 +141,7 @@ uninstall_snort_macos() {
 uninstall_snort_linux() {
     info_message "Uninstalling Snort on Linux"
     if command -v apt >/dev/null 2>&1; then
-        sudo apt-get purge -y snort && sudo apt-get autoremove -y
+        sudo apt-get purge -y snort snort-common snort-common-libraries snort-rules-default && sudo apt-get autoremove -y
     else
         warn_message "This script supports only Debian-based systems for uninstallation."
     fi
