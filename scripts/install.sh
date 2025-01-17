@@ -236,7 +236,7 @@ update_ossec_conf_macos() {
     if ! maybe_sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
         
 
-            sed_alternative -i -e "/<\/ossec_config>/i\\
+        sed_alternative -i -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
 <localfile>\\
     <log_format>snort-full</log_format>\\
