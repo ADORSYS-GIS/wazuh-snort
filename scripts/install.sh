@@ -153,8 +153,59 @@ install_snort_linux() {
 
     # Function to install Snort on Linux
     install_snort_apt() {
-        sudo DEBIAN_FRONTEND=noninteractive apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install snort -y --no-install-recommends
+       echo "Checking system architecture..."
+    ARCH=$(uname -m)
+    
+    if [[ $ARCH == "x86_64" ]]; then
+        ZIP_URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/main/snort3-packages-amd64.zip"
+        ZIP_FILE="amd64.zip"
+    elif [[ $ARCH == "aarch64" ]]; then
+        ZIP_URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/main/snort3-packages-arm64.zip"
+        ZIP_FILE="arm64.zip"
+    else
+        echo "Unsupported architecture: $ARCH"
+        exit 1
+    fi
+
+    echo "Downloading Snort package for $ARCH..."
+    curl -o "$ZIP_FILE" "$ZIP_URL" -L
+
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to download $ZIP_FILE. Exiting."
+        exit 1
+    fi
+
+    echo "Unzipping $ZIP_FILE..."
+    if ! command -v unzip &> /dev/null; then
+        echo "Unzip not found. Installing unzip..."
+        maybe_sudo apt-get update && maybe_sudo apt-get install -y unzip
+    fi
+
+    unzip "$ZIP_FILE"
+
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to unzip $ZIP_FILE. Exiting."
+        exit 1
+    fi
+
+    echo "Installing Snort .deb packages..."
+    maybe_sudo apt-get install -y ./*.deb
+
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install Snort packages. Exiting."
+        exit 1
+    fi
+
+    echo "Fixing permissions for apt cache..."
+    maybe_sudo chown -Rv _apt:root /var/cache/apt/archives/partial/
+    maybe_sudo chmod -Rv 700 /var/cache/apt/archives/partial/
+
+    echo "Updating library cache..."
+    maybe_sudo ldconfig
+
+    echo "Snort installation completed successfully!"
+        
+
     }
 
     # Install Snort
