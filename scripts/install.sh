@@ -361,7 +361,7 @@ configure_snort_linux() {
     info_message "Configuring Snort"
     sed_alternative -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
     sed_alternative -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
-    if [! -f /etc/snort/rules/local.rules] then
+    if [! -f /etc/snort/rules/local.rules]; then
         maybe_sudo curl -o /etc/snort/rules/local.rules https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules
     else
         error_message "File /etc/snort/rules/local.rules does not exist"
