@@ -69,17 +69,19 @@ function Install-Snort {
 </localfile>
 "@
 
-if (Test-Path $ossecConfigPath) {
-    $ossecConfigContent = Get-Content $ossecConfigPath
-    if ($ossecConfigContent -notmatch [regex]::Escape($snortConfig.Trim())) {
-        $ossecConfigContent -replace "</ossec_config>", "$snortConfig</ossec_config>" | Set-Content $ossecConfigPath
-        Write-Host "Snort configuration added to ossec.conf." -ForegroundColor Green
+    if (Test-Path $ossecConfigPath) {
+        $ossecConfigContent = Get-Content $ossecConfigPath -Raw
+        if ($ossecConfigContent -notmatch [regex]::Escape($snortConfig.Trim())) {
+            # Add the configuration only if it doesn't already exist
+            $ossecConfigContent = $ossecConfigContent -replace "</ossec_config>", "$snortConfig</ossec_config>"
+            $ossecConfigContent | Set-Content $ossecConfigPath
+            Write-Host "Snort configuration added to ossec.conf." -ForegroundColor Green
+        } else {
+            Write-Host "Snort configuration already exists in ossec.conf. Skipping addition." -ForegroundColor Yellow
+        }
     } else {
-        Write-Host "Snort configuration already exists in ossec.conf. Skipping addition." -ForegroundColor Yellow
+        Write-Host "ossec.conf file not found." -ForegroundColor Red
     }
-} else {
-    Write-Host "ossec.conf file not found." -ForegroundColor Red
-}
 
     # Download the new snort.conf file
     $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf" #todo: update the URL
