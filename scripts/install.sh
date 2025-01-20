@@ -189,7 +189,7 @@ install_snort_linux() {
     fi
 
     echo "Installing Snort .deb packages..."
-    maybe_sudo apt-get install -y ./*.deb 
+    maybe_sudo apt-get install -y --allow-downgrades ./*.deb 
 
     if [[ $? -ne 0 ]]; then
         echo "Failed to install Snort packages. Exiting."
