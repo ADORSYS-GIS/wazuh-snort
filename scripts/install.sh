@@ -181,7 +181,7 @@ install_snort_linux() {
         maybe_sudo apt-get update && maybe_sudo apt-get install -y unzip
     fi
 
-    unzip "$ZIP_FILE"
+    unzip -o "$ZIP_FILE"
 
     if [[ $? -ne 0 ]]; then
         echo "Failed to unzip $ZIP_FILE. Exiting."
@@ -189,7 +189,7 @@ install_snort_linux() {
     fi
 
     echo "Installing Snort .deb packages..."
-    maybe_sudo apt-get install ./*.deb 
+    maybe_sudo apt-get install -y ./*.deb 
 
     if [[ $? -ne 0 ]]; then
         echo "Failed to install Snort packages. Exiting."
