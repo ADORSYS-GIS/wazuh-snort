@@ -153,7 +153,7 @@ install_snort_linux() {
 
     # Function to install Snort on Linux
     install_snort_apt() {
-       echo "Checking system architecture..."
+       info_message "Checking system architecture..."
     ARCH=$(uname -m)
     
     if [[ $ARCH == "x86_64" ]]; then
@@ -163,48 +163,94 @@ install_snort_linux() {
         ZIP_URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/main/snort3-packages-arm64.zip"
         ZIP_FILE="arm64.zip"
     else
-        echo "Unsupported architecture: $ARCH"
+        info_message "Unsupported architecture: $ARCH"
         exit 1
     fi
 
-    echo "Downloading Snort package for $ARCH..."
+    info_message "Downloading Snort package for $ARCH..."
     curl -o "$ZIP_FILE" "$ZIP_URL" -L
 
     if [[ $? -ne 0 ]]; then
-        echo "Failed to download $ZIP_FILE. Exiting."
+        error_message "Failed to download $ZIP_FILE. Exiting."
         exit 1
     fi
 
-    echo "Unzipping $ZIP_FILE..."
+    info_message "Unzipping $ZIP_FILE..."
     if ! command -v unzip &> /dev/null; then
-        echo "Unzip not found. Installing unzip..."
+        warn_message "Unzip not found. Installing unzip..."
         maybe_sudo apt-get update && maybe_sudo apt-get install -y unzip
     fi
 
     unzip -o "$ZIP_FILE"
 
     if [[ $? -ne 0 ]]; then
-        echo "Failed to unzip $ZIP_FILE. Exiting."
+        error_message "Failed to unzip $ZIP_FILE. Exiting."
         exit 1
     fi
 
-    echo "Installing Snort .deb packages..."
+    info_message "Installing Snort .deb packages..."
     maybe_sudo apt-get install -y --allow-downgrades ./*.deb 
 
     if [[ $? -ne 0 ]]; then
-        echo "Failed to install Snort packages. Exiting."
+        error_message "Failed to install Snort packages. Exiting."
         exit 1
     fi
 
-    echo "Fixing permissions for apt cache..."
+    info_message "Fixing permissions for apt cache..."
     maybe_sudo chown -Rv _apt:root /var/cache/apt/archives/partial/
     maybe_sudo chmod -Rv 700 /var/cache/apt/archives/partial/
 
-    echo "Updating library cache..."
+    info_message "Updating library cache..."
     maybe_sudo ldconfig
 
-    echo "Snort installation completed successfully!"
-        
+    success_message "Snort installation completed successfully!"
+    
+    # Ensure Snort configuration file exists
+    if [ ! -f /etc/snort/snort.conf ]; then
+        warn_message "Snort configuration file not found. Copying example configuration..."
+        maybe_sudo curl -o /etc/snort/snort.conf https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf
+    fi
+
+        # Get all network interface excluding virtual network interfaces
+        INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(en|eth|wl)' | tr '\n' ' ')
+
+        # Configuring Snort interface
+        DEBIAN_SNORT_INTERFACE="$INTERFACE"
+        info_message "Configuring Snort interface: $DEBIAN_SNORT_INTERFACE"   
+        maybe_sudo sed -i "s/^interface = .*/interface = ${DEBIAN_SNORT_INTERFACE}/" /etc/snort/snort.debian.conf
+
+    # Create Snort service file if it doesn't exist
+    if [ ! -f /etc/systemd/system/snort.service ]; then
+        info_message "Creating Snort service file..."
+        maybe_sudo bash -c "cat <<EOF > /etc/systemd/system/snort.service
+        [Unit]
+        Description=Snort Network Intrusion Detection System
+        After=network.target
+
+        [Service]
+        ExecStart=/usr/sbin/snort -c /etc/snort/snort.conf -i ${INTERFACE}
+        ExecReload=/bin/kill -HUP \$MAINPID
+        Restart=on-failure
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF"
+        fi
+
+    # Reload systemd daemon
+    maybe_sudo systemctl daemon-reload
+
+    # Enable and start Snort service
+    maybe_sudo systemctl enable snort
+    maybe_sudo systemctl start snort
+
+    # Check if Snort service started successfully
+    if [[ $? -ne 0 ]]; then
+        error_message "Failed to restart Snort. Check the configuration."
+        exit 1
+    fi
+
+        success_message "Snort configuration completed successfully!"
 
     }
 
