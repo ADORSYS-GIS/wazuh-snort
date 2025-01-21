@@ -59,22 +59,50 @@ function Install-Snort {
     } else {
         Write-Host "Failed to download local.rules file."
     }
-
-    # Add Snort configuration to ossec.conf
-    $snortConfig = @"
-<!-- snort -->
+    
+# Define the Snort configuration XML node
+$snortConfigXml = @"
 <localfile>
     <log_format>snort-full</log_format>
     <location>C:\Snort\log\alert.ids</location>
 </localfile>
 "@
 
+    # Path to the ossec.conf file
     if (Test-Path $ossecConfigPath) {
-        $ossecConfigContent = Get-Content $ossecConfigPath -Raw
-        if ($ossecConfigContent -notmatch [regex]::Escape($snortConfig.Trim())) {
-            # Add the configuration only if it doesn't already exist
-            $ossecConfigContent = $ossecConfigContent -replace "</ossec_config>", "$snortConfig</ossec_config>"
-            $ossecConfigContent | Set-Content $ossecConfigPath
+        # Load the ossec.conf content as XML
+        try {
+            [xml]$ossecConfig = Get-Content $ossecConfigPath -Raw
+        } catch {
+            Write-Host "Failed to load ossec.conf as XML. Please check the file format." -ForegroundColor Red
+            return
+        }
+
+        # Check if the Snort configuration already exists
+        $snortConfigNode = [xml]$snortConfigXml
+        $nodeExists = $false
+
+        foreach ($localfile in $ossecConfig.ossec_config.localfile) {
+            if ($localfile.log_format -eq "snort-full" -and $localfile.location -eq "C:\Snort\log\alert.ids") {
+                $nodeExists = $true
+                break
+            }
+        }
+
+        if (-not $nodeExists) {
+            # Add the Snort configuration node
+            $newNode = $ossecConfig.CreateElement("localfile")
+            $logFormat = $ossecConfig.CreateElement("log_format")
+            $logFormat.InnerText = "snort-full"
+            $location = $ossecConfig.CreateElement("location")
+            $location.InnerText = "C:\Snort\log\alert.ids"
+
+            $newNode.AppendChild($logFormat) | Out-Null
+            $newNode.AppendChild($location) | Out-Null
+            $ossecConfig.ossec_config.AppendChild($newNode) | Out-Null
+
+            # Save the updated configuration
+            $ossecConfig.Save($ossecConfigPath)
             Write-Host "Snort configuration added to ossec.conf." -ForegroundColor Green
         } else {
             Write-Host "Snort configuration already exists in ossec.conf. Skipping addition." -ForegroundColor Yellow
