@@ -96,7 +96,7 @@ remove_snort() {
             maybe_sudo apt-get remove --purge -y snort snort-common snort-common-libraries snort-rules-default
             maybe_sudo apt-get autoremove -y
         elif [[ $OS_NAME == "Darwin" ]]; then
-            maybe_sudo brew uninstall snort || warn_message "Snort may not be installed via Homebrew."
+            brew uninstall snort || warn_message "Snort may not be installed via Homebrew."
         fi
         success_message "Snort package removed."
     else
