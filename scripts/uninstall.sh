@@ -107,7 +107,7 @@ remove_snort() {
 clean_snort_files() {
     info_message "Cleaning Snort configuration and logs..."
     maybe_sudo rm -rf "$SNORT_CONF_PATH" "$RULES_DIR" "$LOG_DIR"
-    success_message "Snort configuration and logs removed."
+    info_message "Snort configuration and logs removed."
 }
 
 remove_ossec_snort_integration() {
@@ -120,7 +120,7 @@ remove_ossec_snort_integration() {
     
     if [ -f "$OSSEC_CONF_PATH" ]; then
         sed_alternative -i '/<!-- snort -->/,/<\/localfile>/d' "$OSSEC_CONF_PATH"
-        success_message "Snort integration removed from OSSEC configuration."
+        info_message "Snort integration removed from OSSEC configuration."
     else
         warn_message "OSSEC configuration file not found. Skipping OSSEC cleanup."
     fi
@@ -131,7 +131,7 @@ stop_snort_service() {
         info_message "Stopping Snort service..."
         maybe_sudo systemctl stop "$SNORT_SERVICE"
         maybe_sudo systemctl disable "$SNORT_SERVICE"
-        success_message "Snort service stopped and disabled."
+        info_message "Snort service stopped and disabled."
     else
         warn_message "Snort service is not running or systemctl is unavailable. Skipping."
     fi
