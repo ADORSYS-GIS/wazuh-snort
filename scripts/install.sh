@@ -206,6 +206,7 @@ install_snort_linux() {
     success_message "Snort installation completed successfully!"
     
     # Ensure Snort configuration file exists
+    sudo mkdir -p /etc/snort
     if [ ! -f /etc/snort/snort.conf ]; then
         warn_message "Snort configuration file not found. Copying example configuration..."
         maybe_sudo curl -o /etc/snort/snort.conf https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf
@@ -259,6 +260,7 @@ install_snort_linux() {
 
     # Function to configure Snort to use the main network interface and set HomeNet
     configure_debian_snort_interface() {
+        sudo mkdir -p /etc/snort
         if [ ! -f /etc/snort/snort.debian.conf ]; then
             # Create snort.conf with minimal configuration
             echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
@@ -361,6 +363,7 @@ configure_snort_linux() {
     info_message "Configuring Snort"
     sed_alternative -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
     sed_alternative -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
+    sudo mkdir -p /etc/snort/rules
     if [ ! -f /etc/snort/rules/local.rules ]; then
         sudo curl -o /etc/snort/rules/local.rules https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules
     fi
