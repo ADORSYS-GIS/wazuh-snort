@@ -205,21 +205,7 @@ install_snort_linux() {
 
     success_message "Snort installation completed successfully!"
     
-    # Ensure Snort configuration file exists
-    sudo mkdir -p /etc/snort
-    if [ ! -f /etc/snort/snort.conf ]; then
-        warn_message "Snort configuration file not found. Copying example configuration..."
-        maybe_sudo curl -o /etc/snort/snort.conf https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf
-    fi
-
-        # Get all network interface excluding virtual network interfaces
-        INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(en|eth|wl)' | tr '\n' ' ')
-
-        # Configuring Snort interface
-        DEBIAN_SNORT_INTERFACE="$INTERFACE"
-        info_message "Configuring Snort interface: $DEBIAN_SNORT_INTERFACE"   
-        maybe_sudo sed -i "s/^interface = .*/interface = ${DEBIAN_SNORT_INTERFACE}/" /etc/snort/snort.debian.conf
-
+    
     # Create Snort service file if it doesn't exist
     if [ ! -f /etc/systemd/system/snort.service ]; then
         info_message "Creating Snort service file..."
@@ -258,30 +244,6 @@ install_snort_linux() {
     # Install Snort
     install_snort_apt
 
-    # Function to configure Snort to use the main network interface and set HomeNet
-    configure_debian_snort_interface() {
-        sudo mkdir -p /etc/snort
-        if [ ! -f /etc/snort/snort.debian.conf ]; then
-            # Create snort.conf with minimal configuration
-            sudo bash -c 'cat <<EOF > /etc/snort/snort.debian.conf
-            # This file is used to specify the interface for Snort on Debian-based systems
-            EOF'
-            echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
-        else
-            # Update existing snort.conf
-            sed_alternative -i "s/^DEBIAN_SNORT_INTERFACE=.*/DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"/" /etc/snort/snort.debian.conf
-        fi
-    }
-
-    configure_snort_interface() {
-        if [ ! -f /etc/snort/snort.conf ]; then
-            # Create snort.conf with minimal configuration
-            echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
-        else
-            # Update existing snort.conf
-            sed_alternative -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
-        fi
-    }
 
     # Run the configuration function   
     if [ -f /etc/debian_version ]; then
@@ -363,23 +325,15 @@ start_snort_macos() {
 
 # Function to configure Snort on Linux
 configure_snort_linux() {
-    info_message "Configuring Snort"
-    sed_alternative -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
-    sed_alternative -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
-    sudo mkdir -p /etc/snort/rules
-    if [ ! -f /etc/snort/rules/local.rules ]; then
-        sudo curl -o /etc/snort/rules/local.rules https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules
-    fi
-    echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules > /dev/null
+    local config_file="$SNORT_CONF_PATH"
+    local content_to_add='alert_fast =\n{\n    file = true\n}'
 
-    info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
-    maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
-    maybe_sudo rm community-rules.tar.gz
-
-    if ! maybe_sudo grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
-        echo "include \$RULE_PATH/community.rules" | maybe_sudo tee -a /etc/snort/snort.conf
-        success_message "Snort rule files configured on Linux"
+    info_message "Configuring Snort logging"
+    if ! maybe_sudo grep -q "$content_to_add" "$config_file"; then
+        echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
+        success_message "Snort logging configured in $config_file"
+    else
+        info_message "Snort logging is already configured in $config_file"
     fi
 }
 
