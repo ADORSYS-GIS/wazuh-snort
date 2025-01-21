@@ -245,14 +245,6 @@ install_snort_linux() {
     install_snort_apt
 
 
-    # Run the configuration function   
-    if [ -f /etc/debian_version ]; then
-        echo "This is a Debian-based OS. Configuring snort.debian.conf"
-        configure_debian_snort_interface
-    else
-        echo "This is not a Debian-based OS. Configuring snort.conf"
-        configure_snort_interface
-    fi
  
     
 
