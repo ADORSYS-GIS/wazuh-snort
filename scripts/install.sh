@@ -263,6 +263,9 @@ install_snort_linux() {
         sudo mkdir -p /etc/snort
         if [ ! -f /etc/snort/snort.debian.conf ]; then
             # Create snort.conf with minimal configuration
+            sudo bash -c 'cat <<EOF > /etc/snort/snort.debian.conf
+            # This file is used to specify the interface for Snort on Debian-based systems
+            EOF'
             echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
         else
             # Update existing snort.conf
