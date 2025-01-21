@@ -2,23 +2,20 @@ name: Build and Package Snort 3
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
 
 jobs:
+  # TODO Fix this job concerning different Arch (amd64, arm64)
   build:
     name: Build and Package Snort 3
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: [ amd64, arm64 ]
 
     steps:
       - name: Checkout code
@@ -49,6 +46,7 @@ jobs:
   deploy:
     name: Publish to GitHub Release
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
