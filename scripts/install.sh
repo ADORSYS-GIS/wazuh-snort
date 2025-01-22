@@ -112,11 +112,16 @@ install_snort_macos() {
     
     print_step "Installing" "Snort for macOS ($ARCH)"
     
+    if command_exists snort; then
+        info_message "snort is already installed. Skipping installation."
+    else
+        brew install snort
+        info_message "snort installed successfully"
+    fi
+    
     if [[ $ARCH == "arm64" ]]; then
-         brew install snort
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
     else
-         brew install snort
         SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
     fi
 
@@ -158,7 +163,12 @@ install_snort_linux() {
     }
 
     # Install Snort
-    install_snort_apt
+    if command_exists snort; then
+        info_message "Snort is already installed. Skipping installation."
+    else
+        install_snort_apt
+        info_message "Snort installed successfully"
+    fi
 
     # Function to configure Snort to use the main network interface and set HomeNet
     configure_debian_snort_interface() {
