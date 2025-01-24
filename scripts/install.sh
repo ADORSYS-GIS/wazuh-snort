@@ -265,7 +265,7 @@ update_ossec_conf_macos() {
 # Function to start Snort on macOS
 start_snort_macos() {
     info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
+    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/snort3-community-rules.tar.gz
     maybe_sudo tar -xvzf community-rules.tar.gz -C /usr/local/etc/rules --strip-components=1
     maybe_sudo rm community-rules.tar.gz
     info_message "Snort rule files downloaded and configured successfully"
