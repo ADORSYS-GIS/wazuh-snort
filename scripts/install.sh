@@ -112,11 +112,16 @@ install_snort_macos() {
     
     print_step "Installing" "Snort for macOS ($ARCH)"
     
+    if command_exists snort; then
+        info_message "snort is already installed. Skipping installation."
+    else
+        brew install snort
+        info_message "snort installed successfully"
+    fi
+    
     if [[ $ARCH == "arm64" ]]; then
-         brew install snort
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
     else
-         brew install snort
         SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
     fi
 
@@ -153,98 +158,47 @@ install_snort_linux() {
 
     # Function to install Snort on Linux
     install_snort_apt() {
-       info_message "Checking system architecture..."
-    ARCH=$(uname -m)
-    
-    if [[ $ARCH == "x86_64" ]]; then
-        ZIP_URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/main/snort3-packages-amd64.zip"
-        ZIP_FILE="amd64.zip"
-    elif [[ $ARCH == "aarch64" ]]; then
-        ZIP_URL="https://github.com/ADORSYS-GIS/wazuh-snort/releases/download/main/snort3-packages-arm64.zip"
-        ZIP_FILE="arm64.zip"
-    else
-        info_message "Unsupported architecture: $ARCH"
-        exit 1
-    fi
-
-    info_message "Downloading Snort package for $ARCH..."
-    curl -o "$ZIP_FILE" "$ZIP_URL" -L
-
-    if [[ $? -ne 0 ]]; then
-        error_message "Failed to download $ZIP_FILE. Exiting."
-        exit 1
-    fi
-
-    info_message "Unzipping $ZIP_FILE..."
-    if ! command -v unzip &> /dev/null; then
-        warn_message "Unzip not found. Installing unzip..."
-        maybe_sudo apt-get update && maybe_sudo apt-get install -y unzip
-    fi
-
-    unzip -o "$ZIP_FILE"
-
-    if [[ $? -ne 0 ]]; then
-        error_message "Failed to unzip $ZIP_FILE. Exiting."
-        exit 1
-    fi
-
-    info_message "Installing Snort .deb packages..."
-    maybe_sudo apt-get install -y --allow-downgrades ./*.deb 
-
-    if [[ $? -ne 0 ]]; then
-        error_message "Failed to install Snort packages. Exiting."
-        exit 1
-    fi
-
-    info_message "Fixing permissions for apt cache..."
-    maybe_sudo chown -Rv _apt:root /var/cache/apt/archives/partial/
-    maybe_sudo chmod -Rv 700 /var/cache/apt/archives/partial/
-
-    info_message "Updating library cache..."
-    maybe_sudo ldconfig
-
-    success_message "Snort installation completed successfully!"
-    
-    
-    # Create Snort service file if it doesn't exist
-    if [ ! -f /etc/systemd/system/snort.service ]; then
-        info_message "Creating Snort service file..."
-        maybe_sudo bash -c "cat <<EOF > /etc/systemd/system/snort.service
-        [Unit]
-        Description=Snort Network Intrusion Detection System
-        After=network.target
-
-        [Service]
-        ExecStart=/usr/sbin/snort -c /etc/snort/snort.conf -i ${INTERFACE}
-        ExecReload=/bin/kill -HUP \$MAINPID
-        Restart=on-failure
-
-        [Install]
-        WantedBy=multi-user.target
-        EOF"
-        fi
-
-    # Reload systemd daemon
-    maybe_sudo systemctl daemon-reload
-
-    # Enable and start Snort service
-    maybe_sudo systemctl enable snort
-    maybe_sudo systemctl start snort
-
-    # Check if Snort service started successfully
-    if [[ $? -ne 0 ]]; then
-        error_message "Failed to restart Snort. Check the configuration."
-        exit 1
-    fi
-
-        success_message "Snort configuration completed successfully!"
-
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install snort -y --no-install-recommends
     }
 
     # Install Snort
-    install_snort_apt
+    if command_exists snort; then
+        info_message "Snort is already installed. Skipping installation."
+    else
+        install_snort_apt
+        info_message "Snort installed successfully"
+    fi
 
+    # Function to configure Snort to use the main network interface and set HomeNet
+    configure_debian_snort_interface() {
+        if [ ! -f /etc/snort/snort.debian.conf ]; then
+            # Create snort.conf with minimal configuration
+            echo "DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"" | sudo tee -a /etc/snort/snort.debian.conf
+        else
+            # Update existing snort.conf
+            sed_alternative -i "s/^DEBIAN_SNORT_INTERFACE=.*/DEBIAN_SNORT_INTERFACE=\"$INTERFACE\"/" /etc/snort/snort.debian.conf
+        fi
+    }
 
+    configure_snort_interface() {
+        if [ ! -f /etc/snort/snort.conf ]; then
+            # Create snort.conf with minimal configuration
+            echo "config interface: $INTERFACE" | sudo tee -a /etc/snort/snort.conf
+        else
+            # Update existing snort.conf
+            sed_alternative -i "s/^config interface: .*/config interface: $INTERFACE/" /etc/snort/snort.conf
+        fi
+    }
+
+    # Run the configuration function   
+    if [ -f /etc/debian_version ]; then
+        echo "This is a Debian-based OS. Configuring snort.debian.conf"
+        configure_debian_snort_interface
+    else
+        echo "This is not a Debian-based OS. Configuring snort.conf"
+        configure_snort_interface
+    fi
  
     
 
@@ -310,35 +264,64 @@ update_ossec_conf_macos() {
 
 # Function to start Snort on macOS
 start_snort_macos() {
+    info_message "Downloading and configuring Snort rule files"
+    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
+    maybe_sudo tar -xvzf community-rules.tar.gz -C /usr/local/etc/rules --strip-components=1
+    maybe_sudo rm community-rules.tar.gz
+    info_message "Snort rule files downloaded and configured successfully"
+
     info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
+    maybe_sudo snort -c "$SNORT_CONF_PATH" --rule-path /usr/local/etc/rules/ -i en0 -A fast -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
 # Function to configure Snort on Linux
 configure_snort_linux() {
-    local config_file="$SNORT_CONF_PATH"
-    local content_to_add='alert_fast =\n{\n    file = true\n}'
+    info_message "Configuring Snort"
+    sed_alternative -i 's/output alert_fast: snort.alert.fast/output alert_fast: snort.alert/g' /etc/snort/snort.conf
+    sed_alternative -i 's/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
+    echo 'alert icmp any any -> any any (msg:"ICMP connection attempt:"; sid:1000010; rev:1;)' | maybe_sudo tee -a /etc/snort/rules/local.rules > /dev/null
 
-    info_message "Configuring Snort logging"
-    if ! maybe_sudo grep -q "$content_to_add" "$config_file"; then
-        echo -e "$content_to_add" | maybe_sudo tee -a "$config_file" > /dev/null
-        success_message "Snort logging configured in $config_file"
-    else
-        info_message "Snort logging is already configured in $config_file"
+    info_message "Downloading and configuring Snort rule files"
+    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/community-rules.tar.gz
+    maybe_sudo tar -xvzf community-rules.tar.gz -C /etc/snort/rules --strip-components=1
+    maybe_sudo rm community-rules.tar.gz
+
+    if ! maybe_sudo grep -q "include \$RULE_PATH/community.rules" /etc/snort/snort.conf; then
+        echo "include \$RULE_PATH/community.rules" | maybe_sudo tee -a /etc/snort/snort.conf
+        success_message "Snort rule files configured on Linux"
     fi
 }
 
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
     info_message "Updating $OSSEC_CONF_PATH"
-    sed_alternative -i '/<\/ossec_config>/i\
-        <!-- snort -->\
-        <localfile>\
-            <log_format>snort-full<\/log_format>\
-            <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
-        <\/localfile>' "$OSSEC_CONF_PATH"
-    success_message "ossec.conf updated on Linux"
+    # sed_alternative -i '/<\/ossec_config>/i\
+    #     <!-- snort -->\
+    #     <localfile>\
+    #         <log_format>snort-full<\/log_format>\
+    #         <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
+    #     <\/localfile>' "$OSSEC_CONF_PATH"
+    # success_message "ossec.conf updated on Linux"
+    
+    
+    # Check if the specific <location> tag exists in the configuration file
+    if ! maybe_sudo grep -q "<location>/var/log/snort/snort.alert.fast</location>" "$OSSEC_CONF_PATH"; then
+        
+
+        sed_alternative -i -e "/<\/ossec_config>/i\\
+<!-- snort -->\\
+<localfile>\\
+    <log_format>snort-full</log_format>\\
+    <location>/var/log/snort/snort.alert.fast</location>\\
+</localfile>" "$OSSEC_CONF_PATH"
+    
+
+        success_message "ossec.conf updated on macOS"
+    else
+        info_message "The content already exists in $OSSEC_CONF_PATH"
+    fi
+    
 }
 
 # Function to start Snort on Linux
@@ -346,8 +329,7 @@ start_snort_linux() {
     info_message "Restarting Snort"
     maybe_sudo systemctl restart snort
     success_message "Snort started on Linux"
-    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
-    
+    maybe_sudo snort -q -c /etc/snort/snort.conf --rule-path /etc/snort/rules -l /var/log/snort -A fast &
 }
 
 # Function to validate the installation and configuration
