@@ -271,7 +271,7 @@ start_snort_macos() {
     info_message "Snort rule files downloaded and configured successfully"
 
     info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A fast -q -D -l /var/log/snort
+    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A full -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
@@ -313,7 +313,7 @@ update_ossec_conf_linux() {
 
 # Function to start Snort on Linux
 start_snort_linux() {
-    info_message "Restarting Snort"
+    info_message "Starting Snort"
     maybe_sudo systemctl restart snort
     success_message "Snort started on Linux"
     maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A full &
