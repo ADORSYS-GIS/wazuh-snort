@@ -316,7 +316,7 @@ start_snort_linux() {
     info_message "Restarting Snort"
     maybe_sudo systemctl restart snort
     success_message "Snort started on Linux"
-    maybe_sudo snort -q -c /etc/snort/snort.conf --rule-path /etc/snort/rules -l /var/log/snort -A fast &
+    maybe_sudo snort -q -c /etc/snort/snort.conf -R /etc/snort/rules/community.rules -l /var/log/snort -A fast &
 }
 
 # Function to validate the installation and configuration
