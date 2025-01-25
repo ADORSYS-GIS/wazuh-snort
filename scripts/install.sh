@@ -271,7 +271,7 @@ start_snort_macos() {
     info_message "Snort rule files downloaded and configured successfully"
 
     info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A full -q -D -l /var/log/snort
+    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A alert_full -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
