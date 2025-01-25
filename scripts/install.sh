@@ -295,32 +295,19 @@ configure_snort_linux() {
 
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
-    info_message "Updating $OSSEC_CONF_PATH"
-    sed_alternative -i '/<\/ossec_config>/i\
-        <!-- snort -->\
-        <localfile>\
-            <log_format>snort-full<\/log_format>\
-            <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
-        <\/localfile>' "$OSSEC_CONF_PATH"
-    success_message "ossec.conf updated on Linux"
-    
-    
-#     # Check if the specific <location> tag exists in the configuration file
-#     if ! maybe_sudo grep -q "<location>/var/log/snort/snort.alert.fast</location>" "$OSSEC_CONF_PATH"; then
-        
-
-#         sed_alternative -i -e "/<\/ossec_config>/i\\
-# <!-- snort -->\\
-# <localfile>\\
-#     <log_format>snort-full</log_format>\\
-#     <location>/var/log/snort/snort.alert.fast</location>\\
-# </localfile>" "$OSSEC_CONF_PATH"
-    
-
-#         success_message "ossec.conf updated on macOS"
-#     else
-#         info_message "The content already exists in $OSSEC_CONF_PATH"
-#     fi
+    # Check if the specific <location> tag exists in the configuration file
+    if ! maybe_sudo grep -q "<location>/var/log/snort/snort.alert.fast</location>" "$OSSEC_CONF_PATH"; then
+        info_message "Updating $OSSEC_CONF_PATH"
+        sed_alternative -i '/<\/ossec_config>/i\
+            <!-- snort -->\
+            <localfile>\
+                <log_format>snort-full<\/log_format>\
+                <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
+            <\/localfile>' "$OSSEC_CONF_PATH"
+        success_message "ossec.conf updated."
+    else
+        info_message "The content already exists in $OSSEC_CONF_PATH"
+    fi
     
 }
 
