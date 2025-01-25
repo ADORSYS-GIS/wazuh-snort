@@ -50,7 +50,8 @@ def test_update_ossec_conf_linux(host):
         <!-- snort -->
         <localfile>
             <log_format>snort-full</log_format>
-            <location>/var/log/snort/snort.alert.fast</location>
+            <location>/var/log/snort/snort.alert</location>
+        </localfile>
         """
 
     ossec_conf = host.file(ossec_conf_path)
