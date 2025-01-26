@@ -243,7 +243,7 @@ update_ossec_conf_macos() {
     info_message "Updating $OSSEC_CONF_PATH"
 
     # Check if the specific <location> tag exists in the configuration file
-    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
+    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_syslog.txt</location>" "$OSSEC_CONF_PATH"; then
         
 
         sed_alternative -i -e "/<\/ossec_config>/i\\
@@ -271,7 +271,7 @@ start_snort_macos() {
     info_message "Snort rule files downloaded and configured successfully"
 
     info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -q -D -l /var/log/snort
+    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A alert_syslog -q -D -l /var/log/snort
     success_message "Snort started on macOS"
 }
 
