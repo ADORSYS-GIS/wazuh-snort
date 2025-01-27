@@ -7,6 +7,9 @@ else
     set -eu
 fi
 
+APP_NAME=${APP_NAME:-"snort"}
+SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
+
 # Define text formatting
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -95,6 +98,16 @@ create_snort_dirs_files() {
     done
 }
 
+# General Utility Functions
+create_file() {
+    local filepath="$1"
+    local content="$2"
+    maybe_sudo bash -c "cat > \"$filepath\" <<EOF
+$content
+EOF"
+    info_message "Created file: $filepath"
+}
+
 create_snort_files() {
     local files=("$@")
     for file in "${files[@]}"; do
@@ -142,10 +155,14 @@ install_snort_macos() {
         # Exit the script with a non-zero status
         exit 1
     fi
+    
+    info_message "Downloading and configuring Snort rule files"
+    maybe_sudo curl -SL -s https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/rules/snort3.rules > "/usr/local/etc/rules/snort3-community.rules"
+    info_message "Snort rule files downloaded and configured successfully"
 
-    start_snort_macos
-
-    success_message "Snort installed successfully"
+    info_message "Creating plist file..."
+    create_snort_plist_file
+    success_message "Snort started on macOS"
 }
 
 # Function to install Snort on Linux
@@ -226,7 +243,7 @@ install_snort_linux() {
 # Function to configure Snort logging on macOS
 configure_snort_logging_macos() {
     local config_file="$SNORT_CONF_PATH"
-    local content_to_add='alert_fast =\n{\n    file = true\n}'
+    local content_to_add='alert_full =\n{\n    file = true\n}'
 
     info_message "Configuring Snort logging"
     if ! maybe_sudo grep -q "$content_to_add" "$config_file"; then
@@ -243,14 +260,14 @@ update_ossec_conf_macos() {
     info_message "Updating $OSSEC_CONF_PATH"
 
     # Check if the specific <location> tag exists in the configuration file
-    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_fast.txt</location>" "$OSSEC_CONF_PATH"; then
+    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_full.txt</location>" "$OSSEC_CONF_PATH"; then
         
 
         sed_alternative -i -e "/<\/ossec_config>/i\\
 <!-- snort -->\\
 <localfile>\\
     <log_format>snort-full</log_format>\\
-    <location>/var/log/snort/alert_fast.txt</location>\\
+    <location>/var/log/snort/alert_full.txt</location>\\
 </localfile>" "$OSSEC_CONF_PATH"
     
 
@@ -260,13 +277,52 @@ update_ossec_conf_macos() {
     fi
 }
 
-
-
-# Function to start Snort on macOS
-start_snort_macos() {
-    info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/local.rules -i en0 -A fast -q -D -l /var/log/snort
-    success_message "Snort started on macOS"
+# macOS Launchd Plist File
+create_snort_plist_file() {
+    if [[ $ARCH == "arm64" ]]; then
+        BIN_FOLDER="/opt/homebrew/bin"
+    else
+        BIN_FOLDER="/usr/local/bin"
+    fi
+    
+    info_message "Creating plist file for $APP_NAME..."
+    create_file "$SNORT_LAUNCH_DAEMON_FILE" "
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>Label</key>
+    <string>com.adorsys.$APP_NAME</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$BIN_FOLDER/$APP_NAME</string>
+        <string>-c</string>
+        <string>$SNORT_CONF_PATH</string>
+        <string>-R</string>
+        <string>/usr/local/etc/rules/snort3-community.rules</string>
+        <string>-i</string>
+        <string>en0</string>
+        <string>-A</string>
+        <string>alert_full</string>
+        <string>-q</string>
+        <string>-D</string>
+        <string>-l</string>
+        <string>/var/log/snort</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+"
+    info_message "Unloading previous plist file (if any)..."
+    maybe_sudo launchctl unload "$SNORT_LAUNCH_DAEMON_FILE" 2>/dev/null || true
+    
+    info_message "Loading new plist file..."
+    maybe_sudo launchctl load -w "$SNORT_LAUNCH_DAEMON_FILE" 2>/dev/null || true
+    
+    info_message "macOS Launchd plist file created and loaded: $SNORT_LAUNCH_DAEMON_FILE"
 }
 
 # Function to configure Snort on Linux
@@ -289,23 +345,28 @@ configure_snort_linux() {
 
 # Function to update ossec.conf on Linux
 update_ossec_conf_linux() {
-    info_message "Updating $OSSEC_CONF_PATH"
-    sed_alternative -i '/<\/ossec_config>/i\
-        <!-- snort -->\
-        <localfile>\
-            <log_format>snort-full<\/log_format>\
-            <location>\/var\/log\/snort\/snort.alert.fast<\/location>\
-        <\/localfile>' "$OSSEC_CONF_PATH"
-    success_message "ossec.conf updated on Linux"
+    # Check if the specific <location> tag exists in the configuration file
+    if ! maybe_sudo grep -q "<location>/var/log/snort/snort.alert.fast</location>" "$OSSEC_CONF_PATH"; then
+        info_message "Updating $OSSEC_CONF_PATH"
+        sed_alternative -i '/<\/ossec_config>/i\
+            <!-- snort -->\
+            <localfile>\
+                <log_format>snort-full<\/log_format>\
+                <location>\/var\/log\/snort\/snort.alert<\/location>\
+            <\/localfile>' "$OSSEC_CONF_PATH"
+        success_message "ossec.conf updated."
+    else
+        info_message "The content already exists in $OSSEC_CONF_PATH"
+    fi
+    
 }
 
 # Function to start Snort on Linux
 start_snort_linux() {
-    info_message "Restarting Snort"
+    info_message "Starting Snort"
     maybe_sudo systemctl restart snort
     success_message "Snort started on Linux"
-    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A fast &
-    
+    maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A full &
 }
 
 # Function to validate the installation and configuration
@@ -357,9 +418,11 @@ validate_installation() {
 case "$OS_NAME" in
     Linux)
         install_snort_linux
+        success_message "Snort installed successfully"
         ;;
     Darwin)
         install_snort_macos
+        success_message "Snort installed successfully"
         ;;
     *)
         error_message "Unsupported OS: $OS_NAME"
