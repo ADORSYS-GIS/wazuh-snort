@@ -157,7 +157,7 @@ install_snort_macos() {
     fi
     
     info_message "Downloading and configuring Snort rule files"
-    maybe curl -SL -s https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/rules/snort3.rules > "/usr/local/etc/rules/snort3-community.rules"
+    maybe_sudo curl -SL -s https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/rules/snort3.rules > "/usr/local/etc/rules/snort3-community.rules"
     info_message "Snort rule files downloaded and configured successfully"
 
     info_message "Creating plist file..."
