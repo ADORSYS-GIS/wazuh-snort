@@ -7,6 +7,9 @@ else
     set -eu
 fi
 
+APP_NAME=${APP_NAME:-"snort"}
+SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
+
 # Define text formatting
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -95,6 +98,16 @@ create_snort_dirs_files() {
     done
 }
 
+# General Utility Functions
+create_file() {
+    local filepath="$1"
+    local content="$2"
+    maybe_sudo bash -c "cat > \"$filepath\" <<EOF
+$content
+EOF"
+    info_message "Created file: $filepath"
+}
+
 create_snort_files() {
     local files=("$@")
     for file in "${files[@]}"; do
@@ -142,10 +155,16 @@ install_snort_macos() {
         # Exit the script with a non-zero status
         exit 1
     fi
+    
+    info_message "Downloading and configuring Snort rule files"
+    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/snort3-community-rules.tar.gz
+    maybe_sudo tar -xvzf community-rules.tar.gz -C /usr/local/etc/rules --strip-components=1
+    maybe_sudo rm community-rules.tar.gz
+    info_message "Snort rule files downloaded and configured successfully"
 
-    start_snort_macos
-
-    success_message "Snort installed successfully"
+    info_message "Creating plist file..."
+    create_snort_plist_file
+    success_message "Snort started on macOS"
 }
 
 # Function to install Snort on Linux
@@ -260,19 +279,52 @@ update_ossec_conf_macos() {
     fi
 }
 
-
-
-# Function to start Snort on macOS
-start_snort_macos() {
-    info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/snort3-community-rules.tar.gz
-    maybe_sudo tar -xvzf community-rules.tar.gz -C /usr/local/etc/rules --strip-components=1
-    maybe_sudo rm community-rules.tar.gz
-    info_message "Snort rule files downloaded and configured successfully"
-
-    info_message "Starting Snort"
-    maybe_sudo snort -c "$SNORT_CONF_PATH" -R /usr/local/etc/rules/snort3-community.rules -i en0 -A alert_full -q -D -l /var/log/snort
-    success_message "Snort started on macOS"
+# macOS Launchd Plist File
+create_snort_plist_file() {
+    if [[ $ARCH == "arm64" ]]; then
+        BIN_FOLDER="/opt/homebrew/bin"
+    else
+        BIN_FOLDER="/usr/local/bin"
+    fi
+    
+    info_message "Creating plist file for $APP_NAME..."
+    create_file "$SNORT_LAUNCH_DAEMON_FILE" "
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>Label</key>
+    <string>com.adorsys.$APP_NAME</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$BIN_FOLDER/$APP_NAME</string>
+        <string>-c</string>
+        <string>$SNORT_CONF_PATH</string>
+        <string>-R</string>
+        <string>/usr/local/etc/rules/snort3-community.rules</string>
+        <string>-i</string>
+        <string>en0</string>
+        <string>-A</string>
+        <string>alert_full</string>
+        <string>-q</string>
+        <string>-D</string>
+        <string>-l</string>
+        <string>/var/log/snort</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+"
+    info_message "Unloading previous plist file (if any)..."
+    maybe_sudo launchctl unload "$SNORT_LAUNCH_DAEMON_FILE" 2>/dev/null || true
+    
+    info_message "Loading new plist file..."
+    maybe_sudo launchctl load -w "$SNORT_LAUNCH_DAEMON_FILE" 2>/dev/null || true
+    
+    info_message "macOS Launchd plist file created and loaded: $SNORT_LAUNCH_DAEMON_FILE"
 }
 
 # Function to configure Snort on Linux
@@ -368,9 +420,11 @@ validate_installation() {
 case "$OS_NAME" in
     Linux)
         install_snort_linux
+        success_message "Snort installed successfully"
         ;;
     Darwin)
         install_snort_macos
+        success_message "Snort installed successfully"
         ;;
     *)
         error_message "Unsupported OS: $OS_NAME"
