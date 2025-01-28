@@ -157,9 +157,8 @@ install_snort_macos() {
     fi
     
     info_message "Downloading and configuring Snort rule files"
-    maybe_sudo curl -SL --progress-bar -o community-rules.tar.gz https://www.snort.org/downloads/community/snort3-community-rules.tar.gz
-    maybe_sudo tar -xvzf community-rules.tar.gz -C /usr/local/etc/rules --strip-components=1
-    maybe_sudo rm community-rules.tar.gz
+    maybe_sudo curl -SL --progress-bar -o snort3-community.rules https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/rules/snort3.rules
+    maybe_sudo mv snort3-community.rules /usr/local/etc/rules
     info_message "Snort rule files downloaded and configured successfully"
 
     info_message "Creating plist file..."
