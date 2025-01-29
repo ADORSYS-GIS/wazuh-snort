@@ -118,13 +118,21 @@ function Uninstall-NpCap {
 }
 
 function Remove-Configuration {
-        # Restore the ossec.conf file if Snort-related changes were made
+    # Restore the ossec.conf file if Snort-related changes were made
+    InfoMessage "Removing Snort configuration from ossec.conf"
+    
     if (Test-Path -Path $ossecConfigPath) {
         try {
             [xml]$ossecConfig = Get-Content $ossecConfigPath -Raw
             $snortNodes = $ossecConfig.ossec_config.localfile | Where-Object {
                 $_.log_format -eq "snort-full" -and $_.location -eq "C:\Snort\log\alert.ids"
             }
+
+            if ($snortNodes.Count -eq 0) {
+                WarnMessage "No Snort configuration found in ossec.conf. Skipping removal."
+                return
+            }
+
             foreach ($node in $snortNodes) {
                 $ossecConfig.ossec_config.RemoveChild($node) | Out-Null
             }
@@ -137,6 +145,7 @@ function Remove-Configuration {
         WarnMessage "ossec.conf file not found. Skipping"
     }
 }
+
 
 function Remove-ScheduledTask {
 
