@@ -1,42 +1,123 @@
-# Function to uninstall Snort and associated changes
+$npcapPath = "C:\Program Files\Npcap"
+$snortBinPath = "C:\Snort\bin"
+$snortUninstallPath = "C:\Snort\uninstall.exe"
+$npcapUninstallPath = "C:\Program Files\Npcap\uninstall.exe"
+$taskName = "SnortStartup"
+function Log {
+    param (
+        [string]$Level,
+        [string]$Message,
+        [string]$Color = "White"  # Default color
+    )
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "$Timestamp $Level $Message" -ForegroundColor $Color
+}
+
+# Logging helpers with colors
+function InfoMessage {
+    param ([string]$Message)
+    Log "[INFO]" $Message "White"
+}
+
+function WarnMessage {
+    param ([string]$Message)
+    Log "[WARNING]" $Message "Yellow"
+}
+
+function ErrorMessage {
+    param ([string]$Message)
+    Log "[ERROR]" $Message "Red"
+}
+
+function SuccessMessage {
+    param ([string]$Message)
+    Log "[SUCCESS]" $Message "Green"
+}
+
+function PrintStep {
+    param (
+        [int]$StepNumber,
+        [string]$Message
+    )
+    Log "[STEP]" "Step ${StepNumber}: $Message" "White"
+}
+
+# Restart wazuh agent
+function Restart-WazuhAgent {
+    InfoMessage "Restarting wazuh agent..."
+    try {
+        Restart-Service -Name WazuhSvc -ErrorAction Stop
+        InfoMessage "Wazuh Agent restarted succesfully"
+    }
+    catch {
+        ErrorMessage "Failed to restart Wazuh Agent: $($_.Exception.Message)"
+    }
+}
+
+function Remove-SystemPath {
+    param (
+        [string]$PathToRemove
+    )
+
+    # Get the current system Path
+    $currentPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
+
+    # Split the Path into an array
+    $pathArray = $currentPath -split ';'
+
+    # Check if the specified path exists
+    if ($pathArray -contains $PathToRemove) {
+        InfoMessage "The path '$PathToRemove' exists in the system Path. Proceeding to remove it."
+
+        # Remove the specified path
+        $updatedPathArray = $pathArray | Where-Object { $_ -ne $PathToRemove }
+
+        # Join the array back into a single string
+        $updatedPath = ($updatedPathArray -join ';').TrimEnd(';')
+
+        # Update the system Path
+        [System.Environment]::SetEnvironmentVariable("Path", $updatedPath, [System.EnvironmentVariableTarget]::Machine)
+
+        InfoMessage "Successfully removed '$PathToRemove' from the system Path."
+    } else {
+        WarnMessage "The path '$PathToRemove' does not exist in the system Path. No changes were made."
+    }
+}
+
+# Function to uninstall Snort
 function Uninstall-Snort {
-    # Define paths and variables
-    $tempDir = "C:\Temp"
-    $snortBinPath = "C:\Snort\bin"
-    $snortPath = "C:\Snort"
-    $npcapPath = "C:\Program Files\Npcap"
-    $rulesDir = "C:\Snort\rules"
-    $ossecConfigPath = "C:\Program Files (x86)\ossec-agent\ossec.conf"
-    $taskName = "SnortStartup"
 
-    # Remove the Snort directory and its contents
-    if (Test-Path -Path $snortPath) {
-        Remove-Item -Path $snortPath -Recurse -Force
-        Write-Host "Removed Snort directory and its contents."
-    } else {
-        Write-Host "Snort directory not found."
+    InfoMessage "Uninstalling snort..."
+    
+    if (-Not (Test-Path $snortUninstallPath)) {
+        WarnMessage "Snort uninstaller not found: $snortUninstallPath" skipping
+        return
     }
 
-    # Remove Npcap if installed
-    if (Test-Path -Path $npcapPath) {
-        $npcapUninstallPath = Join-Path -Path $npcapPath -ChildPath "Uninstall.exe"
-        if (Test-Path -Path $npcapUninstallPath) {
-            Start-Process -FilePath $npcapUninstallPath -ArgumentList "/S" -Wait
-            Write-Host "Npcap uninstalled."
-        } else {
-            Write-Host "Npcap uninstall executable not found."
-        }
-    } else {
-        Write-Host "Npcap directory not found."
+    Start-Process -FilePath $snortUninstallPath -NoNewWindow -Wait
+
+    InfoMessage "Successfully uninstalled snort"
+
+    Remove-SystemPath $snortBinPath
+}
+
+
+function Uninstall-NpCap {
+
+    InfoMessage "Uninstalling NpCap"
+
+    if (-Not (Test-Path $npcapUninstallPath)) {
+        WarnMessage "Npcap uninstaller not found: $npcapUninstallPath" skipping
+        return
     }
 
-    # Remove Snort-specific environment variables
-    $envPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-    $newEnvPath = $envPath -replace [regex]::Escape(";$snortBinPath;$npcapPath"), ""
-    [Environment]::SetEnvironmentVariable("Path", $newEnvPath, "Machine")
-    Write-Host "Removed Snort and Npcap from environment variables."
+    Start-Process -FilePath $npcapUninstallPath -NoNewWindow -Wait
+    InfoMessage "Succesfully removed NpCap"
+    Remove-SystemPath $npcapPath
+}
 
-    # Restore the ossec.conf file if Snort-related changes were made
+function Remove-Configuration {
+        # Restore the ossec.conf file if Snort-related changes were made
     if (Test-Path -Path $ossecConfigPath) {
         try {
             [xml]$ossecConfig = Get-Content $ossecConfigPath -Raw
@@ -47,13 +128,16 @@ function Uninstall-Snort {
                 $ossecConfig.ossec_config.RemoveChild($node) | Out-Null
             }
             $ossecConfig.Save($ossecConfigPath)
-            Write-Host "Removed Snort configuration from ossec.conf."
+            InfoMessage "Removed Snort configuration from ossec.conf."
         } catch {
-            Write-Host "Failed to modify ossec.conf. Check the file format." -ForegroundColor Red
+            ErrorMessage "Failed to modify ossec.conf. Check the file format." 
         }
     } else {
-        Write-Host "ossec.conf file not found."
+        WarnMessage "ossec.conf file not found. Skipping"
     }
+}
+
+function Remove-ScheduledTask {
 
     # Remove the Snort scheduled task
     if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
@@ -62,17 +146,22 @@ function Uninstall-Snort {
     } else {
         Write-Host "Snort scheduled task not found."
     }
+    
+}
+#Remove from Path
 
-    # Clean up the temporary directory
-    if (Test-Path -Path $tempDir) {
-        Remove-Item -Path $tempDir -Recurse -Force
-        Write-Host "Removed temporary directory."
-    } else {
-        Write-Host "Temporary directory not found."
+function Uninstall-All {
+    try {
+        Uninstall-NpCap
+        Uninstall-Snort
+        Remove-Configuration
+        Restart-WazuhAgent
+        SuccessMessage "Snort and components uninstalled successfully"
     }
-
-    Write-Host "Uninstallation and cleanup completed!"
+    catch {
+        ErrorMessage "Snort Uninstall Failed: $($_.Exception.Message)"
+    }
 }
 
 # Execute the uninstallation function
-Uninstall-Snort
+Uninstall-All
