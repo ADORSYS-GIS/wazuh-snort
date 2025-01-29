@@ -2,7 +2,8 @@ $npcapPath = "C:\Program Files\Npcap"
 $snortBinPath = "C:\Snort\bin"
 $snortUninstallPath = "C:\Snort\uninstall.exe"
 $npcapUninstallPath = "C:\Program Files\Npcap\uninstall.exe"
-$taskName = "SnortStartup"
+$taskName = "SnortStartup" 
+$ossecConfigPath = "C:\Program Files (x86)\ossec-agent\ossec.conf"
 function Log {
     param (
         [string]$Level,
@@ -97,8 +98,8 @@ function Uninstall-Snort {
     Start-Process -FilePath $snortUninstallPath -NoNewWindow -Wait
 
     InfoMessage "Successfully uninstalled snort"
-
     Remove-SystemPath $snortBinPath
+    Remove-ScheduledTask
 }
 
 
@@ -142,9 +143,9 @@ function Remove-ScheduledTask {
     # Remove the Snort scheduled task
     if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
         Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
-        Write-Host "Removed Snort scheduled task."
+        InfoMessage "Removed Snort scheduled task."
     } else {
-        Write-Host "Snort scheduled task not found."
+        WarnMessage "Snort scheduled task not found."
     }
     
 }
