@@ -46,12 +46,18 @@ function PrintStep {
 # Restart wazuh agent
 function Restart-WazuhAgent {
     InfoMessage "Restarting wazuh agent..."
-    try {
-        Restart-Service -Name WazuhSvc -ErrorAction Stop
-        InfoMessage "Wazuh Agent restarted succesfully"
+    $service = Get-Service -Name WazuhSvc -ErrorAction SilentlyContinue
+    if($service) {
+        try {
+            Restart-Service -Name WazuhSvc -ErrorAction Stop
+            InfoMessage "Wazuh Agent restarted succesfully"
+        }
+        catch {
+            ErrorMessage "Failed to restart Wazuh Agent: $($_.Exception.Message)"
+        }
     }
-    catch {
-        ErrorMessage "Failed to restart Wazuh Agent: $($_.Exception.Message)"
+    else {
+        InfoMessage "Wazuh Service does not exist"
     }
 }
 
