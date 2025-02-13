@@ -7,6 +7,7 @@ function Install-Snort {
     $npcapInstallerUrl = "https://npcap.com/dist/npcap-1.79.exe"
     $npcapInstallerPath = "$tempDir\Npcap_Installer.exe"
     $snortBinPath = "C:\Snort\bin"
+    $snortExePath = "$snortBinPath\snort.exe"  # Assumes this is the installed executable
     $npcapPath = "C:\Program Files\Npcap"
     $rulesDir = "C:\Snort\rules"
     $rulesFile = Join-Path -Path $rulesDir -ChildPath "local.rules"
@@ -18,30 +19,33 @@ function Install-Snort {
         New-Item -ItemType Directory -Path $tempDir
     }
 
-    # Function to download a file
-    function Download-File($url, $outputPath) {
-        try {
-            curl.exe -L $url -o $outputPath
-            Write-Host "Downloaded $url to $outputPath"
-        } catch {
-            Write-Host "Failed to download $url"
-            exit 1
-        }
-    }
+
+    Write-Host "Download and install snort..."
 
     # Download and install Snort
-    Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
+    # Check if Snort is already installed
 
-    $psexecPath = "C:\Tools\PsExec.exe"
-    # Run the installer in the current user's session using PsExec
-    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $snortInstallerPath /S quiet" -Wait
-    # Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
+    Write-Host "Checking if Snort is installed..."
+    if (Test-Path $snortExePath) {
+        Write-Host "Snort is already installed. Skipping Snort installation."
+    } else {
+        Write-Host "Downloading and installing Snort..."
+        Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
+        Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
+    }
 
     # Download Npcap (manual installation required)
-    Invoke-WebRequest $npcapInstallerUrl -OutFile $npcapInstallerPath
-    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $npcapInstallerPath /S quiet" -Wait
-    # Start-Process -FilePath $npcapInstallerPath -Wait
-    Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
+    # Check if Npcap is already installed
+
+    Write-Host "Checking if Npcap is installed..."
+    if (Test-Path $npcapPath) {
+        Write-Host "Npcap is already installed. Skipping Npcap installation."
+    } else {
+        Write-Host "Downloading and installing Npcap..."
+        Invoke-WebRequest -Uri $npcapInstallerUrl -OutFile $npcapInstallerPath
+        Start-Process -FilePath $npcapInstallerPath -Wait
+        Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
+    }
 
     # Add environment variables
     $envPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
