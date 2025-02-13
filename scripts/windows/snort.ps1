@@ -29,18 +29,18 @@ function Install-Snort {
         }
     }
 
-    Write-Host "Download and install snort..."
-
     # Download and install Snort
     Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
-    Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
-    Write-Host "Download and install npcap"
-
+    $psexecPath = "C:\Tools\PsExec.exe"
+    # Run the installer in the current user's session using PsExec
+    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $snortInstallerPath /VERYSILENT"
+    # Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
     # Download Npcap (manual installation required)
     Invoke-WebRequest $npcapInstallerUrl -OutFile $npcapInstallerPath
-    Start-Process -FilePath $npcapInstallerPath -Wait
+    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $npcapInstallerPath /VERYSILENT"
+    # Start-Process -FilePath $npcapInstallerPath -Wait
     Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
 
     # Add environment variables
