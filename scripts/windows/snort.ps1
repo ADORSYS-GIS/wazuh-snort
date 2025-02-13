@@ -34,12 +34,12 @@ function Install-Snort {
 
     $psexecPath = "C:\Tools\PsExec.exe"
     # Run the installer in the current user's session using PsExec
-    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $snortInstallerPath /VERYSILENT"
+    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $snortInstallerPath /S quiet" -Wait
     # Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
 
     # Download Npcap (manual installation required)
     Invoke-WebRequest $npcapInstallerUrl -OutFile $npcapInstallerPath
-    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $npcapInstallerPath /VERYSILENT"
+    Start-Process -FilePath $psexecPath -ArgumentList "-i 1 $npcapInstallerPath /S quiet" -Wait
     # Start-Process -FilePath $npcapInstallerPath -Wait
     Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
 
