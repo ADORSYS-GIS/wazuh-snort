@@ -216,32 +216,32 @@ function Install-Snort {
     # Ensure the temporary directory exists.
     Ensure-Directory -Path $global:Config.TempDir
 
-    InfoMessage "`n=== Installing Snort ==="
+    InfoMessage "=== Installing Snort ==="
     Install-SnortSoftware
 
-    InfoMessage "`n=== Installing Npcap ==="
+    InfoMessage "=== Installing Npcap ==="
     Install-NpcapSoftware
 
-    InfoMessage "`n=== Updating Environment Variables ==="
+    InfoMessage "=== Updating Environment Variables ==="
     Update-EnvironmentVariables
 
-    InfoMessage "`n=== Updating local.rules file ==="
+    InfoMessage "=== Updating local.rules file ==="
     Update-RulesFile
 
-    InfoMessage "`n=== Updating ossec.conf ==="
+    InfoMessage "=== Updating ossec.conf ==="
     Update-OSSECConfig
 
-    InfoMessage "`n=== Updating snort.conf ==="
+    InfoMessage "=== Updating snort.conf ==="
     Update-SnortConf
 
     # Clean up temporary files.
     Remove-Item -Path $global:Config.TempDir -Recurse -Force
     InfoMessage "Cleaned up temporary directory: $($global:Config.TempDir)"
 
-    InfoMessage "`n=== Registering Scheduled Task ==="
+    InfoMessage "=== Registering Scheduled Task ==="
     Register-SnortScheduledTask
 
-    SuccessMessage "`nInstallation and configuration completed!"
+    SuccessMessage "Installation and configuration completed!"
 }
 
 # Execute the main installation function.
