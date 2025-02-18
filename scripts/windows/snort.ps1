@@ -1,156 +1,248 @@
-# Function to install Snort
-function Install-Snort {
-    # Define paths and URLs
-    $tempDir = "C:\Temp"
-    $snortInstallerUrl = "https://www.snort.org/downloads/snort/Snort_2_9_20_Installer.x64.exe"
-    $snortInstallerPath = "$tempDir\Snort_Installer.exe"
-    $npcapInstallerUrl = "https://npcap.com/dist/npcap-1.79.exe"
-    $npcapInstallerPath = "$tempDir\Npcap_Installer.exe"
-    $snortBinPath = "C:\Snort\bin"
-    $snortExePath = "$snortBinPath\snort.exe"  # Assumes this is the installed executable
-    $npcapPath = "C:\Program Files\Npcap"
-    $rulesDir = "C:\Snort\rules"
-    $rulesFile = Join-Path -Path $rulesDir -ChildPath "local.rules"
-    $ossecConfigPath = "C:\Program Files (x86)\ossec-agent\ossec.conf"
-    $snortConfigPath = "C:\Snort\etc\snort.conf"
+# Global configuration
+$global:Config = @{
+    TempDir            = "C:\Temp"
+    SnortInstallerUrl  = "https://www.snort.org/downloads/snort/Snort_2_9_20_Installer.x64.exe"
+    SnortInstallerPath = "C:\Temp\Snort_Installer.exe"
+    NpcapInstallerUrl  = "https://npcap.com/dist/npcap-1.79.exe"
+    NpcapInstallerPath = "C:\Temp\Npcap_Installer.exe"
+    SnortBinPath       = "C:\Snort\bin"
+    SnortExePath       = "C:\Snort\bin\snort.exe"
+    NpcapPath          = "C:\Program Files\Npcap"
+    RulesDir           = "C:\Snort\rules"
+    OssecConfigPath    = "C:\Program Files (x86)\ossec-agent\ossec.conf"
+    SnortConfigPath    = "C:\Snort\etc\snort.conf"
+    LocalRulesUrl      = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules"
+    SnortConfUrl       = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf"
+    SnortLogDir        = "C:\Snort\log"
+    TaskName           = "SnortStartup"
+}
 
-    # Create the C:\Temp directory if it doesn't exist
-    if (-Not (Test-Path -Path $tempDir)) {
-        New-Item -ItemType Directory -Path $tempDir
+# Function to handle logging
+
+function Log {
+    param (
+        [string]$Level,
+        [string]$Message,
+        [string]$Color = "White"  # Default color
+    )
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "$Timestamp $Level $Message" -ForegroundColor $Color
+}
+
+# Logging helpers with colors
+function InfoMessage {
+    param ([string]$Message)
+    Log "[INFO]" $Message "White"
+}
+
+function WarnMessage {
+    param ([string]$Message)
+    Log "[WARNING]" $Message "Yellow"
+}
+
+function ErrorMessage {
+    param ([string]$Message)
+    Log "[ERROR]" $Message "Red"
+}
+
+function SuccessMessage {
+    param ([string]$Message)
+    Log "[SUCCESS]" $Message "Green"
+}
+
+function PrintStep {
+    param (
+        [int]$StepNumber,
+        [string]$Message
+    )
+    Log "[STEP]" "Step ${StepNumber}: $Message" "White"
+}
+
+# Helper: Create a directory if it doesn't exist.
+function Ensure-Directory {
+    param (
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+    if (-Not (Test-Path -Path $Path)) {
+        New-Item -ItemType Directory -Path $Path -Force | Out-Null
+        InfoMessage "Created directory: $Path"
     }
+}
 
-
-    Write-Host "Download and install snort..."
-
-    # Download and install Snort
-    # Check if Snort is already installed
-
-    Write-Host "Checking if Snort is installed..."
-    if (Test-Path $snortExePath) {
-        Write-Host "Snort is already installed. Skipping Snort installation."
-    } else {
-        Write-Host "Downloading and installing Snort..."
-        Invoke-WebRequest -Uri $snortInstallerUrl -OutFile $snortInstallerPath -Headers @{"User-Agent"="Mozilla/5.0"}
-        Start-Process -FilePath $snortInstallerPath -ArgumentList "/S" -Wait
+# Helper: Download a file from a URL.
+function Download-File {
+    param (
+        [Parameter(Mandatory)]
+        [string]$Url,
+        [Parameter(Mandatory)]
+        [string]$OutputPath
+    )
+    try {
+        Invoke-WebRequest -Uri $Url -OutFile $OutputPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
+        InfoMessage "Downloaded file from $Url to $OutputPath"
     }
-
-    # Download Npcap (manual installation required)
-    # Check if Npcap is already installed
-
-    Write-Host "Checking if Npcap is installed..."
-    if (Test-Path $npcapPath) {
-        Write-Host "Npcap is already installed. Skipping Npcap installation."
-    } else {
-        Write-Host "Downloading and installing Npcap..."
-        Invoke-WebRequest -Uri $npcapInstallerUrl -OutFile $npcapInstallerPath
-        Start-Process -FilePath $npcapInstallerPath -Wait
-        Write-Host "Please follow the on-screen instructions to complete the Npcap installation."
+    catch {
+        ErrorMessage "Failed to download file from $Url. $_"
     }
+}
 
-    # Add environment variables
+# Install Snort (only run once)
+function Install-SnortSoftware {
+    if (Test-Path $global:Config.SnortExePath) {
+        WarnMessage "Snort is already installed. Skipping installation."
+    }
+    else {
+        InfoMessage "Downloading Snort installer..."
+        Download-File -Url $global:Config.SnortInstallerUrl -OutputPath $global:Config.SnortInstallerPath
+        InfoMessage "Installing Snort..."
+        Start-Process -FilePath $global:Config.SnortInstallerPath -ArgumentList "/S" -Wait
+    }
+}
+
+# Install Npcap (only run once)
+function Install-NpcapSoftware {
+    if (Test-Path $global:Config.NpcapPath) {
+        WarnMessage "Npcap is already installed. Skipping installation."
+    }
+    else {
+        InfoMessage "Downloading Npcap installer..."
+        Download-File -Url $global:Config.NpcapInstallerUrl -OutputPath $global:Config.NpcapInstallerPath
+        InfoMessage "Installing Npcap..."
+        Start-Process -FilePath $global:Config.NpcapInstallerPath -Wait
+        InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
+    }
+}
+
+# Update environment variables to include Snort and Npcap directories.
+function Update-EnvironmentVariables {
     $envPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-    [Environment]::SetEnvironmentVariable("Path", "$envPath;$snortBinPath;$npcapPath", "Machine")
+    $newPath = "$envPath;$($global:Config.SnortBinPath);$($global:Config.NpcapPath)"
+    [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+    InfoMessage "Environment PATH updated with Snort and Npcap directories."
+}
 
-    # Create the rules directory if it does not exist
-    if (-Not (Test-Path -Path $rulesDir)) {
-        New-Item -ItemType Directory -Force -Path $rulesDir
-    }
+# Update local.rules file.
+function Update-RulesFile {
+    $localRulesTempPath = Join-Path -Path $global:Config.TempDir -ChildPath "local.rules"
+    Download-File -Url $global:Config.LocalRulesUrl -OutputPath $localRulesTempPath
 
-    # Download the local.rules file
-    $localRulesUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules" #todo: update the URL
-    $localRulesPath = "$tempDir\local.rules"
-    Invoke-WebRequest -Uri $localRulesUrl -OutFile $localRulesPath
-
-    # Replace the existing local.rules file
-    if (Test-Path $localRulesPath) {
-        Copy-Item -Path $localRulesPath -Destination $rulesFile -Force
-        Write-Host "local.rules file replaced."
-    } else {
-        Write-Host "Failed to download local.rules file."
-    }
+    Ensure-Directory -Path $global:Config.RulesDir
+    $rulesFile = Join-Path -Path $global:Config.RulesDir -ChildPath "local.rules"
     
-# Define the Snort configuration XML node
-$snortConfigXml = @"
-<localfile>
-    <log_format>snort-full</log_format>
-    <location>C:\Snort\log\alert.ids</location>
-</localfile>
-"@
+    if (Test-Path $localRulesTempPath) {
+        Copy-Item -Path $localRulesTempPath -Destination $rulesFile -Force
+        InfoMessage "local.rules file replaced."
+    }
+    else {
+        ErrorMessage "Failed to download local.rules file."
+    }
+}
 
-    # Path to the ossec.conf file
-    if (Test-Path $ossecConfigPath) {
-        # Load the ossec.conf content as XML
+# Update ossec.conf by adding the Snort configuration node.
+function Update-OSSECConfig {
+    if (Test-Path $global:Config.OssecConfigPath) {
         try {
-            [xml]$ossecConfig = Get-Content $ossecConfigPath -Raw
-        } catch {
-            Write-Host "Failed to load ossec.conf as XML. Please check the file format." -ForegroundColor Red
+            [xml]$ossecConfig = Get-Content $global:Config.OssecConfigPath -Raw
+        }
+        catch {
+            ErrorMessage "Failed to load ossec.conf as XML. Please check the file format."
             return
         }
-
-        # Check if the Snort configuration already exists
-        $snortConfigNode = [xml]$snortConfigXml
+        
+        $snortLogFormat   = "snort-full"
+        $snortAlertLocation = "C:\Snort\log\alert.ids"
         $nodeExists = $false
 
         foreach ($localfile in $ossecConfig.ossec_config.localfile) {
-            if ($localfile.log_format -eq "snort-full" -and $localfile.location -eq "C:\Snort\log\alert.ids") {
+            if ($localfile.log_format -eq $snortLogFormat -and $localfile.location -eq $snortAlertLocation) {
                 $nodeExists = $true
                 break
             }
         }
-
         if (-not $nodeExists) {
-            # Add the Snort configuration node
             $newNode = $ossecConfig.CreateElement("localfile")
             $logFormat = $ossecConfig.CreateElement("log_format")
-            $logFormat.InnerText = "snort-full"
+            $logFormat.InnerText = $snortLogFormat
             $location = $ossecConfig.CreateElement("location")
-            $location.InnerText = "C:\Snort\log\alert.ids"
+            $location.InnerText = $snortAlertLocation
 
             $newNode.AppendChild($logFormat) | Out-Null
             $newNode.AppendChild($location) | Out-Null
             $ossecConfig.ossec_config.AppendChild($newNode) | Out-Null
 
-            # Save the updated configuration
-            $ossecConfig.Save($ossecConfigPath)
-            Write-Host "Snort configuration added to ossec.conf." -ForegroundColor Green
-        } else {
-            Write-Host "Snort configuration already exists in ossec.conf. Skipping addition." -ForegroundColor Yellow
+            $ossecConfig.Save($global:Config.OssecConfigPath)
+            InfoMessage "Snort configuration added to ossec.conf." 
         }
-    } else {
-        Write-Host "ossec.conf file not found." -ForegroundColor Red
+        else {
+            WarnMessage "Snort configuration already exists in ossec.conf. Skipping addition."
+        }
     }
-
-    # Download the new snort.conf file
-    $snortConfUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf" #todo: update the URL
-    $snortConfPath = "$tempDir\snort.conf"
-    Invoke-WebRequest -Uri $snortConfUrl -OutFile $snortConfPath
-
-    # Replace the existing snort.conf file
-    if (Test-Path $snortConfPath) {
-        Copy-Item -Path $snortConfPath -Destination $snortConfigPath -Force
-        Write-Host "snort.conf file replaced."
-    } else {
-        Write-Host "Failed to download snort.conf file."
+    else {
+        ErrorMessage "ossec.conf file not found at $($global:Config.OssecConfigPath)."
     }
-    
-    # Delete temp directory
-    Remove-Item -Path $tempDir -Recurse -Force
+}
 
-    # Register Snort as a scheduled task to run at startup
-    $taskName = "SnortStartup"
-    $taskAction = New-ScheduledTaskAction -Execute "C:\Snort\bin\snort.exe" -Argument "-c C:\Snort\etc\snort.conf -A full -l C:\Snort\log\ -i 5 -A console"
+# Update snort.conf file.
+function Update-SnortConf {
+    $snortConfTempPath = Join-Path -Path $global:Config.TempDir -ChildPath "snort.conf"
+    Download-File -Url $global:Config.SnortConfUrl -OutputPath $snortConfTempPath
+
+    if (Test-Path $snortConfTempPath) {
+        Copy-Item -Path $snortConfTempPath -Destination $global:Config.SnortConfigPath -Force
+        InfoMessage "snort.conf file replaced."
+    }
+    else {
+        ErrorMessage "Failed to download snort.conf file."
+    }
+}
+
+# Register Snort as a scheduled task to run at startup.
+function Register-SnortScheduledTask {
+    $taskAction = New-ScheduledTaskAction -Execute $global:Config.SnortExePath -Argument "-c $($global:Config.SnortConfigPath) -A full -l $($global:Config.SnortLogDir) -i 5 -A console"
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     $taskSettings = New-ScheduledTaskSettingsSet -Hidden
 
-    if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
-        Write-Host "Scheduled Task already exists, Unregisting to Update Scheduled Task"
+    if (Get-ScheduledTask -TaskName $global:Config.TaskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $global:Config.TaskName -Confirm:$false
+        WarnMessage "Scheduled Task already exists, unregistering to update task."
     }
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest 
-    Write-Host "Registering Snort to Run at Startup"
-
-
-    Write-Host "Installation and configuration completed!"
+    Register-ScheduledTask -TaskName $global:Config.TaskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest 
+    InfoMessage "Registered Snort to run at startup."
 }
 
+# Main function that runs the installation and configuration steps.
+function Install-Snort {
+    # Ensure the temporary directory exists.
+    Ensure-Directory -Path $global:Config.TempDir
+
+    InfoMessage "=== Installing Snort ==="
+    Install-SnortSoftware
+
+    InfoMessage "=== Installing Npcap ==="
+    Install-NpcapSoftware
+
+    InfoMessage "=== Updating Environment Variables ==="
+    Update-EnvironmentVariables
+
+    InfoMessage "=== Updating local.rules file ==="
+    Update-RulesFile
+
+    InfoMessage "=== Updating ossec.conf ==="
+    Update-OSSECConfig
+
+    InfoMessage "=== Updating snort.conf ==="
+    Update-SnortConf
+
+    # Clean up temporary files.
+    Remove-Item -Path $global:Config.TempDir -Recurse -Force
+    InfoMessage "Cleaned up temporary directory: $($global:Config.TempDir)"
+
+    InfoMessage "=== Registering Scheduled Task ==="
+    Register-SnortScheduledTask
+
+    SuccessMessage "Installation and configuration completed!"
+}
+
+# Execute the main installation function.
 Install-Snort
