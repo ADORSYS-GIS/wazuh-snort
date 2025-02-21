@@ -122,7 +122,7 @@ create_snort_files() {
 install_snort_macos() {
     # Check if the architecture is M1/ARM or Intel
     ARCH=$(uname -m)
-    BREW_PATH =$(brew --prefix)
+    BREW_PATH=$(brew --prefix)
 
     print_step "Installing" "Snort for macOS ($ARCH)"
     
