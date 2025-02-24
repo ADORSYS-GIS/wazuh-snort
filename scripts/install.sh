@@ -122,7 +122,8 @@ create_snort_files() {
 install_snort_macos() {
     # Check if the architecture is M1/ARM or Intel
     ARCH=$(uname -m)
-    
+    BREW_PATH=$(brew --prefix)
+
     print_step "Installing" "Snort for macOS ($ARCH)"
     
     if command_exists snort; then
@@ -132,7 +133,8 @@ install_snort_macos() {
         info_message "snort installed successfully"
     fi
     
-    if [[ $ARCH == "arm64" ]]; then
+
+    if [[ $BREW_PATH == "/opt/homebrew" ]]; then
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
     else
         SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
@@ -279,7 +281,7 @@ update_ossec_conf_macos() {
 
 # macOS Launchd Plist File
 create_snort_plist_file() {
-    if [[ $ARCH == "arm64" ]]; then
+    if [[ $BREW_PATH == "/opt/homebrew" ]]; then
         BIN_FOLDER="/opt/homebrew/bin"
     else
         BIN_FOLDER="/usr/local/bin"
