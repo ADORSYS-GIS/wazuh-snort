@@ -222,7 +222,7 @@ function Register-SnortScheduledTask {
     InfoMessage "Snort Log Directory: $logDir"
 
     # Build the argument string, quoting each path for safety
-    $arguments = "-c `"$cfgPath`" -A full -l `"$logDir`" -i 5 -A console"
+    $arguments = "-c `"$cfgPath`" -A full -l `"$logDir`""
 
     # Create action, trigger, and settings
     $taskAction   = New-ScheduledTaskAction    -Execute $exePath    -Argument $arguments
