@@ -199,17 +199,57 @@ function Update-SnortConf {
 
 # Register Snort as a scheduled task to run at startup.
 function Register-SnortScheduledTask {
-    $taskAction = New-ScheduledTaskAction -Execute $global:Config.SnortExePath -Argument "-c $($global:Config.SnortConfigPath) -A full -l $($global:Config.SnortLogDir) -i 5 -A console"
-    $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-    $taskSettings = New-ScheduledTaskSettingsSet -Hidden
+    # Ensure Snort executable and config paths are defined
+    $exePath   = $global:Config.SnortExePath
+    $cfgPath   = $global:Config.SnortConfigPath
+    $logDir    = $global:Config.SnortLogDir
 
+    if (-not (Test-Path $exePath)) {
+        ErrorMessage "Cannot register Snort scheduled task: Snort executable not found at $exePath."
+        return
+    }
+    if (-not (Test-Path $cfgPath)) {
+        ErrorMessage "Cannot register Snort scheduled task: Config file not found at $cfgPath."
+        return
+    }
+    if (-not (Test-Path $logDir)) {
+        ErrorMessage "Cannot register Snort scheduled task: Log directory not found at $logDir."
+        return
+    }
+
+    InfoMessage "Snort Exe Path: $exePath"
+    InfoMessage "Snort Config Path: $cfgPath"
+    InfoMessage "Snort Log Directory: $logDir"
+
+    # Build the argument string, quoting each path for safety
+    $arguments = "-c `"$cfgPath`" -A full -l `"$logDir`""
+
+    # Create action, trigger, and settings
+    $taskAction   = New-ScheduledTaskAction    -Execute $exePath    -Argument $arguments
+    $taskTrigger  = New-ScheduledTaskTrigger   -AtStartup
+    $taskSettings = New-ScheduledTaskSettingsSet -Hidden `
+                                                  -AllowStartIfOnBatteries `
+                                                  -DontStopIfGoingOnBatteries `
+                                                  -StartWhenAvailable `
+                                                  -RunOnlyIfNetworkAvailable
+
+    # If a task with this name already exists, unregister it so we can replace it
     if (Get-ScheduledTask -TaskName $global:Config.TaskName -ErrorAction SilentlyContinue) {
         Unregister-ScheduledTask -TaskName $global:Config.TaskName -Confirm:$false
-        WarnMessage "Scheduled Task already exists, unregistering to update task."
+        WarnMessage "Scheduled Task already exists; unregistering so we can update it."
     }
-    Register-ScheduledTask -TaskName $global:Config.TaskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -RunLevel Highest 
-    InfoMessage "Registered Snort to run at startup."
+
+    # Register new task running as SYSTEM at the highest run level
+    Register-ScheduledTask -TaskName  $global:Config.TaskName `
+                           -Action    $taskAction       `
+                           -Trigger   $taskTrigger      `
+                           -Settings  $taskSettings     `
+                           -User      "SYSTEM"          `
+                           -RunLevel  Highest
+
+    InfoMessage "Registered Snort to run at startup as SYSTEM."
 }
+
 
 # Main function that runs the installation and configuration steps.
 function Install-Snort {

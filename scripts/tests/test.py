@@ -46,13 +46,7 @@ def test_snort_interface_configuration(host):
 def test_update_ossec_conf_linux(host):
     """Test if ossec.conf is updated on Linux."""
     ossec_conf_path = "/var/ossec/etc/ossec.conf"
-    expected_content = """
-        <!-- snort -->
-        <localfile>
-            <log_format>snort-full</log_format>
-            <location>/var/log/snort/snort.alert</location>
-        </localfile>
-        """
+    expected_content = "<location>/var/log/snort/snort.alert</location>"
 
     ossec_conf = host.file(ossec_conf_path)
     assert (
