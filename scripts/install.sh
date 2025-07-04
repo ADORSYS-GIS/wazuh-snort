@@ -118,6 +118,19 @@ create_snort_files() {
     done
 }
 
+# Get the logged-in user (works on macOS & Linux)
+get_logged_in_user() {
+    if [ "$(uname -s)" = "Darwin" ]; then
+        scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}'
+    else
+        if command -v logname >/dev/null 2>&1; then
+            logname 2>/dev/null || who | awk '/console/{print $1}' | head -n 1
+        else
+            who | awk '/console/{print $1}' | head -n 1
+        fi
+    fi
+}
+
 # Function to install Snort on macOS
 install_snort_macos() {
     # Check if the architecture is M1/ARM or Intel
@@ -129,7 +142,8 @@ install_snort_macos() {
     if command_exists snort; then
         info_message "snort is already installed. Skipping installation."
     else
-        brew install snort
+        USER=$(get_logged_in_user)
+        sudo -u "$USER" brew install snort
         info_message "snort installed successfully"
     fi
     
