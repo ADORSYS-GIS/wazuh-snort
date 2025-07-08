@@ -9,6 +9,11 @@ fi
 
 APP_NAME=${APP_NAME:-"snort"}
 SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
+LOGGED_IN_USER=""
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    LOGGED_IN_USER=$(scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}')
+fi
 
 # Define text formatting
 RED='\033[0;31m'
@@ -87,6 +92,10 @@ sed_alternative() {
     fi
 }
 
+brew_command() {
+    sudo -u "$LOGGED_IN_USER" brew "$@"
+}
+
 # Function to create necessary directories and files for Snort
 create_snort_dirs_files() {
     local dirs=("$@")
@@ -118,19 +127,6 @@ create_snort_files() {
     done
 }
 
-# Get the logged-in user (works on macOS & Linux)
-get_logged_in_user() {
-    if [ "$(uname -s)" = "Darwin" ]; then
-        scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}'
-    else
-        if command -v logname >/dev/null 2>&1; then
-            logname 2>/dev/null || who | awk '/console/{print $1}' | head -n 1
-        else
-            who | awk '/console/{print $1}' | head -n 1
-        fi
-    fi
-}
-
 # Function to install Snort on macOS
 install_snort_macos() {
     # Check if the architecture is M1/ARM or Intel
@@ -142,11 +138,9 @@ install_snort_macos() {
     if command_exists snort; then
         info_message "snort is already installed. Skipping installation."
     else
-        USER=$(get_logged_in_user)
-        sudo -u "$USER" brew install snort
+        brew_command install snort
         info_message "snort installed successfully"
     fi
-    
 
     if [[ $BREW_PATH == "/opt/homebrew" ]]; then
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"

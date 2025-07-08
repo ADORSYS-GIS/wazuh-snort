@@ -7,6 +7,12 @@ else
     set -eu
 fi
 
+LOGGED_IN_USER=""
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    LOGGED_IN_USER=$(scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}')
+fi
+
 # Determine OS-specific paths
 OS_NAME=$(uname)
 if [[ $OS_NAME == "Linux" ]]; then
@@ -80,6 +86,10 @@ sed_alternative() {
     fi
 }
 
+brew_command() {
+    sudo -u "$LOGGED_IN_USER" brew "$@"
+}
+
 # Function to remove directories and files
 remove_snort_dirs_files() {
     local dirs=("$@")
@@ -121,7 +131,7 @@ revert_ossec_conf() {
 # Function to uninstall Snort on macOS
 uninstall_snort_macos() {
     info_message "Uninstalling Snort on macOS"
-    brew uninstall snort || warn_message "Snort was not installed via Homebrew."
+    brew_command uninstall snort || warn_message "Snort was not installed via Homebrew."
 
     remove_snort_dirs_files \
         "/usr/local/etc/rules" \
