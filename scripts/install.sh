@@ -9,6 +9,11 @@ fi
 
 APP_NAME=${APP_NAME:-"snort"}
 SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
+LOGGED_IN_USER=""
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    LOGGED_IN_USER=$(scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}')
+fi
 
 # Define text formatting
 RED='\033[0;31m'
@@ -87,6 +92,10 @@ sed_alternative() {
     fi
 }
 
+brew_command() {
+    sudo -u "$LOGGED_IN_USER" brew "$@"
+}
+
 # Function to create necessary directories and files for Snort
 create_snort_dirs_files() {
     local dirs=("$@")
@@ -129,10 +138,9 @@ install_snort_macos() {
     if command_exists snort; then
         info_message "snort is already installed. Skipping installation."
     else
-        brew install snort
+        brew_command install snort
         info_message "snort installed successfully"
     fi
-    
 
     if [[ $BREW_PATH == "/opt/homebrew" ]]; then
         SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
