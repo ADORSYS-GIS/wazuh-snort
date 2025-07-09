@@ -118,39 +118,28 @@ remove_snort_dirs_files() {
             maybe_sudo rm -rf "$dir"
             info_message "Removed directory $dir"
 
-remove_snort() {
-    if command_exists snort; then
-        info_message "Removing Snort package..."
-        if [[ $OS_NAME == "Linux" ]]; then
-            maybe_sudo apt-get remove --purge -y snort snort-common snort-common-libraries snort-rules-default
-            maybe_sudo apt-get autoremove -y
-        elif [[ $OS_NAME == "Darwin" ]]; then
-            brew_command uninstall snort || warn_message "Snort may not be installed via Homebrew."
-
+remove_snort_files() {
+    local files=("$@")
+    for file in "${files[@]}"; do
+        if [ -f "$file" ]; then
+            maybe_sudo rm -f "$file"
+            info_message "Removed file $file"
         fi
-        success_message "Snort package removed."
-    else
-        warn_message "Snort is not installed. Skipping removal."
-    fi
+    done
 }
 
-clean_snort_files() {
-    info_message "Cleaning Snort configuration and logs..."
-    maybe_sudo rm -rf "$SNORT_CONF_PATH" "$RULES_DIR" "$LOG_DIR"
-    info_message "Snort configuration and logs removed."
-}
+# Function to revert changes in ossec.conf
+revert_ossec_conf() {
+    local ossec_conf="$1"
+    local snort_tag="<!-- snort -->"
 
-remove_ossec_snort_integration() {
-    local OSSEC_CONF_PATH
-    if [[ $OS_NAME == "Linux" ]]; then
-        OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
-    elif [[ $OS_NAME == "Darwin" ]]; then
-        OSSEC_CONF_PATH="/Library/Ossec/etc/ossec.conf"
-    fi
-    
-    if [ -f "$OSSEC_CONF_PATH" ]; then
-        sed_alternative -i '/<!-- snort -->/,/<\/localfile>/d' "$OSSEC_CONF_PATH"
-        info_message "Snort integration removed from OSSEC configuration."
+    if maybe_sudo [ -f "$ossec_conf" ]; then
+        if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
+            sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
+            info_message "Reverted changes in $ossec_conf"
+        else
+            info_message "No Snort-related changes found in $ossec_conf. Skipping"
+        fi
     else
         warn_message "The file $ossec_conf no longer exists. Skipping"
     fi    
@@ -175,24 +164,33 @@ uninstall_snort_macos() {
     success_message "Snort uninstalled on macOS"
 }
 
-stop_snort_service() {
-    if command_exists systemctl && systemctl is-active --quiet "$SNORT_SERVICE"; then
-        info_message "Stopping Snort service..."
-        maybe_sudo systemctl stop "$SNORT_SERVICE"
-        maybe_sudo systemctl disable "$SNORT_SERVICE"
-        info_message "Snort service stopped and disabled."
+# Function to uninstall Snort on Linux
+uninstall_snort_linux() {
+    info_message "Uninstalling Snort on Linux"
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt-get purge -y snort snort-common snort-common-libraries snort-rules-default && sudo apt-get autoremove -y
     else
-        warn_message "Snort service is not running or systemctl is unavailable. Skipping."
+        warn_message "This script supports only Debian-based systems for uninstallation."
     fi
+
+    remove_snort_dirs_files \
+        "/etc/snort/" \
+        "/var/log/snort"
+
+    revert_ossec_conf "$OSSEC_CONF_PATH"
+    success_message "Snort uninstalled on Linux"
 }
 
-uninstall_snort() {
-    stop_snort_service
-    remove_snort
-    clean_snort_files
-    remove_ossec_snort_integration
-    success_message "Snort uninstallation completed successfully."
-}
-
-# Start the uninstallation
-uninstall_snort
+# Main logic: uninstall Snort based on the operating system
+case "$OS_NAME" in
+    Linux)
+        uninstall_snort_linux
+        ;;
+    Darwin)
+        uninstall_snort_macos
+        ;;
+    *)
+        error_message "Unsupported OS: $OS_NAME"
+        exit 1
+        ;;
+esac
