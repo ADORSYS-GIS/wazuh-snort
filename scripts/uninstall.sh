@@ -58,39 +58,18 @@ error_message() {
     log "${RED}${BOLD}[ERROR]${NORMAL}" "$*"
 }
 
-# Determine OS-specific paths
-OS_NAME=$(uname)
-if [[ $OS_NAME == "Linux" ]]; then
-    SNORT_CONF_PATH="/etc/snort/snort.conf"
-    SNORT_SERVICE="snort"
-    RULES_DIR="/etc/snort/rules"
-    LOG_DIR="/var/log/snort"
-elif [[ $OS_NAME == "Darwin" ]]; then
-    ARCH=$(uname -m)
-    if [[ $ARCH == "arm64" ]]; then
-        SNORT_CONF_PATH="/opt/homebrew/etc/snort/snort.lua"
-    else
-        SNORT_CONF_PATH="/usr/local/etc/snort/snort.lua"
-    fi
-    SNORT_SERVICE="snort"
-    RULES_DIR="/usr/local/etc/rules"
-    LOG_DIR="/var/log/snort"
-else
-    error_message "Unsupported operating system."
-    exit 1
-fi
-
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Ensure root privileges, either directly or through sudo
 maybe_sudo() {
     if [ "$(id -u)" -ne 0 ]; then
         if command_exists sudo; then
             sudo "$@"
         else
-            error_message "Root privileges required. Run with sudo."
+            error_message "This script requires root privileges. Please run with sudo or as root."
             exit 1
         fi
     else
@@ -117,6 +96,9 @@ remove_snort_dirs_files() {
         if [ -d "$dir" ]; then
             maybe_sudo rm -rf "$dir"
             info_message "Removed directory $dir"
+        fi
+    done
+}
 
 remove_snort_files() {
     local files=("$@")
