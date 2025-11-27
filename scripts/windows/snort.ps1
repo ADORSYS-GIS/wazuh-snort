@@ -251,6 +251,64 @@ function Register-SnortScheduledTask {
 }
 
 
+# Function to validate the installation and configuration
+function Validate-Installation {
+    InfoMessage "Validating the installation..."
+    
+    # Check if Snort is installed
+    if (-not (Test-Path $global:Config.SnortExePath)) {
+        ErrorMessage "Snort is not installed on this system. Please install it and rerun the script."
+        exit 1
+    }
+    else {
+        SuccessMessage "Snort is installed."
+    }
+    
+    # Check if Npcap is installed
+    if (-not (Test-Path $global:Config.NpcapPath)) {
+        ErrorMessage "Npcap is not installed on this system. Please install it and rerun the script."
+        exit 1
+    }
+    else {
+        SuccessMessage "Npcap is installed."
+    }
+    
+    # Validate Snort rules and directories
+    if (-not (Test-Path $global:Config.RulesDir) -or -not (Test-Path (Join-Path -Path $global:Config.RulesDir -ChildPath "local.rules"))) {
+        WarnMessage "Snort rules or directories are missing. Please check the configuration."
+    }
+    else {
+        SuccessMessage "Snort rules and directories are properly configured."
+    }
+    
+    # Validate Snort configuration file
+    if (-not (Test-Path $global:Config.SnortConfigPath)) {
+        ErrorMessage "Snort configuration file not found at $($global:Config.SnortConfigPath). Please ensure Snort is installed properly."
+        exit 1
+    }
+    else {
+        SuccessMessage "Snort configuration file is present."
+    }
+    
+    # Validate OSSEC configuration file
+    if (-not (Test-Path $global:Config.OssecConfigPath)) {
+        WarnMessage "OSSEC configuration file not found at $($global:Config.OssecConfigPath). Please ensure OSSEC is installed properly."
+    }
+    else {
+        SuccessMessage "OSSEC configuration file is present."
+    }
+    
+    # Validate Snort log directory
+    if (-not (Test-Path $global:Config.SnortLogDir)) {
+        WarnMessage "Snort log directory not found at $($global:Config.SnortLogDir). Please check the configuration."
+    }
+    else {
+        SuccessMessage "Snort log directory is present."
+    }
+    
+    SuccessMessage "Validation completed successfully."
+}
+
 # Main function that runs the installation and configuration steps.
 function Install-Snort {
     # Ensure the temporary directory exists.
@@ -286,3 +344,6 @@ function Install-Snort {
 
 # Execute the main installation function.
 Install-Snort
+
+# Validate the installation
+Validate-Installation
