@@ -46,17 +46,6 @@ install_snort() {
 
     configure_snort_logging
 
-    #update_ossec_conf_macos
-    if maybe_sudo [[ -f "$OSSEC_CONF_PATH" ]]; then
-        # Call the function to update OSSEC configuration
-        update_ossec_conf
-    else
-        # Notify the user that the file is missing
-        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
-        # Exit the script with a non-zero status
-        exit 1
-    fi
-    
     info_message "Downloading and configuring Snort rule files"
     maybe_sudo curl -SL --progress-bar -o /usr/local/etc/rules/snort3-community.rules https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/rules/snort3.rules
     info_message "Snort rule files downloaded and configured successfully"
@@ -83,28 +72,6 @@ configure_snort_logging() {
     return 0
 }
 
-update_ossec_conf() {
-   
-    info_message "Updating $OSSEC_CONF_PATH"
-
-    # Check if the specific <location> tag exists in the configuration file
-    if ! maybe_sudo grep -q "<location>/var/log/snort/alert_full.txt</location>" "$OSSEC_CONF_PATH"; then
-        
-
-        sed_alternative -i -e "/<\/ossec_config>/i\\
-<!-- snort -->\\
-<localfile>\\
-    <log_format>snort-full</log_format>\\
-    <location>/var/log/snort/alert_full.txt</location>\\
-</localfile>" "$OSSEC_CONF_PATH"
-    
-
-        success_message "ossec.conf updated."
-    else
-        info_message "The content already exists in $OSSEC_CONF_PATH"
-    fi
-    return 0
-}
 
 create_snort_plist_file() {
     if [[ $BREW_PATH == "/opt/homebrew" ]]; then
@@ -166,6 +133,8 @@ validate_installation() {
     return 0
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]] || [[ "${0}" == *"install.sh" ]]; then
     install_snort
 fi
+
+install_snort

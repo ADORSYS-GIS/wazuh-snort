@@ -32,22 +32,6 @@ remove_snort_files() {
     return 0
 }
 
-revert_ossec_conf() {
-    local ossec_conf="$1"
-    local snort_tag="<!-- snort -->"
-
-    if maybe_sudo [[ -f "$ossec_conf" ]]; then
-        if maybe_sudo grep -q "$snort_tag" "$ossec_conf"; then
-            sed_alternative -i "/$snort_tag/,/<\/localfile>/d" "$ossec_conf"
-            info_message "Reverted changes in $ossec_conf"
-        else
-            info_message "No Snort-related changes found in $ossec_conf. Skipping"
-        fi
-    else
-        warn_message "The file $ossec_conf no longer exists. Skipping"
-    fi
-    return 0
-}
 
 uninstall_snort() {
     info_message "Uninstalling Snort"
@@ -60,14 +44,35 @@ uninstall_snort() {
         "/var/log/snort"
 
     remove_snort_files \
-        "/usr/local/etc/rules/local.rules" \
+        "/usr/local/etc/rules/local.rules" \ 
         "/usr/local/etc/lists/default.blocklist"
 
-    revert_ossec_conf "$OSSEC_CONF_PATH"
+    validate_uninstallation
+
     success_message "Snort uninstalled"
+/
+validate_uninstallation() {
+    if command_exists snort; then
+        error_message "Snort is still installed. Uninstallation failed."
+        exit 1
+    fi
+
+    if [[ -d "/usr/local/etc/rules" ]]; then
+        error_message "Snort rules directory /usr/local/etc/rules still exists. Uninstallation incomplete."
+        exit 1
+    fi
+
+    if [[ -d "/var/log/snort" ]]; then
+        error_message "Snort log directory /var/log/snort still exists. Uninstallation incomplete."
+        exit 1
+    fi
+
+    success_message "Snort successfully uninstalled"
     return 0
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    uninstall_snort
-fi
+    return 0
+}
+
+uninstall_snort
+

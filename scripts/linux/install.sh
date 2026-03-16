@@ -10,7 +10,6 @@ fi
 
 source "$COMMON"
 
-OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
 
 install_snort() {
     print_step "Installing" "Snort"
@@ -61,14 +60,9 @@ install_snort() {
 
     configure_snort
 
-    if maybe_sudo [[ -f "$OSSEC_CONF_PATH" ]]; then
-        update_ossec_conf
-    else
-        warn_message "OSSEC configuration file not found at $OSSEC_CONF_PATH."
-        exit 1
-    fi
-
     start_snort
+
+    validate_installation
 }
 
 configure_snort() {
@@ -89,22 +83,6 @@ configure_snort() {
     return 0
 }
 
-update_ossec_conf() {
-    if ! maybe_sudo grep -q "<location>/var/log/snort/snort.alert.fast</location>" "$OSSEC_CONF_PATH"; then
-        info_message "Updating $OSSEC_CONF_PATH"
-        sed_alternative -i '/<\/ossec_config>/i\
-            <!-- snort -->\
-            <localfile>\
-                <log_format>snort-full<\/log_format>\
-                <location>\/var\/log\/snort\/snort.alert<\/location>\
-            <\/localfile>' "$OSSEC_CONF_PATH"
-        success_message "ossec.conf updated."
-    else
-        info_message "The content already exists in $OSSEC_CONF_PATH"
-    fi
-    return 0
-}
-
 start_snort() {
     info_message "Starting Snort"
     maybe_sudo systemctl restart snort
@@ -121,10 +99,16 @@ validate_installation() {
         exit 1
     fi
 
+    # Check if interface is present in snort.debian.conf file
+    INTERFACE=$(ip route | grep default | awk '{print $5}')
+    if [[ -f "/etc/snort/snort.debian.conf" ]]; then
+        if [[ ! "$INTERFACE" =~ $(grep -o "DEBIAN_SNORT_INTERFACE=\"[^\"]*" /etc/snort/snort.debian.conf | grep -o "[^\"]*$") ]]; then
+            error_message "Interface $INTERFACE not found in snort.debian.conf"
+            exit 1
+        fi
+    fi
+
     success_message "Snort configuration file found at /etc/snort/snort.conf"
     return 0
 }
-
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    install_snort
-fi
+install_snort

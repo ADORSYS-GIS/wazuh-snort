@@ -41,19 +41,3 @@ def test_snort_interface_configuration(host):
     snort_conf = host.file("/etc/snort/snort.debian.conf")
     assert interface in snort_conf.content_string, "Interface should be present in snort.debian.conf"
 
-
-
-def test_update_ossec_conf_linux(host):
-    """Test if ossec.conf is updated on Linux."""
-    ossec_conf_path = "/var/ossec/etc/ossec.conf"
-    expected_content = "<location>/var/log/snort/snort.alert</location>"
-
-    ossec_conf = host.file(ossec_conf_path)
-    assert (
-        expected_content.strip() in ossec_conf.content_string.strip()
-    ), "ossec.conf should be updated on Linux"
-
-
-
-
-    
