@@ -1,90 +1,15 @@
-# Global configuration
-$global:Config = @{
-    TempDir            = "C:\Temp"
-    SnortInstallerUrl  = "https://www.snort.org/downloads/snort/Snort_2_9_20_Installer.x64.exe"
-    SnortInstallerPath = "C:\Temp\Snort_Installer.exe"
-    NpcapInstallerUrl  = "https://npcap.com/dist/npcap-1.79.exe"
-    NpcapInstallerPath = "C:\Temp\Npcap_Installer.exe"
-    SnortBinPath       = "C:\Snort\bin"
-    SnortExePath       = "C:\Snort\bin\snort.exe"
-    NpcapPath          = "C:\Program Files\Npcap"
-    RulesDir           = "C:\Snort\rules"
-    OssecConfigPath    = "C:\Program Files (x86)\ossec-agent\ossec.conf"
-    SnortConfigPath    = "C:\Snort\etc\snort.conf"
-    LocalRulesUrl      = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules"
-    SnortConfUrl       = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf"
-    SnortLogDir        = "C:\Snort\log"
-    TaskName           = "SnortStartup"
+# Download and source common helper functions
+$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/windows/common.ps1"
+$commonPath = Join-Path -Path $global:Config.TempDir -ChildPath "common.ps1"
+
+try {
+    Invoke-WebRequest -Uri $commonUrl -OutFile $commonPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
+    . "$commonPath"
+    InfoMessage "Loaded common helper functions"
 }
-
-# Function to handle logging
-
-function Log {
-    param (
-        [string]$Level,
-        [string]$Message,
-        [string]$Color = "White"  # Default color
-    )
-    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "$Timestamp $Level $Message" -ForegroundColor $Color
-}
-
-# Logging helpers with colors
-function InfoMessage {
-    param ([string]$Message)
-    Log "[INFO]" $Message "White"
-}
-
-function WarnMessage {
-    param ([string]$Message)
-    Log "[WARNING]" $Message "Yellow"
-}
-
-function ErrorMessage {
-    param ([string]$Message)
-    Log "[ERROR]" $Message "Red"
-}
-
-function SuccessMessage {
-    param ([string]$Message)
-    Log "[SUCCESS]" $Message "Green"
-}
-
-function PrintStep {
-    param (
-        [int]$StepNumber,
-        [string]$Message
-    )
-    Log "[STEP]" "Step ${StepNumber}: $Message" "White"
-}
-
-# Helper: Create a directory if it doesn't exist.
-function Ensure-Directory {
-    param (
-        [Parameter(Mandatory)]
-        [string]$Path
-    )
-    if (-Not (Test-Path -Path $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-        InfoMessage "Created directory: $Path"
-    }
-}
-
-# Helper: Download a file from a URL.
-function Download-File {
-    param (
-        [Parameter(Mandatory)]
-        [string]$Url,
-        [Parameter(Mandatory)]
-        [string]$OutputPath
-    )
-    try {
-        Invoke-WebRequest -Uri $Url -OutFile $OutputPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
-        InfoMessage "Downloaded file from $Url to $OutputPath"
-    }
-    catch {
-        ErrorMessage "Failed to download file from $Url. $_"
-    }
+catch {
+    ErrorMessage "Failed to download common helper functions: $_"
+    exit 1
 }
 
 # Install Snort (only run once)
