@@ -39,7 +39,7 @@ jobs:
     - name: Run Snort install script (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo bash scripts/install.sh
+        sudo bash scripts/linux/install.sh
 
     # Windows-specific steps
     - name: Install Wazuh agent (Windows)
@@ -76,7 +76,7 @@ jobs:
     - name: Run Snort install script (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-         bash scripts/install.sh
+         bash scripts/macos/install.sh
 
     # Running tests
     - name: Run tests (Linux)
