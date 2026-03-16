@@ -22,9 +22,9 @@ sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     golang nano net-tools automake checkinstall
 
 # Install Go
-if [ "$ARCH" = "amd64" ]; then
+if [[ "$ARCH" = "amd64" ]]; then
     GO_BIN=go1.22.4.linux-amd64.tar.gz
-elif [ "$ARCH" = "arm64" ]; then
+elif [[ "$ARCH" = "arm64" ]]; then
     GO_BIN=go1.22.4.linux-arm64.tar.gz
 else
     echo "Unsupported architecture"

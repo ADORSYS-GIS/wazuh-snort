@@ -14,7 +14,7 @@ source "$COMMON"
 install_snort() {
     print_step "Installing" "Snort"
 
-    INTERFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(en|eth|wl)' | tr '\n' ' ')
+    INTERFACE=$(ip route show default | awk '/default/ {print $5}' | head -1)
 
     install_snort_apt() {
         sudo DEBIAN_FRONTEND=noninteractive apt-get update
@@ -100,12 +100,14 @@ validate_installation() {
     fi
 
     # Check if interface is present in snort.debian.conf file
-    INTERFACE=$(ip route | grep default | awk '{print $5}')
+    INTERFACE=$(ip route show default | awk '/default/ {print $5}' | head -1)
     if [[ -f "/etc/snort/snort.debian.conf" ]]; then
-        if [[ ! "$INTERFACE" =~ $(grep -o "DEBIAN_SNORT_INTERFACE=\"[^\"]*" /etc/snort/snort.debian.conf | grep -o "[^\"]*$") ]]; then
-            error_message "Interface $INTERFACE not found in snort.debian.conf"
+        CONFIG_INTERFACE=$(grep "DEBIAN_SNORT_INTERFACE" /etc/snort/snort.debian.conf | sed 's/.*"\([^"]*\)".*/\1/' | tr -d ' ')
+        if [[ ! "$INTERFACE" =~ $CONFIG_INTERFACE ]]; then
+            error_message "Interface $INTERFACE not found in snort.debian.conf (found: $CONFIG_INTERFACE)"
             exit 1
         fi
+        success_message "Interface $INTERFACE found in snort.debian.conf"
     fi
 
     success_message "Snort configuration file found at /etc/snort/snort.conf"
