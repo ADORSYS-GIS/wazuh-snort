@@ -1,5 +1,5 @@
 # Download and source common helper functions
-$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/windows/common.ps1"
+$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
 $commonPath = Join-Path -Path $global:Config.TempDir -ChildPath "common.ps1"
 
 try {

@@ -1,14 +1,28 @@
 # Download and source common helper functions
-$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/windows/common.ps1"
-$commonPath = Join-Path -Path $global:Config.TempDir -ChildPath "common.ps1"
+$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
+$commonPath = "C:\Temp\common.ps1"
+
+if (-not (Test-Path $commonPath)) {
+    try {
+        if (-not (Test-Path "C:\Temp")) {
+            New-Item -ItemType Directory -Path "C:\Temp" -Force | Out-Null
+            Write-Host "Created directory: C:\Temp"
+        }
+        Invoke-WebRequest -Uri $commonUrl -OutFile $commonPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
+        Write-Host "Downloaded common helper functions"
+    }
+    catch {
+        Write-Host "Failed to download common helper functions: $_" -ForegroundColor Red
+        exit 1
+    }
+}
 
 try {
-    Invoke-WebRequest -Uri $commonUrl -OutFile $commonPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
     . "$commonPath"
     InfoMessage "Loaded common helper functions"
 }
 catch {
-    ErrorMessage "Failed to download common helper functions: $_"
+    Write-Host "Failed to load common helper functions: $_" -ForegroundColor Red
     exit 1
 }
 
