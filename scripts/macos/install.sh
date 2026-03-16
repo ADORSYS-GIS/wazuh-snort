@@ -11,6 +11,8 @@ fi
 
 source "$COMMON"
 
+OSSEC_CONF_PATH="/Library/Ossec/etc/ossec.conf"
+
 ARCH=$(uname -m)
 BREW_PATH=""
 if command_exists brew; then

@@ -10,6 +10,8 @@ fi
 
 source "$COMMON"
 
+OSSEC_CONF_PATH="/var/ossec/etc/ossec.conf"
+
 install_snort() {
     print_step "Installing" "Snort"
 
