@@ -1,3 +1,7 @@
+Param(
+    [switch]$Silent
+)
+
 $npcapPath = "C:\Program Files\Npcap"
 $snortBinPath = "C:\Snort\bin"
 $snortUninstallPath = "C:\Snort\uninstall.exe"
@@ -93,15 +97,17 @@ function Remove-SystemPath {
 
 # Function to uninstall Snort
 function Uninstall-Snort {
+    param ([switch]$Silent)
 
     InfoMessage "Uninstalling snort..."
     
     if (-Not (Test-Path $snortUninstallPath)) {
-        WarnMessage "Snort uninstaller not found: $snortUninstallPath" skipping
+        WarnMessage "Snort uninstaller not found: $snortUninstallPath skipping"
         return
     }
 
-    Start-Process -FilePath $snortUninstallPath -NoNewWindow -Wait
+    $args = if ($Silent) { "/S" } else { "" }
+    Start-Process -FilePath $snortUninstallPath -ArgumentList $args -NoNewWindow -Wait
 
     InfoMessage "Successfully uninstalled snort"
     Remove-SystemPath $snortBinPath
@@ -110,16 +116,18 @@ function Uninstall-Snort {
 
 
 function Uninstall-NpCap {
+    param ([switch]$Silent)
 
     InfoMessage "Uninstalling NpCap"
 
     if (-Not (Test-Path $npcapUninstallPath)) {
-        WarnMessage "Npcap uninstaller not found: $npcapUninstallPath" skipping
+        WarnMessage "Npcap uninstaller not found: $npcapUninstallPath skipping"
         return
     }
 
-    Start-Process -FilePath $npcapUninstallPath -NoNewWindow -Wait
-    InfoMessage "Succesfully removed NpCap"
+    $args = if ($Silent) { "/S" } else { "" }
+    Start-Process -FilePath $npcapUninstallPath -ArgumentList $args -NoNewWindow -Wait
+    InfoMessage "Successfully removed NpCap"
     Remove-SystemPath $npcapPath
 }
 
@@ -167,9 +175,10 @@ function Remove-ScheduledTask {
 #Remove from Path
 
 function Uninstall-All {
+    param ([switch]$Silent)
     try {
-        Uninstall-NpCap
-        Uninstall-Snort
+        Uninstall-NpCap -Silent:$Silent
+        Uninstall-Snort -Silent:$Silent
         Remove-Configuration
         Restart-WazuhAgent
         SuccessMessage "Snort and components uninstalled successfully"
@@ -180,4 +189,4 @@ function Uninstall-All {
 }
 
 # Execute the uninstallation function
-Uninstall-All
+Uninstall-All -Silent:$Silent
