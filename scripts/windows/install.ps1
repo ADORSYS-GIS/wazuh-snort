@@ -293,7 +293,12 @@ function Install-Snort {
 }
 
 # Execute the main installation function.
-Install-Snort
+if ($Silent) {
+    Install-Snort -Silent:$Silent
+}
+else {
+    Install-Snort
+}
 
 # Validate the installation
 Validate-Installation
