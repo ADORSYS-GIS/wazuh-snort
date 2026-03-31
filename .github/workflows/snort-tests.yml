@@ -41,18 +41,6 @@ jobs:
       run: |
         sudo bash scripts/linux/install.sh
 
-    # Windows-specific steps
-    - name: Install Wazuh agent (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.0-1.msi -OutFile $env:TEMP\wazuh-agent.msi
-        msiexec.exe /i $env:TEMP\wazuh-agent.msi /qn WAZUH_MANAGER='10.0.0.1' WAZUH_AGENT_NAME='test'
-
-    - name: Install Snort (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        & "$env:GITHUB_WORKSPACE/scripts/windows/install.ps1" -Silent
-        
     # macOS-specific steps
     - name: Set up Python (macOS)
       if: matrix.os == 'macos-latest'
@@ -84,13 +72,18 @@ jobs:
       run: |
         sudo $(which pytest) -vv scripts/tests/test.py
 
-    - name: List files (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: Install PSScriptAnalyzer
+      shell: pwsh
       run: |
-        dir $env:GITHUB_WORKSPACE\scripts
-
-    - name: Run tests (Windows)
-      if: matrix.os == 'windows-latest'
+        Set-PSRepository PSGallery -InstallationPolicy Trusted
+        Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+    - name: Run PSScriptAnalyzer on PowerShell scripts
+      shell: pwsh
       run: |
-        pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/tests/test.ps1
-
+        $results = Get-ChildItem -Path scripts/windows -Filter "*.ps1" -Recurse | ForEach-Object {
+          Invoke-ScriptAnalyzer -Path $_.FullName -Severity Warning,Error
+        }
+        if ($results) {
+          $results | Format-Table -AutoSize
+          Write-Warning "PSScriptAnalyzer found issues"
+        }

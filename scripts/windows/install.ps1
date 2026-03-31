@@ -1,7 +1,3 @@
-Param(
-    [switch]$Silent
-)
-
 # Download and source common helper functions
 $commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
 $commonPath = "C:\Temp\common.ps1"
@@ -32,7 +28,6 @@ catch {
 
 # Install Snort (only run once)
 function Install-SnortSoftware {
-    param ([switch]$Silent)
     if (Test-Path $global:Config.SnortExePath) {
         WarnMessage "Snort is already installed. Skipping installation."
     }
@@ -40,14 +35,12 @@ function Install-SnortSoftware {
         InfoMessage "Downloading Snort installer..."
         Download-File -Url $global:Config.SnortInstallerUrl -OutputPath $global:Config.SnortInstallerPath
         InfoMessage "Installing Snort..."
-        $args = if ($Silent) { "/S" } else { "" }
-        Start-Process -FilePath $global:Config.SnortInstallerPath -ArgumentList $args -Wait
+        Start-Process -FilePath $global:Config.SnortInstallerPath -Wait
     }
 }
 
 # Install Npcap (only run once)
 function Install-NpcapSoftware {
-    param ([switch]$Silent)
     if (Test-Path $global:Config.NpcapPath) {
         WarnMessage "Npcap is already installed. Skipping installation."
     }
@@ -55,11 +48,8 @@ function Install-NpcapSoftware {
         InfoMessage "Downloading Npcap installer..."
         Download-File -Url $global:Config.NpcapInstallerUrl -OutputPath $global:Config.NpcapInstallerPath
         InfoMessage "Installing Npcap..."
-        $args = if ($Silent) { "/S" } else { "" }
-        Start-Process -FilePath $global:Config.NpcapInstallerPath -ArgumentList $args -Wait -NoNewWindow
-        if (-not $Silent) {
-            InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
-        }
+        Start-Process -FilePath $global:Config.NpcapInstallerPath -Wait -NoNewWindow
+        InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
     }
 }
 
@@ -195,7 +185,6 @@ function Register-SnortScheduledTask {
                            -Settings  $taskSettings     `
                            -User      "SYSTEM"          `
                            -RunLevel  Highest
-
     InfoMessage "Registered Snort to run at startup as SYSTEM."
 }
 
@@ -260,15 +249,14 @@ function Validate-Installation {
 
 # Main function that runs the installation and configuration steps.
 function Install-Snort {
-    param ([switch]$Silent)
     # Ensure the temporary directory exists.
     Ensure-Directory -Path $global:Config.TempDir
 
     InfoMessage "=== Installing Snort ==="
-    Install-SnortSoftware -Silent:$Silent
+    Install-SnortSoftware
 
     InfoMessage "=== Installing Npcap ==="
-    Install-NpcapSoftware -Silent:$Silent
+    Install-NpcapSoftware
 
     InfoMessage "=== Updating Environment Variables ==="
     Update-EnvironmentVariables
@@ -293,12 +281,7 @@ function Install-Snort {
 }
 
 # Execute the main installation function.
-if ($Silent) {
-    Install-Snort -Silent:$Silent
-}
-else {
-    Install-Snort
-}
+Install-Snort
 
 # Validate the installation
 Validate-Installation

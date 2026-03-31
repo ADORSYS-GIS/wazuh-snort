@@ -1,7 +1,3 @@
-Param(
-    [switch]$Silent
-)
-
 # Download and source common helper functions
 $commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
 $commonPath = Join-Path -Path $global:Config.TempDir -ChildPath "common.ps1"
@@ -18,8 +14,6 @@ catch {
 
 # Function to uninstall Snort
 function Uninstall-Snort {
-    param ([switch]$Silent)
-
     InfoMessage "Uninstalling snort..."
     
     if (-Not (Test-Path $snortUninstallPath)) {
@@ -27,8 +21,7 @@ function Uninstall-Snort {
         return
     }
 
-    $args = if ($Silent) { "/S" } else { "" }
-    Start-Process -FilePath $global:Config.SnortUninstallPath -ArgumentList $args -NoNewWindow -Wait
+    Start-Process -FilePath $global:Config.SnortUninstallPath -NoNewWindow -Wait
     InfoMessage "Successfully uninstalled snort"
     Remove-SystemPath $global:Config.SnortBinPath
     return 0
@@ -36,8 +29,6 @@ function Uninstall-Snort {
 
 # Function to uninstall Npcap
 function Uninstall-NpCap {
-    param ([switch]$Silent)
-
     InfoMessage "Uninstalling NpCap"
 
     if (-Not (Test-Path $global:Config.NpcapUninstallPath)) {
@@ -45,8 +36,7 @@ function Uninstall-NpCap {
         return
     }
 
-    $args = if ($Silent) { "/S" } else { "" }
-    Start-Process -FilePath $global:Config.NpcapUninstallPath -ArgumentList $args -NoNewWindow -Wait
+    Start-Process -FilePath $global:Config.NpcapUninstallPath -NoNewWindow -Wait
     InfoMessage "Successsfully removed NpCap"
     Remove-SystemPath $global:Config.NpcapPath
     return 0
@@ -157,10 +147,9 @@ function Restart-WazuhAgent {
 
 # Main uninstall function
 function Uninstall-All {
-    param ([switch]$Silent)
     try {
-        Uninstall-NpCap -Silent:$Silent
-        Uninstall-Snort -Silent:$Silent
+        Uninstall-NpCap
+        Uninstall-Snort
         Remove-Configuration
         Restart-WazuhAgent
         SuccessMessage "Snort and components uninstalled successfully"
@@ -171,7 +160,7 @@ function Uninstall-All {
 }
 
 # Execute the main uninstall function
-Uninstall-All -Silent:$Silent
+Uninstall-All
 
 # Validate uninstallation
 Validate-UninstallationCommon
