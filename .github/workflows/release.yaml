@@ -11,12 +11,15 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: "0"
+          persist-credentials: 'false'
 
       - name: Get the version
         id: get_version
@@ -24,7 +27,7 @@ jobs:
 
       - name: Generate script checksums
         run: |
-          find scripts -type f -exec sha256sum {} + >> checksums.sha256
+          find scripts \( -path "scripts/tests" -o -path "scripts/tests/*" \) -prune -o -type f -exec sha256sum {} + > checksums.sha256
           cat checksums.sha256
 
       - name: Generate release notes (latest only)
@@ -42,6 +45,7 @@ jobs:
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
@@ -54,8 +58,12 @@ jobs:
 
       - name: Create Pull Request to update CHANGELOG.md and checksums
         uses: peter-evans/create-pull-request@v8
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: |
+            CHANGELOG.md
+            checksums.sha256
           commit-message: "chore: update CHANGELOG.md and checksums"
           title: "Update Changelog and checksums"
           body: |
@@ -66,6 +74,3 @@ jobs:
           base: main
           delete-branch: true
           labels: documentation, automated-pr
-          add-paths: |
-            CHANGELOG.md
-            checksums.sha256

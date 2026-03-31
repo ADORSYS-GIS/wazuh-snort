@@ -1,99 +1,33 @@
-Param(
-    [switch]$Silent
-)
+# Download and source common helper functions
+$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
+$commonPath = "C:\Temp\common.ps1"
 
-# Global configuration
-$global:Config = @{
-    TempDir            = "C:\Temp"
-    SnortInstallerUrl  = "https://www.snort.org/downloads/snort/Snort_2_9_20_Installer.x64.exe"
-    SnortInstallerPath = "C:\Temp\Snort_Installer.exe"
-    NpcapInstallerUrl  = "https://npcap.com/dist/npcap-1.79.exe"
-    NpcapInstallerPath = "C:\Temp\Npcap_Installer.exe"
-    SnortBinPath       = "C:\Snort\bin"
-    SnortExePath       = "C:\Snort\bin\snort.exe"
-    NpcapPath          = "C:\Program Files\Npcap"
-    RulesDir           = "C:\Snort\rules"
-    OssecConfigPath    = "C:\Program Files (x86)\ossec-agent\ossec.conf"
-    SnortConfigPath    = "C:\Snort\etc\snort.conf"
-    LocalRulesUrl      = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/local.rules"
-    SnortConfUrl       = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.conf"
-    SnortLogDir        = "C:\Snort\log"
-    TaskName           = "SnortStartup"
-}
-
-# Function to handle logging
-
-function Log {
-    param (
-        [string]$Level,
-        [string]$Message,
-        [string]$Color = "White"  # Default color
-    )
-    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "$Timestamp $Level $Message" -ForegroundColor $Color
-}
-
-# Logging helpers with colors
-function InfoMessage {
-    param ([string]$Message)
-    Log "[INFO]" $Message "White"
-}
-
-function WarnMessage {
-    param ([string]$Message)
-    Log "[WARNING]" $Message "Yellow"
-}
-
-function ErrorMessage {
-    param ([string]$Message)
-    Log "[ERROR]" $Message "Red"
-}
-
-function SuccessMessage {
-    param ([string]$Message)
-    Log "[SUCCESS]" $Message "Green"
-}
-
-function PrintStep {
-    param (
-        [int]$StepNumber,
-        [string]$Message
-    )
-    Log "[STEP]" "Step ${StepNumber}: $Message" "White"
-}
-
-# Helper: Create a directory if it doesn't exist.
-function Ensure-Directory {
-    param (
-        [Parameter(Mandatory)]
-        [string]$Path
-    )
-    if (-Not (Test-Path -Path $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-        InfoMessage "Created directory: $Path"
-    }
-}
-
-# Helper: Download a file from a URL.
-function Download-File {
-    param (
-        [Parameter(Mandatory)]
-        [string]$Url,
-        [Parameter(Mandatory)]
-        [string]$OutputPath
-    )
+if (-not (Test-Path $commonPath)) {
     try {
-        Invoke-WebRequest -Uri $Url -OutFile $OutputPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
-        InfoMessage "Downloaded file from $Url to $OutputPath"
+        if (-not (Test-Path "C:\Temp")) {
+            New-Item -ItemType Directory -Path "C:\Temp" -Force | Out-Null
+            Write-Host "Created directory: C:\Temp"
+        }
+        Invoke-WebRequest -Uri $commonUrl -OutFile $commonPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
+        Write-Host "Downloaded common helper functions"
     }
     catch {
-        ErrorMessage "Failed to download file from $Url. $_"
+        Write-Host "Failed to download common helper functions: $_" -ForegroundColor Red
+        exit 1
     }
+}
+
+try {
+    . "$commonPath"
+    InfoMessage "Loaded common helper functions"
+}
+catch {
+    Write-Host "Failed to load common helper functions: $_" -ForegroundColor Red
+    exit 1
 }
 
 # Install Snort (only run once)
 function Install-SnortSoftware {
-    param ([switch]$Silent)
     if (Test-Path $global:Config.SnortExePath) {
         WarnMessage "Snort is already installed. Skipping installation."
     }
@@ -101,14 +35,12 @@ function Install-SnortSoftware {
         InfoMessage "Downloading Snort installer..."
         Download-File -Url $global:Config.SnortInstallerUrl -OutputPath $global:Config.SnortInstallerPath
         InfoMessage "Installing Snort..."
-        $args = if ($Silent) { "/S" } else { "" }
-        Start-Process -FilePath $global:Config.SnortInstallerPath -ArgumentList $args -Wait
+        Start-Process -FilePath $global:Config.SnortInstallerPath -Wait
     }
 }
 
 # Install Npcap (only run once)
 function Install-NpcapSoftware {
-    param ([switch]$Silent)
     if (Test-Path $global:Config.NpcapPath) {
         WarnMessage "Npcap is already installed. Skipping installation."
     }
@@ -116,11 +48,8 @@ function Install-NpcapSoftware {
         InfoMessage "Downloading Npcap installer..."
         Download-File -Url $global:Config.NpcapInstallerUrl -OutputPath $global:Config.NpcapInstallerPath
         InfoMessage "Installing Npcap..."
-        $args = if ($Silent) { "/S" } else { "" }
-        Start-Process -FilePath $global:Config.NpcapInstallerPath -ArgumentList $args -Wait -NoNewWindow
-        if (-not $Silent) {
-            InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
-        }
+        Start-Process -FilePath $global:Config.NpcapInstallerPath -Wait -NoNewWindow
+        InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
     }
 }
 
@@ -256,22 +185,78 @@ function Register-SnortScheduledTask {
                            -Settings  $taskSettings     `
                            -User      "SYSTEM"          `
                            -RunLevel  Highest
-
     InfoMessage "Registered Snort to run at startup as SYSTEM."
 }
 
 
+# Function to validate the installation and configuration
+function Validate-Installation {
+    InfoMessage "Validating the installation..."
+    
+    # Check if Snort is installed
+    if (-not (Test-Path $global:Config.SnortExePath)) {
+        ErrorMessage "Snort is not installed on this system. Please install it and rerun the script."
+        exit 1
+    }
+    else {
+        SuccessMessage "Snort is installed."
+    }
+    
+    # Check if Npcap is installed
+    if (-not (Test-Path $global:Config.NpcapPath)) {
+        ErrorMessage "Npcap is not installed on this system. Please install it and rerun the script."
+        exit 1
+    }
+    else {
+        SuccessMessage "Npcap is installed."
+    }
+    
+    # Validate Snort rules and directories
+    if (-not (Test-Path $global:Config.RulesDir) -or -not (Test-Path (Join-Path -Path $global:Config.RulesDir -ChildPath "local.rules"))) {
+        WarnMessage "Snort rules or directories are missing. Please check the configuration."
+    }
+    else {
+        SuccessMessage "Snort rules and directories are properly configured."
+    }
+    
+    # Validate Snort configuration file
+    if (-not (Test-Path $global:Config.SnortConfigPath)) {
+        ErrorMessage "Snort configuration file not found at $($global:Config.SnortConfigPath). Please ensure Snort is installed properly."
+        exit 1
+    }
+    else {
+        SuccessMessage "Snort configuration file is present."
+    }
+    
+    # Validate OSSEC configuration file
+    if (-not (Test-Path $global:Config.OssecConfigPath)) {
+        WarnMessage "OSSEC configuration file not found at $($global:Config.OssecConfigPath). Please ensure OSSEC is installed properly."
+    }
+    else {
+        SuccessMessage "OSSEC configuration file is present."
+    }
+    
+    # Validate Snort log directory
+    if (-not (Test-Path $global:Config.SnortLogDir)) {
+        WarnMessage "Snort log directory not found at $($global:Config.SnortLogDir). Please check the configuration."
+    }
+    else {
+        SuccessMessage "Snort log directory is present."
+    }
+    
+    SuccessMessage "Validation completed successfully."
+}
+
 # Main function that runs the installation and configuration steps.
 function Install-Snort {
-    param ([switch]$Silent)
     # Ensure the temporary directory exists.
     Ensure-Directory -Path $global:Config.TempDir
 
     InfoMessage "=== Installing Snort ==="
-    Install-SnortSoftware -Silent:$Silent
+    Install-SnortSoftware
 
     InfoMessage "=== Installing Npcap ==="
-    Install-NpcapSoftware -Silent:$Silent
+    Install-NpcapSoftware
 
     InfoMessage "=== Updating Environment Variables ==="
     Update-EnvironmentVariables
@@ -296,4 +281,7 @@ function Install-Snort {
 }
 
 # Execute the main installation function.
-Install-Snort -Silent:$Silent
+Install-Snort
+
+# Validate the installation
+Validate-Installation
