@@ -51,8 +51,7 @@ jobs:
     - name: Install Snort (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-        & "$env:GITHUB_WORKSPACE/scripts/windows/install.ps1 -Silent"
+        & "$env:GITHUB_WORKSPACE/scripts/windows/install.ps1" -Silent
         
     # macOS-specific steps
     - name: Set up Python (macOS)

@@ -3,7 +3,7 @@
 
 [remote.github]
 owner = "ADORSYS-GIS"
-repo = "wazuh-agent-status"
+repo = "wazuh-snort"
 
 [changelog]
 header = """
