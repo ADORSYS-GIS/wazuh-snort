@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: refs/heads/main
           fetch-depth: 0
 
       - name: Get the version
@@ -54,15 +54,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: |
-          git add CHANGELOG.md checksums.sha256
-          git commit -m "chore: update CHANGELOG.md and checksums"
-
       - name: Create Pull Request to update CHANGELOG.md and checksums
         uses: peter-evans/create-pull-request@v8
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: |
+            CHANGELOG.md
+            checksums.sha256
+          commit-message: "chore: update CHANGELOG.md and checksums"
           title: "Update Changelog and checksums"
           body: |
             This PR updates the CHANGELOG.md and checksums.
