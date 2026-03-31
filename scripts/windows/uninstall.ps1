@@ -1,3 +1,7 @@
+Param(
+    [switch]$Silent
+)
+
 # Download and source common helper functions
 $commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
 $commonPath = Join-Path -Path $global:Config.TempDir -ChildPath "common.ps1"
@@ -14,14 +18,17 @@ catch {
 
 # Function to uninstall Snort
 function Uninstall-Snort {
-    InfoMessage "Uninstalling Snort..."
+    param ([switch]$Silent)
+
+    InfoMessage "Uninstalling snort..."
     
-    if (-Not (Test-Path $global:Config.SnortUninstallPath)) {
-        WarnMessage "Snort uninstaller not found: $global:Config.SnortUninstallPath" skipping
+    if (-Not (Test-Path $snortUninstallPath)) {
+        WarnMessage "Snort uninstaller not found: $snortUninstallPath" skipping
         return
     }
 
-    Start-Process -FilePath $global:Config.SnortUninstallPath -NoNewWindow -Wait
+    $args = if ($Silent) { "/S" } else { "" }
+    Start-Process -FilePath $global:Config.SnortUninstallPath -ArgumentList $args -NoNewWindow -Wait
     InfoMessage "Successfully uninstalled snort"
     Remove-SystemPath $global:Config.SnortBinPath
     return 0
@@ -29,15 +36,18 @@ function Uninstall-Snort {
 
 # Function to uninstall Npcap
 function Uninstall-NpCap {
-    InfoMessage "Uninstalling Npcap"
+    param ([switch]$Silent)
+
+    InfoMessage "Uninstalling NpCap"
 
     if (-Not (Test-Path $global:Config.NpcapUninstallPath)) {
-        WarnMessage "Npcap uninstaller not found: $global:Config.NpcapUninstallPath" skipping
+        WarnMessage "Npcap uninstaller not found: $global:Config.NpcapUninstallPath skipping"
         return
     }
 
-    Start-Process -FilePath $global:Config.NpcapUninstallPath -NoNewWindow -Wait
-    InfoMessage "Successfully removed NpCap"
+    $args = if ($Silent) { "/S" } else { "" }
+    Start-Process -FilePath $global:Config.NpcapUninstallPath -ArgumentList $args -NoNewWindow -Wait
+    InfoMessage "Successsfully removed NpCap"
     Remove-SystemPath $global:Config.NpcapPath
     return 0
 }
@@ -147,9 +157,10 @@ function Restart-WazuhAgent {
 
 # Main uninstall function
 function Uninstall-All {
+    param ([switch]$Silent)
     try {
-        Uninstall-NpCap
-        Uninstall-Snort
+        Uninstall-NpCap -Silent:$Silent
+        Uninstall-Snort -Silent:$Silent
         Remove-Configuration
         Restart-WazuhAgent
         SuccessMessage "Snort and components uninstalled successfully"
@@ -159,8 +170,8 @@ function Uninstall-All {
     }
 }
 
+# Execute the main uninstall function
+Uninstall-All -Silent:$Silent
+
 # Validate uninstallation
 Validate-UninstallationCommon
-
-# Execute the main uninstall function
-Uninstall-All

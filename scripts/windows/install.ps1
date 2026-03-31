@@ -28,6 +28,7 @@ catch {
 
 # Install Snort (only run once)
 function Install-SnortSoftware {
+    param ([switch]$Silent)
     if (Test-Path $global:Config.SnortExePath) {
         WarnMessage "Snort is already installed. Skipping installation."
     }
@@ -35,12 +36,14 @@ function Install-SnortSoftware {
         InfoMessage "Downloading Snort installer..."
         Download-File -Url $global:Config.SnortInstallerUrl -OutputPath $global:Config.SnortInstallerPath
         InfoMessage "Installing Snort..."
-        Start-Process -FilePath $global:Config.SnortInstallerPath -ArgumentList "/S" -Wait
+        $args = if ($Silent) { "/S" } else { "" }
+        Start-Process -FilePath $global:Config.SnortInstallerPath -ArgumentList $args -Wait
     }
 }
 
 # Install Npcap (only run once)
 function Install-NpcapSoftware {
+    param ([switch]$Silent)
     if (Test-Path $global:Config.NpcapPath) {
         WarnMessage "Npcap is already installed. Skipping installation."
     }
@@ -48,8 +51,11 @@ function Install-NpcapSoftware {
         InfoMessage "Downloading Npcap installer..."
         Download-File -Url $global:Config.NpcapInstallerUrl -OutputPath $global:Config.NpcapInstallerPath
         InfoMessage "Installing Npcap..."
-        Start-Process -FilePath $global:Config.NpcapInstallerPath -Wait
-        InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
+        $args = if ($Silent) { "/S" } else { "" }
+        Start-Process -FilePath $global:Config.NpcapInstallerPath -ArgumentList $args -Wait -NoNewWindow
+        if (-not $Silent) {
+            InfoMessage "Please follow the on-screen instructions to complete the Npcap installation."
+        }
     }
 }
 
@@ -250,14 +256,15 @@ function Validate-Installation {
 
 # Main function that runs the installation and configuration steps.
 function Install-Snort {
+    param ([switch]$Silent)
     # Ensure the temporary directory exists.
     Ensure-Directory -Path $global:Config.TempDir
 
     InfoMessage "=== Installing Snort ==="
-    Install-SnortSoftware
+    Install-SnortSoftware -Silent:$Silent
 
     InfoMessage "=== Installing Npcap ==="
-    Install-NpcapSoftware
+    Install-NpcapSoftware -Silent:$Silent
 
     InfoMessage "=== Updating Environment Variables ==="
     Update-EnvironmentVariables
