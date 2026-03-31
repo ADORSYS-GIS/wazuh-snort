@@ -1,3 +1,7 @@
+Param(
+    [switch]$Silent
+)
+
 # Download and source common helper functions
 $commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
 $commonPath = "C:\Temp\common.ps1"
