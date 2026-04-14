@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[553cdf5](https://github.com/ADORSYS-GIS/wazuh-snort/commit/553cdf55cabc667c9848a78777aced2e3429aea0)
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[5258bf6](https://github.com/ADORSYS-GIS/wazuh-snort/commit/5258bf6c1f14bc8def0fab100df40cb7f6f44653)
 
 ### Bug Fixes
 
@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Restrict py-test job to run only on Linux OS ([`f9456d2`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/f9456d2e6b3a6d2b6c81c24d4ee1f4c519df8649))
 - Update test workflow and improve test script output for Windows ([`bb10124`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/bb1012417bc7e81c6e58d804f527094f2aed2574))
 - Fix(ci): remove Windows-specific steps from CI workflow matrix and scripts ([`553cdf5`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/553cdf55cabc667c9848a78777aced2e3429aea0))
+- Add functions to create Snort directories and files ([`5258bf6`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/5258bf6c1f14bc8def0fab100df40cb7f6f44653))
 
 ### Documentation
 
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`b22d1d1`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/b22d1d1282446bdd25a29a2143a377208650e736))
 - Update CHANGELOG.md and checksums [skip ci] ([`0ed68e4`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0ed68e491d336e4ced556533e576eba120fe9fd7))
 - Update CHANGELOG.md and checksums [skip ci] ([`65ebc91`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/65ebc91116d3ad20a9e0033be1f3d1b4953d75d9))
+- Update CHANGELOG.md and checksums [skip ci] ([`224a64d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/224a64d06bec77794fe1bea34a4cc60e618fe269))
 
 ### Features
 
