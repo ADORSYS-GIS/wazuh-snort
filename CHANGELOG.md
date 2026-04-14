@@ -4,16 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[7b464fe](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7b464fe95331980c1dfc277dbe6e1f7127edcb64)
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[f9456d2](https://github.com/ADORSYS-GIS/wazuh-snort/commit/f9456d2e6b3a6d2b6c81c24d4ee1f4c519df8649)
 
 ### Bug Fixes
 
 - Correct environment variable references in Wazuh agent install scripts ([`7b464fe`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7b464fe95331980c1dfc277dbe6e1f7127edcb64))
+- Restrict py-test job to run only on Linux OS ([`f9456d2`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/f9456d2e6b3a6d2b6c81c24d4ee1f4c519df8649))
 
 ### Documentation
 
 - Update CHANGELOG.md and checksums [skip ci] ([`18a49f1`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/18a49f180108c9d4cd42e2e61989f32e9d4e3a5d))
 - Update CHANGELOG.md and checksums [skip ci] ([`1081575`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/10815750cd2015b5047c7faacb5f8980abafca78))
+- Update CHANGELOG.md and checksums [skip ci] ([`2a45b8c`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a45b8c318350dea62ae1c1cc2725d19ddde75fb))
 
 ### Features
 
