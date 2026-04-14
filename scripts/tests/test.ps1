@@ -1,5 +1,5 @@
 # Initialize a list to store test results
-$testResults = @()
+$global:testResults = @()
 
 # Function to run a test and log the result
 function Run-Test {
@@ -10,9 +10,11 @@ function Run-Test {
 
     try {
         & $TestScript
-        $testResults += [pscustomobject]@{ TestName = $TestName; Status = "Passed" }
+        $global:testResults += [pscustomobject]@{ TestName = $TestName; Status = "Passed" }
+        Write-Host "✓ PASSED: $TestName" -ForegroundColor Green
     } catch {
-        $testResults += [pscustomobject]@{ TestName = $TestName; Status = "Failed"; Error = $_.Exception.Message }
+        $global:testResults += [pscustomobject]@{ TestName = $TestName; Status = "Failed"; Error = $_.Exception.Message }
+        Write-Host "✗ FAILED: $TestName - $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -90,5 +92,23 @@ foreach ($test in $tests.GetEnumerator()) {
 }
 
 # Output the test results
-Write-Host "Test Results:"
-$testResults | Format-Table -AutoSize
+Write-Host "`n========================================"
+Write-Host "Test Results Summary"
+Write-Host "========================================"
+$global:testResults | Format-Table -AutoSize
+
+# Calculate pass/fail counts
+$passedCount = ($global:testResults | Where-Object { $_.Status -eq "Passed" }).Count
+$failedCount = ($global:testResults | Where-Object { $_.Status -eq "Failed" }).Count
+$totalCount = $global:testResults.Count
+
+Write-Host "`nTotal: $totalCount | Passed: $passedCount | Failed: $failedCount"
+
+# Exit with error if any tests failed
+if ($failedCount -gt 0) {
+    Write-Host "`nSome tests failed!" -ForegroundColor Red
+    exit 1
+} else {
+    Write-Host "`nAll tests passed!" -ForegroundColor Green
+    exit 0
+}

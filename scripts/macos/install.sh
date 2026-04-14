@@ -55,10 +55,12 @@ fi
 
 # Register cleanup to run on exit
 trap cleanup EXIT
+
 OSSEC_CONF_PATH="/Library/Ossec/etc/ossec.conf"
 
 ARCH=$(uname -m)
-BREW_PATH=""APP_NAME=${APP_NAME:-"snort"}
+BREW_PATH=""
+APP_NAME=${APP_NAME:-"snort"}
 SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
 
 LOGGED_IN_USER=""
@@ -80,10 +82,6 @@ if command_exists brew; then
 fi
 
 install_snort() {
-    # Check if the architecture is M1/ARM or Intel
-    ARCH=$(uname -m)
-    BREW_PATH=$(brew --prefix)
-
     print_step "Installing" "Snort ($ARCH)"
     
     if command_exists snort; then
