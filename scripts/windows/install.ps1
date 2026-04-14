@@ -1,30 +1,55 @@
-# Download and source common helper functions
-$commonUrl = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/refactor/split-linux-macos-scripts/scripts/shared/common.ps1"
-$commonPath = "C:\Temp\common.ps1"
+# Repository configuration
+$WAZUH_SNORT_REPO_REF = if ($env:WAZUH_SNORT_REPO_REF) { $env:WAZUH_SNORT_REPO_REF } else { "main" }
+$WAZUH_SNORT_REPO_URL = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/$WAZUH_SNORT_REPO_REF"
 
-if (-not (Test-Path $commonPath)) {
-    try {
-        if (-not (Test-Path "C:\Temp")) {
-            New-Item -ItemType Directory -Path "C:\Temp" -Force | Out-Null
-            Write-Host "Created directory: C:\Temp"
-        }
-        Invoke-WebRequest -Uri $commonUrl -OutFile $commonPath -Headers @{"User-Agent"="Mozilla/5.0"} -ErrorAction Stop
-        Write-Host "Downloaded common helper functions"
-    }
-    catch {
-        Write-Host "Failed to download common helper functions: $_" -ForegroundColor Red
-        exit 1
-    }
+$TEMP_DIR = Join-Path $env:TEMP "wazuh-snort-install"
+if (-not (Test-Path $TEMP_DIR)) {
+    New-Item -Path $TEMP_DIR -ItemType Directory | Out-Null
 }
 
 try {
-    . "$commonPath"
-    InfoMessage "Loaded common helper functions"
+    $ChecksumsURL = "$WAZUH_SNORT_REPO_URL/checksums.sha256"
+    $UtilsURL = "$WAZUH_SNORT_REPO_URL/scripts/shared/common.ps1"
+    
+    $global:ChecksumsPath = Join-Path $TEMP_DIR "checksums.sha256"
+    $global:UtilsPath = Join-Path $TEMP_DIR "common.ps1"
+
+    Invoke-WebRequest -Uri $ChecksumsURL -OutFile $global:ChecksumsPath -ErrorAction Stop
+    Invoke-WebRequest -Uri $UtilsURL -OutFile $global:UtilsPath -ErrorAction Stop
+
+    # Verification function (bootstrap)
+    function Get-FileChecksum-Bootstrap {
+        param([string]$FilePath)
+        return (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLower()
+    }
+
+    $ExpectedHash = (Select-String -Path $ChecksumsPath -Pattern "scripts/shared/common.ps1").Line.Split(" ")[0]
+    $ActualHash = Get-FileChecksum-Bootstrap -FilePath $UtilsPath
+
+    if ([string]::IsNullOrWhiteSpace($ExpectedHash) -or ($ActualHash -ne $ExpectedHash.ToLower())) {
+        Write-Error "Checksum verification failed for utils.ps1"
+        Write-Error "Expected: $ExpectedHash"
+        Write-Error "Got:      $ActualHash"
+        exit 1
+    }
+
+    . $global:UtilsPath
+    
+    # Cleanup temporary files
+    if (Test-Path $TEMP_DIR) {
+        Remove-Item -Path $TEMP_DIR -Recurse -Force
+    }
 }
 catch {
-    Write-Host "Failed to load common helper functions: $_" -ForegroundColor Red
+    # Cleanup temporary files on error
+    if (Test-Path $TEMP_DIR) {
+        Remove-Item -Path $TEMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Write-Error "Failed to initialize utilities: $($_.Exception.Message)"
     exit 1
 }
+
+Ensure-Admin
 
 # Install Snort (only run once)
 function Install-SnortSoftware {

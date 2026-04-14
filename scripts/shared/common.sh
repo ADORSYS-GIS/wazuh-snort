@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
 
-# Common helpers sourced by OS-specific install/uninstall scripts
-
-set -euo pipefail
-
-APP_NAME=${APP_NAME:-"snort"}
-SNORT_LAUNCH_DAEMON_FILE=${SNORT_LAUNCH_DAEMON_FILE:-"/Library/LaunchDaemons/com.adorsys.$APP_NAME.plist"}
-
-LOGGED_IN_USER=""
-if [[ "$(uname -s)" = "Darwin" ]]; then
-    LOGGED_IN_USER=$(scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ {print $3}')
-fi
+# Centralized Utility Functions
+# Designed to be downloaded and sourced via a bootstrap mechanism
 
 # Define text formatting
 RED='\033[0;31m'
@@ -20,33 +11,68 @@ BLUE='\033[1;34m'
 BOLD='\033[1m'
 NORMAL='\033[0m'
 
+# Function for logging with timestamp
 log() {
-    local LEVEL="$1"
+    local level="$1"
     shift
-    local MESSAGE="$*"
-    local TIMESTAMP
-    TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${TIMESTAMP} ${LEVEL} ${MESSAGE}"
+    local message="$*"
+    local timestamp
+    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "${timestamp} ${level} ${message}"
+    return 0
 }
 
-info_message() { log "${BLUE}${BOLD}[INFO]${NORMAL}" "$*"; }
-warn_message() { log "${YELLOW}${BOLD}[WARNING]${NORMAL}" "$*"; }
-error_message() { log "${RED}${BOLD}[ERROR]${NORMAL}" "$*"; }
-success_message() { log "${GREEN}${BOLD}[SUCCESS]${NORMAL}" "$*"; }
-print_step() { log "${BLUE}${BOLD}[STEP]${NORMAL}" "$1: $2"; }
+# Logging helpers
+info_message() {
+    log "${BLUE}${BOLD}[INFO]${NORMAL}" "$*"
+    return 0
+}
 
-command_exists() { command -v "$1" >/dev/null 2>&1; }
+warn_message() {
+    log "${YELLOW}${BOLD}[WARNING]${NORMAL}" "$*"
+    return 0
+}
 
+error_message() {
+    log "${RED}${BOLD}[ERROR]${NORMAL}" "$*"
+    return 0
+}
+
+error_exit() {
+    error_message "$*"
+    exit 1
+}
+
+success_message() {
+    log "${GREEN}${BOLD}[SUCCESS]${NORMAL}" "$*"
+    return 0
+}
+
+print_step() {
+    local step_num="$1"
+    local step_desc="$2"
+    log "${BLUE}${BOLD}[STEP]${NORMAL}" "$step_num: $step_desc"
+    return 0
+}
+
+# Check if a command exists
+command_exists() {
+    local command="$1"
+    command -v "$command" >/dev/null 2>&1
+    return $?
+}
+
+# Check if sudo is available or if the script is run as root
 maybe_sudo() {
     if [[ "$(id -u)" -ne 0 ]]; then
-        if command -v sudo >/dev/null 2>&1; then
+        if command_exists sudo; then
             sudo "$@"
         else
-            error_message "This script requires root privileges. Please run with sudo or as root."
-            exit 1
+            error_exit "This script requires root privileges. Please run with sudo or as root."
         fi
     else
         "$@"
+        return $?
     fi
     return 0
 }
@@ -60,44 +86,158 @@ sed_alternative() {
     return 0
 }
 
-brew_command() {
-    if [[ -n "${LOGGED_IN_USER}" ]]; then
-        sudo -u "${LOGGED_IN_USER}" brew "$@"
-    else
-        brew "$@"
+
+remove_file() {
+    local filepath="$1"
+    if [[ -f "$filepath" ]]; then
+        info_message "Removing file: $filepath"
+        maybe_sudo rm -f "$filepath"
+        return $?
+    elif [[ -d "$filepath" ]]; then
+        info_message "Removing directory: $filepath"
+        maybe_sudo rm -rf "$filepath"
+        return $?
     fi
     return 0
 }
 
-create_snort_dirs_files() {
-    local dirs=("$@")
-    for dir in "${dirs[@]}"; do
-        if [[ ! -d "$dir" ]]; then
-            maybe_sudo mkdir -p "$dir"
-            info_message "Created directory $dir"
-        fi
-    done
+calculate_sha256() {
+    local file="$1"
+    if command_exists sha256sum; then
+        sha256sum "$file" | awk '{print $1}'
+    elif command_exists shasum; then
+        shasum -a 256 "$file" | awk '{print $1}'
+    else
+        error_message "No SHA256 tool available (sha256sum or shasum required)"
+        return 1
+    fi
     return 0
 }
 
-create_file() {
-    local filepath="$1"
-    local content="$2"
-    maybe_sudo bash -c "cat > \"$filepath\" <<EOF
-$content
-EOF"
-    info_message "Created file: $filepath"
+verify_checksum() {
+    local file="$1"
+    local expected="$2"
+    local actual
+    actual=$(calculate_sha256 "$file")
+
+    if [[ "$actual" != "$expected" ]]; then
+        error_message "Checksum verification FAILED for $file!"
+        error_message "  Expected: $expected"
+        error_message "  Got:      $actual"
+        return 1
+    fi
     return 0
 }
 
-create_snort_files() {
-    local files=("$@")
-    for file in "${files[@]}"; do
-        if [[ ! -f "$file" ]]; then
-            maybe_sudo touch "$file"
-            info_message "Created file $file"
+download_file() {
+    local url="$1"
+    local dest="$2"
+    local description="${3:-file}"
+    local max_retries="${4:-3}"
+    local retry_count=0
+
+    info_message "Downloading $description..."
+
+    if [[ -z "$url" ]] || [[ -z "$dest" ]]; then
+        error_message "Usage: download_file <url> <destination> [description] [max_retries]"
+        return 1
+    fi
+
+    maybe_sudo mkdir -p "$(dirname "$dest")"
+
+    while [[ "$retry_count" -lt "$max_retries" ]]; do
+        if command_exists curl; then
+            # If running as root, we can use -o directly. Otherwise, we might need sudo tee.
+            if [[ "$(id -u)" -eq 0 ]]; then
+                if curl -fsSL --retry 3 --retry-delay 2 "$url" -o "$dest"; then
+                    success_message "$description downloaded successfully"
+                    return 0
+                fi
+            else
+                if curl -fsSL --retry 3 --retry-delay 2 "$url" | maybe_sudo tee "$dest" > /dev/null; then
+                    success_message "$description downloaded successfully"
+                    return 0
+                fi
+            fi
+        elif command_exists wget; then
+            if [[ "$(id -u)" -eq 0 ]]; then
+                if wget -q --tries=3 --wait=2 -O "$dest" "$url"; then
+                    success_message "$description downloaded successfully"
+                    return 0
+                fi
+            else
+                if wget -q --tries=3 --wait=2 -O - "$url" | maybe_sudo tee "$dest" > /dev/null; then
+                    success_message "$description downloaded successfully"
+                    return 0
+                fi
+            fi
+        else
+            error_message "Neither curl nor wget is available"
+            return 1
         fi
+        retry_count=$((retry_count + 1))
+        warn_message "Download failed, retrying (${retry_count}/${max_retries})..."
+        sleep 2
     done
+
+    error_message "Failed to download $description from $url after ${max_retries} attempts"
+    return 1
+}
+
+download_and_verify_file() {
+    local url="$1"
+    local dest="$2"
+    local pattern="$3"
+    local name="${4:-Unknown file}"
+    # Expected checksum file format: "sha256  filename" or "sha256 filename"
+    local checksum_url="${5:-${CHECKSUMS_URL:-}}"
+    local checksum_file="${6:-${CHECKSUMS_FILE:-}}"
+
+    if ! download_file "$url" "$dest" "$name"; then
+        error_exit "Failed to download $name from $url"
+    fi
+
+    if [[ -n "$checksum_url" ]]; then
+        local temp_checksum_file
+        temp_checksum_file=$(mktemp)
+        if ! download_file "$checksum_url" "$temp_checksum_file" "checksum file"; then
+            error_exit "Failed to download external checksum file from $checksum_url"
+        fi
+        checksum_file="$temp_checksum_file"
+    fi
+
+    if [[ -f "$checksum_file" ]]; then
+        local expected
+        expected=$(grep "$pattern" "$checksum_file" | awk '{print $1}')
+
+        if [[ -n "$expected" ]]; then
+            if ! verify_checksum "$dest" "$expected"; then
+                error_exit "$name checksum verification failed"
+            fi
+            info_message "$name checksum verification passed."
+        else
+            error_exit "No checksum found for $name in $checksum_file using pattern $pattern"
+        fi
+
+        # Cleanup temporary checksum file if it was downloaded from a URL
+        if [[ -n "$checksum_url" ]] && [[ -f "$checksum_file" ]]; then
+            rm -f "$checksum_file"
+        fi
+    else
+        error_exit "Checksum file not found at $checksum_file, cannot verify $name"
+    fi
+
+    success_message "$name downloaded and verified successfully."
+    return 0
+}
+
+# Cleanup function (can be overridden by caller)
+cleanup() {
+    info_message "Cleaning up temporary files..."
+    if [[ -n "${TMP_DIR:-}" ]] && [[ -d "${TMP_DIR}" ]]; then
+        rm -rf "${TMP_DIR}"
+        return $?
+    fi
     return 0
 }
 
