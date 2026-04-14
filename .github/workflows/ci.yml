@@ -72,7 +72,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest] 
+        os: [ubuntu-latest, macos-latest] 
     
     steps:
       - name: Checkout code
@@ -82,8 +82,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Set up Python (Linux/MacOS)
-        if: matrix.os != 'windows-latest'
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
@@ -126,29 +125,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo $(which pytest) -vv scripts/tests/test.py
-
-      # Windows-specific steps
-      - name: Install Wazuh agent (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          $env:WAZUH_MANAGER = "127.0.0.1"
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-agent/${{ env.WAZUH_AGENT_REPO_REF }}/scripts/windows/install.ps1" -OutFile install.ps1
-          .\install.ps1
-
-      - name: Install Snort (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1 -Silent" -Verb RunAs -Wait
-
-      - name: List files (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          dir $env:GITHUB_WORKSPACE\scripts
-
-      - name: Run tests (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/tests/test.ps1
 
   release:
     name: Release

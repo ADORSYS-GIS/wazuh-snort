@@ -56,14 +56,14 @@ $tests = @{
         }
     }
     "OssecConfFileExists" = { 
-        if (Test-Path "C:\Program Files\Wazuh\ossec.conf") { 
+        if (Test-Path "${env:ProgramFiles(x86)}\ossec-agent\ossec.conf") { 
             Write-Host "OSSEC configuration file exists." 
         } else { 
             throw "OSSEC configuration file does not exist." 
         }
     }
     "SnortConfigInOssecConf" = { 
-        if (Select-String -Path "C:\Program Files\Wazuh\ossec.conf" -Pattern "snort") { 
+        if (Select-String -Path "${env:ProgramFiles(x86)}\ossec-agent\ossec.conf" -Pattern "snort") { 
             Write-Host "Snort is configured in OSSEC configuration." 
         } else { 
             throw "Snort is not configured in OSSEC configuration." 
