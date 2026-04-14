@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[f9456d2](https://github.com/ADORSYS-GIS/wazuh-snort/commit/f9456d2e6b3a6d2b6c81c24d4ee1f4c519df8649)
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[c706f6f](https://github.com/ADORSYS-GIS/wazuh-snort/commit/c706f6f8ffdb07711f0fb61484b65c983b352928)
 
 ### Bug Fixes
 
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`18a49f1`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/18a49f180108c9d4cd42e2e61989f32e9d4e3a5d))
 - Update CHANGELOG.md and checksums [skip ci] ([`1081575`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/10815750cd2015b5047c7faacb5f8980abafca78))
 - Update CHANGELOG.md and checksums [skip ci] ([`2a45b8c`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a45b8c318350dea62ae1c1cc2725d19ddde75fb))
+- Update CHANGELOG.md and checksums [skip ci] ([`b22d1d1`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/b22d1d1282446bdd25a29a2143a377208650e736))
 
 ### Features
 
@@ -30,6 +31,7 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Separate Linux and MacOS steps for clarity ([`cbbb6f6`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/cbbb6f68683807461a4aecfccbaeaf4ca2f4f14d))
+- Unify bootstrap and checksum verification logic across platforms ([`c706f6f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/c706f6f8ffdb07711f0fb61484b65c983b352928))
 
 ## 0.2.4-rc.1 - 2026-03-31
 
