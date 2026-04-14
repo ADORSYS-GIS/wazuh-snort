@@ -1,0 +1,194 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+    paths:
+      - 'scripts/**'
+      - '.github/**'
+      - 'Dockerfile'
+      - 'rules/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'scripts/**'
+      - '.github/**'
+      - 'Dockerfile'
+      - 'rules/**'
+
+env:
+  WAZUH_AGENT_REPO_REF: refactor/split-linux-macos-scripts
+  WAZUH_SNORT_REPO_REF: refactor/split-linux-macos-scripts
+
+jobs:
+  update-changelog-and-checksums:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Configure git user
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Generate script checksums
+        run: |
+          find scripts \( -path "scripts/tests" -o -path "scripts/tests/*" \) -prune -o -type f -exec sha256sum {} + > checksums.sha256
+          cat checksums.sha256
+
+      - name: Generate full CHANGELOG.md
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --output CHANGELOG.md
+
+      - name: Commit and push changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git add CHANGELOG.md checksums.sha256
+            git commit -m "docs: update CHANGELOG.md and checksums [skip ci]"
+            git push origin ${{ github.head_ref || github.ref_name }}
+          else
+            echo "No changes to commit"
+          fi
+
+  test:
+    name: test
+    needs: update-changelog-and-checksums
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest] 
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Python (Linux/MacOS)
+        if: matrix.os != 'windows-latest'
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies (Linux/MacOS)
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y curl gnupg2 iproute2
+            pip install pytest pytest-testinfra
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            brew update
+            brew install curl iproute2mac
+            pip install pytest pytest-testinfra
+          fi
+
+      - name: Install Wazuh agent
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            curl -sfL https://raw.githubusercontent.com/adorsys-gis/wazuh-agent/$WAZUH_AGENT_REPO_REF/scripts/linux/install.sh | sudo env WAZUH_AGENT_REPO_REF=$WAZUH_AGENT_REPO_REF WAZUH_AGENT_VERSION=4.14.2-1 WAZUH_MANAGER=127.0.0.1 bash
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            curl -sfL https://raw.githubusercontent.com/adorsys-gis/wazuh-agent/$WAZUH_AGENT_REPO_REF/scripts/macos/install.sh | sudo env WAZUH_AGENT_REPO_REF=$WAZUH_AGENT_REPO_REF WAZUH_AGENT_VERSION=4.14.2-1 WAZUH_MANAGER=127.0.0.1 bash
+          fi
+
+      - name: Run Snort install script (Linux/MacOS)
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo env WAZUH_SNORT_REPO_REF=${{ env.WAZUH_SNORT_REPO_REF }} bash scripts/linux/install.sh
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            sudo env WAZUH_SNORT_REPO_REF=${{ env.WAZUH_SNORT_REPO_REF }} bash scripts/macos/install.sh
+          fi
+
+      - name: Run tests (Linux/MacOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          sudo $(which pytest) -vv scripts/tests/test.py
+
+      # Windows-specific steps
+      - name: Install Wazuh agent (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $env:WAZUH_MANAGER = "127.0.0.1"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-agent/$WAZUH_AGENT_REPO_REF/scripts/windows/install.ps1" -OutFile install.ps1
+          .\install.ps1
+
+      - name: Install Snort (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Start-Process -FilePath "powershell.exe" -ArgumentList "-File $env:GITHUB_WORKSPACE/scripts/snort.ps1 -Silent" -Verb RunAs -Wait
+
+      - name: List files (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          dir $env:GITHUB_WORKSPACE\scripts
+
+      - name: Run tests (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pwsh -ExecutionPolicy Bypass -File $env:GITHUB_WORKSPACE/scripts/tests/test.ps1
+
+  release:
+    name: Release
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    runs-on: ubuntu-latest
+    needs: [update-changelog-and-checksums, test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+          persist-credentials: 'false'
+
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes (latest only)
+        id: git_cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+
+      - name: Determine prerelease
+        id: prerelease
+        run: |
+          if [[ "${GITHUB_REF#refs/tags/}" == *"rc"* ]]; then
+            echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+          else
+            echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: Release ${{ steps.get_version.outputs.VERSION }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          files: checksums.sha256
+          body: ${{ steps.git_cliff.outputs.content }}
+          draft: false
+          prerelease: ${{ steps.prerelease.outputs.PRERELEASE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
