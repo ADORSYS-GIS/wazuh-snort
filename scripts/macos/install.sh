@@ -81,6 +81,39 @@ if command_exists brew; then
     BREW_PATH=$(brew --prefix || true)
 fi
 
+
+create_snort_dirs_files() {
+    local dirs=("$@")
+    for dir in "${dirs[@]}"; do
+        if [[ ! -d "$dir" ]]; then
+            maybe_sudo mkdir -p "$dir"
+            info_message "Created directory $dir"
+        fi
+    done
+    return 0
+}
+
+create_file() {
+    local filepath="$1"
+    local content="$2"
+    maybe_sudo bash -c "cat > \"$filepath\" <<EOF
+$content
+EOF"
+    info_message "Created file: $filepath"
+    return 0
+}
+
+create_snort_files() {
+    local files=("$@")
+    for file in "${files[@]}"; do
+        if [[ ! -f "$file" ]]; then
+            maybe_sudo touch "$file"
+            info_message "Created file $file"
+        fi
+    done
+    return 0
+}
+
 install_snort() {
     print_step "Installing" "Snort ($ARCH)"
     
