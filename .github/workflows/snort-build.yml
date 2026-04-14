@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'Dockerfile'
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-snort
