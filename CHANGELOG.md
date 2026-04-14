@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[15a9adc](https://github.com/ADORSYS-GIS/wazuh-snort/commit/15a9adc09c9a9211edca4af42c368915edbe36c2)
+
+### Features
+
+- Add silent installation/uninstallation support to Windows scripts and update release workflow to automate changelog and checksum generation. ([`23a3e70`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/23a3e7009dd7f4b83614da18eecd636f24b0375f))
+
+### Miscellaneous Tasks
+
+- Update CHANGELOG.md and checksums ([`e112186`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/e112186327cf75e2e981ec94ef1c5eb65d42972f))
+- Use full commit sa for github actions ([`7063f45`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7063f4520b11a5de55970f378c1806ad35f1c2b5))
+- Consolidate CI and release workflows into a single unified pipeline ([`15a9adc`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/15a9adc09c9a9211edca4af42c368915edbe36c2))
+
 ## 0.2.4-rc.1 - 2026-03-31
 
 [4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)
