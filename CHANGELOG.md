@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[a2c7b74](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a2c7b74ca53ecb02700db639ca25e4da847e163f)
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[4cc386d](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42)
 
 ### Bug Fixes
 
@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`65ebc91`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/65ebc91116d3ad20a9e0033be1f3d1b4953d75d9))
 - Update CHANGELOG.md and checksums [skip ci] ([`224a64d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/224a64d06bec77794fe1bea34a4cc60e618fe269))
 - Update CHANGELOG.md and checksums [skip ci] ([`e3c94a9`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/e3c94a9f58a2bb0292357f0d725da67f030a8bcc))
+- Update CHANGELOG.md and checksums [skip ci] ([`3b5b49f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/3b5b49f696833311ad58122ce8e2801369da65f7))
 
 ### Features
 
@@ -35,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Use full commit sa for github actions ([`7063f45`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7063f4520b11a5de55970f378c1806ad35f1c2b5))
 - Consolidate CI and release workflows into a single unified pipeline ([`15a9adc`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/15a9adc09c9a9211edca4af42c368915edbe36c2))
 - Pin GitHub Actions to specific commit SHAs ([`a2c7b74`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a2c7b74ca53ecb02700db639ca25e4da847e163f))
+- Address recomendations from sonarquibe ([`4cc386d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42))
 
 ### Refactor
 
