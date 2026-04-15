@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ -n "$BASH_VERSION" ]; then
+if [[ -n "$BASH_VERSION" ]]; then
     set -euo pipefail
 else
     set -eu
@@ -147,6 +147,7 @@ install_snort() {
 
     info_message "Validating installation..."
     validate_installation
+    return $?
 }
 
 configure_snort_logging() {
@@ -216,8 +217,7 @@ validate_installation() {
     validate_installation_common
 
     if [[ ! -f "$SNORT_CONF_PATH" ]]; then
-        error_message "Snort configuration file not found at $SNORT_CONF_PATH"
-        exit 1
+        error_exit "Snort configuration file not found at $SNORT_CONF_PATH"
     fi
 
     success_message "Snort configuration file found at $SNORT_CONF_PATH"

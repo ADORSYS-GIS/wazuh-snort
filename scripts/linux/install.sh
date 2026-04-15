@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ -n "$BASH_VERSION" ]; then
+if [[ -n "$BASH_VERSION" ]]; then
     set -euo pipefail
 else
     set -eu
@@ -108,6 +108,7 @@ install_snort() {
     start_snort
 
     validate_installation
+    return $?
 }
 
 configure_snort() {
@@ -133,15 +134,14 @@ start_snort() {
     maybe_sudo systemctl restart snort
     success_message "Snort started"
     maybe_sudo snort -q -c /etc/snort/snort.conf -l /var/log/snort -A full &
-    return 0
+    return $?
 }
 
 validate_installation() {
     validate_installation_common
 
     if [[ ! -f "/etc/snort/snort.conf" ]]; then
-        error_message "Snort configuration file not found at /etc/snort/snort.conf"
-        exit 1
+        error_exit "Snort configuration file not found at /etc/snort/snort.conf"
     fi
 
     # Check if interface is present in snort.debian.conf file
@@ -149,8 +149,7 @@ validate_installation() {
     if [[ -f "/etc/snort/snort.debian.conf" ]]; then
         CONFIG_INTERFACE=$(grep "DEBIAN_SNORT_INTERFACE" /etc/snort/snort.debian.conf | sed 's/.*"\([^"]*\)".*/\1/' | tr -d ' ')
         if [[ ! "$INTERFACE" =~ $CONFIG_INTERFACE ]]; then
-            error_message "Interface $INTERFACE not found in snort.debian.conf (found: $CONFIG_INTERFACE)"
-            exit 1
+            error_exit "Interface $INTERFACE not found in snort.debian.conf (found: $CONFIG_INTERFACE)"
         fi
         success_message "Interface $INTERFACE found in snort.debian.conf"
     fi
