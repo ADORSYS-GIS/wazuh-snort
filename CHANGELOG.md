@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[4cc386d](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42)
+[0e75474](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0e754746a5bf60397d0f19a8c63256615c1d0b7f)...[d0cce8f](https://github.com/ADORSYS-GIS/wazuh-snort/commit/d0cce8f0f47374fd95b093704950919e0528b848)
 
 ### Bug Fixes
 
@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`224a64d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/224a64d06bec77794fe1bea34a4cc60e618fe269))
 - Update CHANGELOG.md and checksums [skip ci] ([`e3c94a9`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/e3c94a9f58a2bb0292357f0d725da67f030a8bcc))
 - Update CHANGELOG.md and checksums [skip ci] ([`3b5b49f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/3b5b49f696833311ad58122ce8e2801369da65f7))
+- Update CHANGELOG.md and checksums [skip ci] ([`dbdf214`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/dbdf214027e70ccf3fed23c0f46be036bf079d87))
 
 ### Features
 
