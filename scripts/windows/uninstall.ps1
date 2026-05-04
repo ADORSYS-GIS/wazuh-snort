@@ -1,60 +1,179 @@
-Param(
-    [switch]$Silent
-)
+# Repository configuration
+$WAZUH_SNORT_REPO_REF = if ($env:WAZUH_SNORT_REPO_REF) { $env:WAZUH_SNORT_REPO_REF } else { "main" }
+$WAZUH_SNORT_REPO_URL = "https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/$WAZUH_SNORT_REPO_REF"
 
-$npcapPath = "C:\Program Files\Npcap"
-$snortBinPath = "C:\Snort\bin"
-$snortUninstallPath = "C:\Snort\uninstall.exe"
-$npcapUninstallPath = "C:\Program Files\Npcap\uninstall.exe"
-$taskName = "SnortStartup" 
-$ossecConfigPath = "C:\Program Files (x86)\ossec-agent\ossec.conf"
-function Log {
+$TEMP_DIR = Join-Path $env:TEMP "wazuh-snort-install"
+if (-not (Test-Path $TEMP_DIR)) {
+    New-Item -Path $TEMP_DIR -ItemType Directory | Out-Null
+}
+
+try {
+    $ChecksumsURL = "$WAZUH_SNORT_REPO_URL/checksums.sha256"
+    $UtilsURL = "$WAZUH_SNORT_REPO_URL/scripts/shared/common.ps1"
+    
+    $global:ChecksumsPath = Join-Path $TEMP_DIR "checksums.sha256"
+    $global:UtilsPath = Join-Path $TEMP_DIR "common.ps1"
+
+    Invoke-WebRequest -Uri $ChecksumsURL -OutFile $global:ChecksumsPath -ErrorAction Stop
+    Invoke-WebRequest -Uri $UtilsURL -OutFile $global:UtilsPath -ErrorAction Stop
+
+    # Verification function (bootstrap)
+    function Get-FileChecksum-Bootstrap {
+        param([string]$FilePath)
+        return (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLower()
+    }
+
+    $ExpectedHash = (Select-String -Path $ChecksumsPath -Pattern "scripts/shared/common.ps1").Line.Split(" ")[0]
+    $ActualHash = Get-FileChecksum-Bootstrap -FilePath $UtilsPath
+
+    if ([string]::IsNullOrWhiteSpace($ExpectedHash) -or ($ActualHash -ne $ExpectedHash.ToLower())) {
+        Write-Error "Checksum verification failed for utils.ps1"
+        Write-Error "Expected: $ExpectedHash"
+        Write-Error "Got:      $ActualHash"
+        exit 1
+    }
+
+    . $global:UtilsPath
+    
+    # Cleanup temporary files
+    if (Test-Path $TEMP_DIR) {
+        Remove-Item -Path $TEMP_DIR -Recurse -Force
+    }
+}
+catch {
+    # Cleanup temporary files on error
+    if (Test-Path $TEMP_DIR) {
+        Remove-Item -Path $TEMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Write-Error "Failed to initialize utilities: $($_.Exception.Message)"
+    exit 1
+}
+
+Ensure-Admin
+
+# Function to uninstall Snort
+function Uninstall-Snort {
+    InfoMessage "Uninstalling snort..."
+    
+    if (-Not (Test-Path $snortUninstallPath)) {
+        WarnMessage "Snort uninstaller not found: $snortUninstallPath" skipping
+        return
+    }
+
+    Start-Process -FilePath $global:Config.SnortUninstallPath -NoNewWindow -Wait
+    InfoMessage "Successfully uninstalled snortBoth Windows install and uninstall scripts define Get-FileChecksum-Bootstrap function inline.
+"
+    Remove-SystemPath $global:Config.SnortBinPath
+    return 0
+}
+
+# Function to uninstall Npcap
+function Uninstall-NpCap {
+    InfoMessage "Uninstalling NpCap"
+
+    if (-Not (Test-Path $global:Config.NpcapUninstallPath)) {
+        WarnMessage "Npcap uninstaller not found: $global:Config.NpcapUninstallPath skipping"
+        return
+    }
+
+    Start-Process -FilePath $global:Config.NpcapUninstallPath -NoNewWindow -Wait
+    InfoMessage "Successsfully removed NpCap"
+    Remove-SystemPath $global:Config.NpcapPath
+    return 0
+}
+
+# Function to remove Snort configuration from OSSEC
+function Remove-Configuration {
+    # Restore ossec.conf file if Snort-related changes were made
+    InfoMessage "Removing Snort configuration from ossec.conf"
+    
+    if (Test-Path $global:Config.OssecConfigPath) {
+        try {
+            [xml]$ossecConfig = Get-Content $global:Config.OssecConfigPath -Raw
+        }
+        catch {
+            ErrorMessage "Failed to load ossec.conf as XML. Please check the file format."
+            return
+        }
+        
+        $snortLogFormat   = "snort-full"
+        $snortAlertLocation = "C:\Snort\log\alert.ids"
+        $snortNodes = $ossecConfig.ossec_config.localfile | Where-Object {
+            $_.log_format -eq $snortLogFormat -and $_.location -eq $snortAlertLocation
+        }
+
+        if ($snortNodes.Count -gt 0) {
+            foreach ($node in $snortNodes) {
+                $ossecConfig.ossec_config.RemoveChild($node) | Out-Null
+            }
+            $ossecConfig.Save($global:Config.OssecConfigPath)
+            InfoMessage "Removed Snort configuration from ossec.conf."
+        }
+        else {
+            WarnMessage "No Snort configuration found in ossec.conf. Skipping removal."
+        }
+    }
+    else {
+        WarnMessage "ossec.conf file not found. Skipping"
+    }
+    return 0
+}
+
+# Function to remove scheduled task
+function Remove-ScheduledTask {
+    # Remove the Snort scheduled task
+    if (Get-ScheduledTask -TaskName $global:Config.TaskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $global:Config.TaskName -Confirm:$false
+        InfoMessage "Removed Snort scheduled task."
+    }
+    else {
+        WarnMessage "Snort scheduled task not found."
+    }
+    return 0
+}
+
+# Function to remove path from system PATH
+function Remove-SystemPath {
     param (
-        [string]$Level,
-        [string]$Message,
-        [string]$Color = "White"  # Default color
+        [Parameter(Mandatory)]
+        [string]$PathToRemove
     )
-    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "$Timestamp $Level $Message" -ForegroundColor $Color
+
+    # Get current system Path
+    $currentPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
+
+    # Split Path into an array
+    $pathArray = $currentPath -split ';'
+
+    # Check if specified path exists
+    if ($pathArray -contains $PathToRemove) {
+        InfoMessage "The path '$PathToRemove' exists in system Path. Proceeding to remove it."
+
+        # Remove the specified path
+        $updatedPathArray = $pathArray | Where-Object { $_ -ne $PathToRemove }
+
+        # Join array back into a single string
+        $updatedPath = ($updatedPathArray -join ';').TrimEnd(';')
+
+        # Update system Path
+        [System.Environment]::SetEnvironmentVariable("Path", $updatedPath, [System.EnvironmentVariableTarget]::Machine)
+
+        InfoMessage "Successfully removed '$PathToRemove' from system Path."
+    }
+    else {
+        WarnMessage "The path '$PathToRemove' does not exist in system Path. No changes were made."
+    }
+    return 0
 }
 
-# Logging helpers with colors
-function InfoMessage {
-    param ([string]$Message)
-    Log "[INFO]" $Message "White"
-}
-
-function WarnMessage {
-    param ([string]$Message)
-    Log "[WARNING]" $Message "Yellow"
-}
-
-function ErrorMessage {
-    param ([string]$Message)
-    Log "[ERROR]" $Message "Red"
-}
-
-function SuccessMessage {
-    param ([string]$Message)
-    Log "[SUCCESS]" $Message "Green"
-}
-
-function PrintStep {
-    param (
-        [int]$StepNumber,
-        [string]$Message
-    )
-    Log "[STEP]" "Step ${StepNumber}: $Message" "White"
-}
-
-# Restart wazuh agent
+# Function to restart Wazuh agent
 function Restart-WazuhAgent {
     InfoMessage "Restarting wazuh agent..."
     $service = Get-Service -Name WazuhSvc -ErrorAction SilentlyContinue
     if($service) {
         try {
             Restart-Service -Name WazuhSvc -ErrorAction Stop
-            InfoMessage "Wazuh Agent restarted succesfully"
+            InfoMessage "Wazuh Agent restarted successfully"
         }
         catch {
             ErrorMessage "Failed to restart Wazuh Agent: $($_.Exception.Message)"
@@ -63,122 +182,14 @@ function Restart-WazuhAgent {
     else {
         InfoMessage "Wazuh Service does not exist"
     }
+    return 0
 }
 
-function Remove-SystemPath {
-    param (
-        [string]$PathToRemove
-    )
-
-    # Get the current system Path
-    $currentPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
-
-    # Split the Path into an array
-    $pathArray = $currentPath -split ';'
-
-    # Check if the specified path exists
-    if ($pathArray -contains $PathToRemove) {
-        InfoMessage "The path '$PathToRemove' exists in the system Path. Proceeding to remove it."
-
-        # Remove the specified path
-        $updatedPathArray = $pathArray | Where-Object { $_ -ne $PathToRemove }
-
-        # Join the array back into a single string
-        $updatedPath = ($updatedPathArray -join ';').TrimEnd(';')
-
-        # Update the system Path
-        [System.Environment]::SetEnvironmentVariable("Path", $updatedPath, [System.EnvironmentVariableTarget]::Machine)
-
-        InfoMessage "Successfully removed '$PathToRemove' from the system Path."
-    } else {
-        WarnMessage "The path '$PathToRemove' does not exist in the system Path. No changes were made."
-    }
-}
-
-# Function to uninstall Snort
-function Uninstall-Snort {
-    param ([switch]$Silent)
-
-    InfoMessage "Uninstalling snort..."
-    
-    if (-Not (Test-Path $snortUninstallPath)) {
-        WarnMessage "Snort uninstaller not found: $snortUninstallPath skipping"
-        return
-    }
-
-    $args = if ($Silent) { "/S" } else { "" }
-    Start-Process -FilePath $snortUninstallPath -ArgumentList $args -NoNewWindow -Wait
-
-    InfoMessage "Successfully uninstalled snort"
-    Remove-SystemPath $snortBinPath
-    Remove-ScheduledTask
-}
-
-
-function Uninstall-NpCap {
-    param ([switch]$Silent)
-
-    InfoMessage "Uninstalling NpCap"
-
-    if (-Not (Test-Path $npcapUninstallPath)) {
-        WarnMessage "Npcap uninstaller not found: $npcapUninstallPath skipping"
-        return
-    }
-
-    $args = if ($Silent) { "/S" } else { "" }
-    Start-Process -FilePath $npcapUninstallPath -ArgumentList $args -NoNewWindow -Wait
-    InfoMessage "Successfully removed NpCap"
-    Remove-SystemPath $npcapPath
-}
-
-function Remove-Configuration {
-    # Restore the ossec.conf file if Snort-related changes were made
-    InfoMessage "Removing Snort configuration from ossec.conf"
-    
-    if (Test-Path -Path $ossecConfigPath) {
-        try {
-            [xml]$ossecConfig = Get-Content $ossecConfigPath -Raw
-            $snortNodes = $ossecConfig.ossec_config.localfile | Where-Object {
-                $_.log_format -eq "snort-full" -and $_.location -eq "C:\Snort\log\alert.ids"
-            }
-
-            if ($snortNodes.Count -eq 0) {
-                WarnMessage "No Snort configuration found in ossec.conf. Skipping removal."
-                return
-            }
-
-            foreach ($node in $snortNodes) {
-                $ossecConfig.ossec_config.RemoveChild($node) | Out-Null
-            }
-            $ossecConfig.Save($ossecConfigPath)
-            InfoMessage "Removed Snort configuration from ossec.conf."
-        } catch {
-            ErrorMessage "Failed to modify ossec.conf. Check the file format." 
-        }
-    } else {
-        WarnMessage "ossec.conf file not found. Skipping"
-    }
-}
-
-
-function Remove-ScheduledTask {
-
-    # Remove the Snort scheduled task
-    if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
-        InfoMessage "Removed Snort scheduled task."
-    } else {
-        WarnMessage "Snort scheduled task not found."
-    }
-    
-}
-#Remove from Path
-
+# Main uninstall function
 function Uninstall-All {
-    param ([switch]$Silent)
     try {
-        Uninstall-NpCap -Silent:$Silent
-        Uninstall-Snort -Silent:$Silent
+        Uninstall-NpCap
+        Uninstall-Snort
         Remove-Configuration
         Restart-WazuhAgent
         SuccessMessage "Snort and components uninstalled successfully"
@@ -188,5 +199,8 @@ function Uninstall-All {
     }
 }
 
-# Execute the uninstallation function
-Uninstall-All -Silent:$Silent
+# Execute the main uninstall function
+Uninstall-All
+
+# Validate uninstallation
+Validate-UninstallationCommon
