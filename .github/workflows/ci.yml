@@ -6,11 +6,11 @@ on:
       - 'v*'
     branches:
       - main
-    paths:
-      - 'scripts/**'
-      - '.github/**'
-      - 'Dockerfile'
-      - 'rules/**'
+    # paths:
+    #   - 'scripts/**'
+    #   - '.github/**'
+    #   - 'Dockerfile'
+    #   - 'rules/**'
   pull_request:
     branches:
       - main
