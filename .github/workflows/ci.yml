@@ -166,7 +166,7 @@ jobs:
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
         with:
-          tag_name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
           files: checksums.sha256
           body: ${{ steps.git_cliff.outputs.content }}
