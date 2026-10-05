@@ -104,13 +104,14 @@ uninstall_snort() {
         "/var/log/snort"
 
     remove_snort_files \
-        "/usr/local/etc/rules/local.rules" \ 
+        "/usr/local/etc/rules/local.rules" \
         "/usr/local/etc/lists/default.blocklist"
 
     validate_uninstallation
 
     success_message "Snort uninstalled"
-/
+}
+
 validate_uninstallation() {
     if command_exists snort; then
         error_message "Snort is still installed. Uninstallation failed."
@@ -128,9 +129,6 @@ validate_uninstallation() {
     fi
 
     success_message "Snort successfully uninstalled"
-    return 0
-}
-
     return 0
 }
 
