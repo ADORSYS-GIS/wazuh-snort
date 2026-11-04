@@ -81,6 +81,10 @@ The goal of this project is to simplify the Snort 3 build and packaging process.
 3. **Retrieve the Packages:**
    - After the build completes, download the generated `.deb` packages from the corresponding GitHub Release.
 
+## Documentation
+
+See the [Documentation entry point](docs/README.md) for the documentation index and structure.
+
 ## License
 
 This project is licensed under the MIT License.
