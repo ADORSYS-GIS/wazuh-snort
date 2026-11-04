@@ -23,12 +23,12 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any \
 
 Typical rule elements include:
 
-- **Action** — `alert` (detection-oriented; this repo's rules are primarily `alert`
+- **Action** - `alert` (detection-oriented; this repo's rules are primarily `alert`
   rules, so the default posture is NIDS).
-- **Protocol** — `tcp`, `udp`, `icmp`, `ip`.
-- **Source / destination** — addresses and ports, often using the `$HOME_NET` and
+- **Protocol** - `tcp`, `udp`, `icmp`, `ip`.
+- **Source / destination** - addresses and ports, often using the `$HOME_NET` and
   `$EXTERNAL_NET` variables.
-- **Options** — `msg`, `content`, `flow`, `pcre`, `reference`, `metadata`
+- **Options** - `msg`, `content`, `flow`, `pcre`, `reference`, `metadata`
   (including `metadata:policy ... ips/alert` hints), `classtype`, `sid`, and `rev`.
 
 Rules cover a broad range of threat categories, including:
@@ -84,7 +84,7 @@ To add your own signatures, append rules to the local rules file used by your
 deployment (e.g. `/etc/snort/rules/local.rules` on Linux,
 `/usr/local/etc/rules/local.rules` on macOS, or the `local.rules` shipped under
 `scripts/windows/` for Windows). Remember that rules in this repo are `alert`
-rules by default — change the action to `drop`/`reject` only if you have configured
+rules by default - change the action to `drop`/`reject` only if you have configured
 Snort inline (NIPS mode).
 
 ## Related documentation

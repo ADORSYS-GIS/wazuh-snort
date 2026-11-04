@@ -50,7 +50,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          command: [ "sh", "-c", "snort -c /usr/local/etc/snort/custom-fast-path.lua -R usr/local/etc/snort/snort3.rules -l /var/log/snort/$NODE_NAME -i eth0" ]
+          command: [ "sh", "-c", "snort -c /usr/local/etc/snort/custom-fast-path.lua -R /usr/local/etc/snort/snort3.rules -l /var/log/snort/$NODE_NAME -i eth0" ]
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

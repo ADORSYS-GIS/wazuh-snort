@@ -7,7 +7,7 @@ connecting Snort to a Wazuh agent.
 
 - A **Wazuh agent** installed on the endpoint (required so Snort alerts can be
   forwarded to the Wazuh manager).
-- Administrative/root privileges — the scripts use `sudo` (Linux/macOS) or require a
+- Administrative/root privileges - the scripts use `sudo` (Linux/macOS) or require a
   PowerShell session running as **Administrator** (Windows).
 - An internet connection so the scripts can download Snort, rules, and dependencies.
 
@@ -94,6 +94,16 @@ This uninstalls Snort via Homebrew, removes the rules/log directories
 (`/usr/local/etc/rules`, `/usr/local/etc/so_rules`, `/usr/local/etc/lists`,
 `/var/log/snort`), and validates the uninstall.
 
+> **Note:** the uninstall script does not currently unload or remove the launchd
+> daemon. Because the daemon has `KeepAlive` enabled, `launchd` will keep trying to
+> restart the (now removed) Snort binary, which can cause a crash loop. After
+> running the uninstall script, unload and remove the daemon manually:
+
+```bash
+sudo launchctl unload /Library/LaunchDaemons/com.adorsys.snort.plist
+sudo rm -f /Library/LaunchDaemons/com.adorsys.snort.plist
+```
+
 ## Windows
 
 Install, in an **Administrator** PowerShell:
@@ -147,8 +157,9 @@ log path Snort writes to:
 
 - **Linux:** `/var/log/snort/snort.alert` (the install script configures
   `output alert_fast: snort.alert`).
-- **macOS:** `/var/log/snort` (Snort 3 `alert_full`).
-- **Windows:** `C:\Snort\log\alert.ids` — added automatically by the installer.
+- **macOS:** `/var/log/snort/alert_full.txt` (Snort 3 `alert_full` writes alerts
+  to this file under the `/var/log/snort` directory).
+- **Windows:** `C:\Snort\log\alert.ids` - added automatically by the installer.
 
 After editing `ossec.conf`, restart the Wazuh agent:
 

@@ -45,7 +45,7 @@ kubectl get pods -l app.kubernetes.io/name=snort-ips
 
 The chart renders these resources (see `helm/templates/`):
 
-- **DaemonSet** (`daemonset.yaml`) — runs one Snort container per node. The main
+- **DaemonSet** (`daemonset.yaml`) - runs one Snort container per node. The main
   container runs:
 
   ```sh
@@ -64,16 +64,16 @@ The chart renders these resources (see `helm/templates/`):
   - The host's `/sys/class/net` is mounted read-only at `/host-interfaces` so Snort
     can discover node interfaces.
 
-- **ConfigMap** (`snortconfig.yaml`) — supplies `custom-fast-path.lua`, a minimal
+- **ConfigMap** (`snortconfig.yaml`) - supplies `custom-fast-path.lua`, a minimal
   Snort 3 Lua config that loads the defaults and enables **JSON alert output**
   (`alert_json`) to `/var/log/snort/$NODE_NAME`. This keeps a per-node alert stream
   on the shared volume.
 
-- **PersistentVolumeClaim** (`pvc.yaml`) — a `ReadWriteMany` volume (default `1Gi`)
+- **PersistentVolumeClaim** (`pvc.yaml`) - a `ReadWriteMany` volume (default `1Gi`)
   mounted at `/var/log/snort` to store alerts from every node. Set
   `values.externalPvcName` to use an existing PVC instead of creating one.
 
-- **ServiceAccount** (`serviceaccount.yaml`) — created when
+- **ServiceAccount** (`serviceaccount.yaml`) - created when
   `values.serviceAccount.create` is `true` (the default).
 
 ## Configuration values

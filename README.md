@@ -35,12 +35,12 @@ This repository contains several resources for installing and configuring Snort,
 ## Installation (Linux)
 Install using this command:
    ```bash
-   sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
+   sudo curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/linux/install.sh | bash
    ```
    ## Installation (MacOS)
    Install using this command:
       ```bash
-      curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/install.sh | bash
+      curl -SL https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/main/scripts/macos/install.sh | bash
       ```
 
    ## Installation (Windows)
@@ -48,7 +48,7 @@ Install using this command:
 
     1. Execute the installation script directly:
          ```powershell
-         Invoke-Expression (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/snort.ps1).Content
+         Invoke-Expression (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ADORSYS-GIS/wazuh-snort/refs/heads/main/scripts/windows/install.ps1).Content
          ```
 
 ## Description
@@ -86,10 +86,10 @@ The goal of this project is to simplify the Snort 3 build and packaging process.
 See the [Documentation entry point](docs/README.md) for the documentation index and structure.
 
 Key documents:
-- [Architecture overview](docs/architecture/overview.md) — how Snort integrates with the Wazuh agent and the event flow.
-- [Installation & Setup](docs/operations/installation.md) — install and uninstall on Linux, macOS, and Windows.
-- [Kubernetes deployment](docs/operations/kubernetes.md) — deploying Snort via the Helm DaemonSet chart.
-- [Rules reference](docs/reference/rules.md) — the Snort rules and configuration.
+- [Architecture overview](docs/architecture/overview.md): how Snort integrates with the Wazuh agent and the event flow.
+- [Installation & Setup](docs/operations/installation.md): install and uninstall on Linux, macOS, and Windows.
+- [Kubernetes deployment](docs/operations/kubernetes.md): deploying Snort via the Helm DaemonSet chart.
+- [Rules reference](docs/reference/rules.md): the Snort rules and configuration.
 
 ## License
 

@@ -48,29 +48,29 @@ flowchart LR
     M --> D[Wazuh dashboard]
 ```
 
-1. **Packet capture** — Snort captures traffic on a network interface using libpcap
+1. **Packet capture** - Snort captures traffic on a network interface using libpcap
    (Linux), Npcap (Windows), or the Snort DAQ layer.
-2. **Rule evaluation** — each packet is matched against the loaded Snort rules
+2. **Rule evaluation** - each packet is matched against the loaded Snort rules
    (community rules plus `rules/snort3.rules`). A match generates an alert.
-3. **Alert logging** — alerts are written to a log file. On Linux this is
+3. **Alert logging** - alerts are written to a log file. On Linux this is
    `/var/log/snort/snort.alert`; on Windows it is `C:\Snort\log\alert.ids`. macOS
    logs to `/var/log/snort` using the `alert_full` format.
-4. **Wazuh ingestion** — the Wazuh agent's `ossec.conf` declares a `<localfile>`
+4. **Wazuh ingestion** - the Wazuh agent's `ossec.conf` declares a `<localfile>`
    entry pointing at the Snort alert log with `log_format snort-full`. The agent
    tails the file and forwards new events.
-5. **Correlation and storage** — the Wazuh manager receives, normalizes, and stores
+5. **Correlation and storage** - the Wazuh manager receives, normalizes, and stores
    the Snort events.
-6. **Visualization** — the events are available in the Wazuh dashboard for search
+6. **Visualization** - the events are available in the Wazuh dashboard for search
    and alerting.
 
 ## NIDS vs. NIPS modes
 
 Snort can run in two fundamental modes:
 
-- **NIDS (Network Intrusion Detection System)** — Snort passively inspects traffic
+- **NIDS (Network Intrusion Detection System)** - Snort passively inspects traffic
   and **alerts** on suspicious activity without interrupting the flow. This is the
   default mode configured by the install scripts (alert rules) and by the Helm chart.
-- **NIPS (Network Intrusion Prevention System)** — Snort actively **drops** or
+- **NIPS (Network Intrusion Prevention System)** - Snort actively **drops** or
   **rejects** matching traffic. This requires placing Snort inline (e.g. `-Q` /
   inline mode with appropriate DAQ) and using `drop`/`reject` rules rather than
   `alert` rules.
@@ -106,12 +106,21 @@ host's network interface directory (`/sys/class/net`) to discover interfaces.
 
 The install scripts target:
 
-- **Ubuntu** (Debian-based) — via `scripts/linux/install.sh`, installing the Snort
-  package from `apt` and configuring `/etc/snort/snort.conf`.
-- **macOS** — via `scripts/macos/install.sh`, installing Snort through Homebrew
-  (Snort 3, `snort.lua`) and registering a launchd daemon.
-- **Windows** — via `scripts/windows/install.ps1`, installing Snort and Npcap and
-  registering a scheduled task.
+- **Ubuntu** (Debian-based) - via `scripts/linux/install.sh`, installing the Snort
+  package from `apt` and configuring `/etc/snort/snort.conf`. This installs the
+  system **Snort 2.9.x** package (configured via `snort.conf`).
+- **macOS** - via `scripts/macos/install.sh`, installing Snort through Homebrew
+  (**Snort 3**, `snort.lua`) and registering a launchd daemon.
+- **Windows** - via `scripts/windows/install.ps1`, installing the **Snort 2.9.20**
+  installer and Npcap, configuring `snort.conf`, and registering a scheduled task.
+- **Kubernetes / Docker** - the Helm chart deploys the container image built from
+  the `Dockerfile`, which compiles **Snort 3.2.2.0** (see
+  [Building and packaging Snort 3](../development/build-and-package.md)).
+
+> **Version note:** Linux and Windows endpoints get **Snort 2.9.x** (configured via
+> `snort.conf`), while macOS, the container image, and the Helm chart use
+> **Snort 3** (configured via `snort.lua`). Do not expect Snort 3 Lua configuration
+> files on Linux or Windows endpoints.
 
 All platforms require a **Wazuh agent** installed on the endpoint as a prerequisite.
 

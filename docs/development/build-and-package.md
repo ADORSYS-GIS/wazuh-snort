@@ -1,26 +1,42 @@
 # Building and Packaging Snort 3
 
-This repository automates building and packaging **Snort 3** into `.deb` packages for
-the `amd64` and `arm64` architectures using GitHub Actions, so you do not have to
-build Snort from source manually.
+This repository automates building and packaging **Snort 3** into `.deb` packages
+for the `amd64` and `arm64` architectures using GitHub Actions, so you do not have
+to build Snort from source manually.
 
-## How it works
+## How the build actually works
 
-The build logic lives in `scripts/linux/snort3.sh`, which compiles Snort 3 and its
-dependencies from source. It builds, in order:
+There are two distinct build paths in this repository, and they are easy to
+confuse:
+
+### 1. The full dependency build lives in the `Dockerfile`
+
+The complete compilation of Snort 3 **and all of its dependencies** is defined in
+the `Dockerfile` (used to build the container image that the Helm chart deploys).
+It builds, in order:
 
 - `libdaq` (`3.0.15`)
 - `libdnet` (`1.14`)
 - `flex` (`2.6.4`)
 - `hwloc` (`2.5.0`)
+- `LuaJIT` (`2.1.0-beta3`)
 - `pcre` (`8.45`)
 - `zlib` (`1.2.13`)
 - **Snort 3** (`3.2.2.0`)
 
-Each component is built and wrapped into a `.deb` package using `checkinstall`
-(e.g. `libdaq_<ver>-1_amd64.deb`). The script resolves the correct Go toolchain
-(`go1.22.4.linux-amd64.tar.gz` or `go1.22.4.linux-arm64.tar.gz`) based on the
-architecture.
+Each component is compiled from source and installed under `/usr/local`, and the
+Snort rules are copied into `/usr/local/etc/snort`.
+
+### 2. `scripts/linux/snort3.sh` is a partial helper
+
+`scripts/linux/snort3.sh` is a **helper script that currently only builds
+`libdaq`** and then stops. It does **not** build `libdnet`, `flex`, `hwloc`,
+`pcre`, `zlib`, or Snort 3 itself. The script ends with an explicit note:
+
+> `# Remaining build steps omitted for brevity in helper script`
+
+So the full dependency compilation described above lives in the `Dockerfile`, not
+in `snort3.sh`.
 
 ## Workflow: `package-snort.yml`
 
@@ -34,14 +50,18 @@ The workflow `.github/workflows/package-snort.yml` ("Build and Package Snort 3")
 4. Uploads them as workflow artifacts named `snort3-packages-amd64` and
    `snort3-packages-arm64`.
 5. A `deploy` job (after `build`) downloads both artifact sets, zips each into
-   `snort3-packages-amd64.zip` and `snort3-packages-arm64.zip`, and attaches them to a
-   GitHub Release for the triggering tag/ref.
+   `snort3-packages-amd64.zip` and `snort3-packages-arm64.zip`, and attaches them to
+   a GitHub Release for the triggering tag/ref.
+
+> **Note:** because `snort3.sh` currently only produces the `libdaq` package, the
+> `.deb` artifacts from this workflow reflect that partial build. The complete
+> Snort 3 build is defined in the `Dockerfile` (used for the container image).
 
 ## How to trigger a build
 
-- **Push to `main`** — builds and packages automatically, then publishes the `.deb`
+- **Push to `main`** - builds and packages automatically, then publishes the `.deb`
   bundles to a GitHub Release for that ref.
-- **Open a pull request against `main`** — builds and packages, producing artifacts
+- **Open a pull request against `main`** - builds and packages, producing artifacts
   (available from the workflow run's "Artifacts" section) without publishing a
   release.
 
