@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[ac3675d](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac3675d8da4dd42ea18db86baea2f9f27fa2e058)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[297afd6](https://github.com/ADORSYS-GIS/wazuh-snort/commit/297afd68ebb1f39a5acb660137969afa0c71184a)
 
 ### Bug Fixes
 
@@ -34,6 +34,8 @@ All notable changes to this project will be documented in this file.
 - Standardize docs folder to SDLC-based structure ([`ac1994d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac1994d16fd2f21ba3496f0fd3c40bc545da33d0))
 - Add architecture, installation, and reference documentation ([`8715c5b`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/8715c5b71853cc3cbf5b90a1ae4f3fd2bc413761))
 - Address review feedback on snort documentation ([`64f8b8d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/64f8b8d7ee748ee4d62f697e3dd67eef80ce6933))
+- Update CHANGELOG.md and checksums [skip ci] ([`a5ac317`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a5ac31729ddb9eced1d896bfbbf6d4c0138ca031))
+- Align ADR-0001 with central specification template ([`297afd6`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/297afd68ebb1f39a5acb660137969afa0c71184a))
 
 ### Features
 
