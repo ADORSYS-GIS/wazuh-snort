@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: lowercase
-        uses: AsZc/change-string-case-action@v6
+        uses: AsZc/change-string-case-action@v8
         with:
           string: ${{ env.IMAGE_NAME }}
 
