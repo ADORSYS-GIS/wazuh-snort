@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[297afd6](https://github.com/ADORSYS-GIS/wazuh-snort/commit/297afd68ebb1f39a5acb660137969afa0c71184a)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[200df55](https://github.com/ADORSYS-GIS/wazuh-snort/commit/200df553e34db3b366c4ecaf824e190381dcba9c)
 
 ### Bug Fixes
 
@@ -36,6 +36,8 @@ All notable changes to this project will be documented in this file.
 - Address review feedback on snort documentation ([`64f8b8d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/64f8b8d7ee748ee4d62f697e3dd67eef80ce6933))
 - Update CHANGELOG.md and checksums [skip ci] ([`a5ac317`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a5ac31729ddb9eced1d896bfbbf6d4c0138ca031))
 - Align ADR-0001 with central specification template ([`297afd6`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/297afd68ebb1f39a5acb660137969afa0c71184a))
+- Update CHANGELOG.md and checksums [skip ci] ([`fc4067f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/fc4067ffa9ab4c045df7fc28058d6d7d7be8b24a))
+- Add Dependabot status badge to README ([`200df55`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/200df553e34db3b366c4ecaf824e190381dcba9c))
 
 ### Features
 
