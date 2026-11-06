@@ -1,59 +1,114 @@
 # ADR-0001: Automate Dependency Updates with Dependabot
 
-- Status: Accepted
-- Date: 2026-11-06
-- Authors: @chojuninengu
-- Deciders: Wazuh Security Operations Team
-- Consulted: @t-desmond
-- Informed: Wazuh Security Operations Team
-- Relations:
-  - Implements: [ADORSYS-GIS/wazuh-snort#37](https://github.com/ADORSYS-GIS/wazuh-snort/issues/37)
-  - Part of: [ADORSYS-GIS/wazuh#2354](https://github.com/ADORSYS-GIS/wazuh/issues/2354)
+> We introduce GitHub Dependabot configuration across all tracked package ecosystems (Docker base images and GitHub Actions workflows) to automate dependency updates with pull request limits and cool-down buffers.
+
+## Metadata
+
+| Field             | Value                                              |
+| :---------------- | :------------------------------------------------- |
+| **Document ID**   | ADR-0001                                           |
+| **Status**        | `Accepted`                                         |
+| **Date**          | 2026-11-06                                         |
+| **Deciders**      | Wazuh maintainers                                  |
+| **Governs**       | `.github/dependabot.yml`                           |
+| **Amends**        | N/A                                                |
+| **Amended by**    | N/A                                                |
+| **Supersedes**    | N/A                                                |
+| **Superseded by** | N/A                                                |
 
 ## Context
 
-The `wazuh-snort` repository maintains Snort NIDS rules, integration scripts, and a Docker container for network intrusion detection within the Wazuh SIEM ecosystem. Dependencies include:
-1. Docker base images in `Dockerfile`.
-2. Third-party GitHub Actions steps used across CI workflows in `.github/workflows/`.
+The `wazuh-snort` repository maintains Snort NIDS rules, integration scripts, and container assets for network intrusion detection within the Wazuh SIEM ecosystem. Dependencies are present in two primary areas:
+1. **Docker base images (docker)**: Dependencies specified in `Dockerfile` defining builder runtimes and runtime container environments.
+2. **CI/CD Actions (github-actions)**: GitHub Actions referenced across workflows in `.github/workflows/` (`ci.yml`, `helm-publish.yml`, `package-snort.yml`, `snort-build.yml`).
 
-Without automated tracking, base images and CI actions accumulate security vulnerabilities and technical debt. Automated dependency updates are necessary to ensure timely patching, maintain audit compliance, and align with organization security baselines.
+Previously, container base images and CI action dependencies were updated manually or ad-hoc. This introduces operational and security risks:
+- Outdated Docker base images may harbor known vulnerabilities (CVEs) and miss critical upstream security patches.
+- Outdated GitHub Actions may rely on deprecated Node.js runner runtimes, eventually causing CI pipelines to fail.
+- Infrequent large batch updates carry higher regression risk than incremental, continuous version bumps.
+
+Under Epic ADORSYS-GIS/wazuh#2354, all actively maintained repositories in the ADORSYS-GIS organization are standardized on automated dependency maintenance using Dependabot, modeled after `wazuh-cert-oauth2`.
+
+The deciding forces are:
+- Minimize exposure to upstream container and CI action vulnerabilities.
+- Automate routine maintenance without overwhelming maintainer review capacity.
+- Provide predictable update schedules and cool-down buffers to maintain stable builds.
+- Maintain organizational compliance across all Wazuh SIEM components.
 
 ## Decision
 
-Enable and configure GitHub Dependabot for `wazuh-snort` via `.github/dependabot.yml` tracking both Docker and GitHub Actions ecosystems.
+We will configure GitHub Dependabot in `.github/dependabot.yml` to track both `docker` and `github-actions`:
 
-Configuration standard (aligned with organizational baseline established in `wazuh-cert-oauth2`):
-- Ecosystems:
-  - `docker` (daily at 08:00 UTC)
-  - `github-actions` (weekly on Mondays at 08:00 UTC)
-- Open pull requests limit: 10
-- Cooldown period: 7 days
+1. **Ecosystem Configuration**:
+   - `docker`: Scans root `/` directory on a `daily` schedule at `08:00` UTC.
+   - `github-actions`: Scans `.github/workflows` on a `weekly` schedule at `08:00` UTC.
 
-## Options Considered
+2. **Workload and Throttling Limits**:
+   - `open-pull-requests-limit: 10`: Restricts active open pull requests per ecosystem to prevent review congestion.
+   - `cooldown.default-days: 7`: Implements a 7-day cool-down buffer before opening non-critical update PRs, allowing upstream patches to stabilize.
 
-### Option 1: GitHub Dependabot (Selected)
-- Native GitHub integration with zero external infrastructure requirements.
-- Native support for Dockerfiles and GitHub Actions.
-- Predictable scheduling and cooldown controls.
+## Options considered
 
-### Option 2: Renovate Bot
-- Rich feature set but introduces unnecessary operational overhead and third-party app permissions.
-
-### Option 3: Manual Version Bumping
-- High operational overhead and prone to delayed security remediation.
+| Option                                              | Verdict  | Why (one line)                                                                    |
+| :-------------------------------------------------- | :------- | :-------------------------------------------------------------------------------- |
+| Manual dependency updates (status quo)              | Rejected | Infrequent updates accumulate debt and delay critical security patches.           |
+| Renovate bot                                        | Rejected | Requires additional third-party app permissions and configuration overhead.       |
+| GitHub Dependabot with org convention               | Adopted  | Native GitHub feature, zero external credentials, matches org-wide Wazuh standard.|
 
 ## Consequences
 
-### Positive
-- Automatic pull requests for base image CVE patches and CI action updates.
-- Standardized review cadence matching other Wazuh repositories.
-- Reduced manual maintenance overhead.
+**Not part of this decision:** Automatic merging of dependency PRs. All Dependabot PRs must still pass automated CI checks and receive human review before merging.
 
-### Negative / Trade-offs
-- Increased PR volume requiring CI verification and code reviews.
-- Mitigated by rate limits (`open-pull-requests-limit: 10`) and cooldown periods (`default-days: 7`).
+### Impact
 
-## Rollout / Rollback Plan
+**Benefits**
 
-- Rollout: Merge `.github/dependabot.yml` into `main`. Dependabot will automatically activate and open update PRs according to schedule.
-- Rollback: Revert the commit introducing `.github/dependabot.yml`.
+- Base image vulnerabilities and outdated actions are remediated continuously.
+- Smaller, incremental version bumps reduce blast radius and upgrade complexity.
+- Weekly scheduling for GitHub Actions avoids daily workflow noise.
+- Cool-down buffers prevent churn from rapid upstream patch releases.
+
+**Costs**
+
+- Maintainers will periodically review and merge Dependabot pull requests.
+- CI runner usage increases due to automated checks on Dependabot PR branches.
+
+**Risks**
+
+- Upstream breaking changes in minor or patch releases (mitigated by existing test pipelines and human review requirement).
+
+### Done when
+
+- [x] `.github/dependabot.yml` exists with valid configuration for `docker` and `github-actions`.
+- [x] Schedule, PR limits, and cool-down parameters conform to the organizational convention.
+- [x] ADR-0001 is documented and registered in `docs/adr/README.md`.
+
+### Revisit when
+
+- Team review capacity requires adjusting `open-pull-requests-limit` or schedule intervals.
+- Additional package ecosystems or sub-directories are introduced.
+
+## Rollback
+
+To roll back, remove or revert `.github/dependabot.yml`. Dependabot will cease opening new PRs.
+
+## Evidence
+
+| Claim                                                                 | Where                                                          |
+| :-------------------------------------------------------------------- | :------------------------------------------------------------- |
+| Organization reference convention                                     | `ADORSYS-GIS/wazuh-cert-oauth2/.github/dependabot.yml`         |
+| Sub-issue scope definition                                            | `ADORSYS-GIS/wazuh-snort#37`                                   |
+| Organization epic tracking                                            | `ADORSYS-GIS/wazuh#2354`                                       |
+
+## References
+
+- [GitHub Dependabot Configuration Options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)
+- [ADR template](https://github.com/ADORSYS-GIS/wazuh/blob/main/docs/adr/template.md)
+- [ADR writing guide](https://github.com/ADORSYS-GIS/wazuh/blob/main/docs/adr/GUIDE.md)
+
+## Solution implementation
+
+| Kind   | Tracking                                                                                   | Status | What it covers                                 |
+| :----- | :----------------------------------------------------------------------------------------- | :----- | :--------------------------------------------- |
+| Issue  | [ADORSYS-GIS/wazuh-snort#37](https://github.com/ADORSYS-GIS/wazuh-snort/issues/37)         | Open   | Add dependabot configuration to wazuh-snort    |
+| PR     | [ADORSYS-GIS/wazuh-snort#38](https://github.com/ADORSYS-GIS/wazuh-snort/pull/38)           | Open   | Adds .github/dependabot.yml and ADR-0001       |
