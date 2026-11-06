@@ -1,5 +1,5 @@
 # Use the base Ubuntu 20.04 image
-FROM --platform=$BUILDPLATFORM ubuntu:20.04
+FROM --platform=$BUILDPLATFORM ubuntu:26.04
 
 # Disable interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
