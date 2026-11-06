@@ -58,13 +58,13 @@ jobs:
         run: sudo mkdir -p /work && sudo chmod -R 777 /work
 
       - name: Download amd64 packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: snort3-packages-amd64
           path: /work/packages/amd64
 
       - name: Download arm64 packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: snort3-packages-arm64
           path: /work/packages/arm64
