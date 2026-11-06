@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[ca97fb0](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ca97fb0aafb91b0349629cc3f2959cb2119b15cc)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[ac3675d](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac3675d8da4dd42ea18db86baea2f9f27fa2e058)
 
 ### Bug Fixes
 
@@ -30,6 +30,10 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`3b5b49f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/3b5b49f696833311ad58122ce8e2801369da65f7))
 - Update CHANGELOG.md and checksums [skip ci] ([`dbdf214`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/dbdf214027e70ccf3fed23c0f46be036bf079d87))
 - Update CHANGELOG.md and checksums [skip ci] ([`7c44ffb`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7c44ffb54fd8192762ea8ab2ccfaa742c754267a))
+- Update CHANGELOG.md and checksums [skip ci] ([`d2a281c`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/d2a281cee4158bb71e94d0e04f4802d28e75cd07))
+- Standardize docs folder to SDLC-based structure ([`ac1994d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac1994d16fd2f21ba3496f0fd3c40bc545da33d0))
+- Add architecture, installation, and reference documentation ([`8715c5b`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/8715c5b71853cc3cbf5b90a1ae4f3fd2bc413761))
+- Address review feedback on snort documentation ([`64f8b8d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/64f8b8d7ee748ee4d62f697e3dd67eef80ce6933))
 
 ### Features
 
@@ -53,6 +57,7 @@ All notable changes to this project will be documented in this file.
 - Consolidate CI and release workflows into a single unified pipeline ([`15a9adc`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/15a9adc09c9a9211edca4af42c368915edbe36c2))
 - Pin GitHub Actions to specific commit SHAs ([`a2c7b74`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a2c7b74ca53ecb02700db639ca25e4da847e163f))
 - Address recomendations from sonarquibe ([`4cc386d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42))
+- Configure dependabot updates and document ADR-0001 ([`ac3675d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac3675d8da4dd42ea18db86baea2f9f27fa2e058))
 
 ### Refactor
 
