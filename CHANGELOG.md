@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[da28ab3](https://github.com/ADORSYS-GIS/wazuh-snort/commit/da28ab342f686d24059b08e043842062d11ef357)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[7fa6a14](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7fa6a14f750487268d343113c712382741cc67c4)
 
 ### Bug Fixes
 
@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG.md and checksums [skip ci] ([`1baf332`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/1baf3329f974e0b491b9e8028b8af29feea069d2))
 - Record solution implementation for ADR-0002 ([`2a66e47`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d))
 - Update CHANGELOG.md and checksums [skip ci] ([`801ed2e`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/801ed2e18641b2220e5afd3888623143602fe539))
+- Update CHANGELOG.md and checksums [skip ci] ([`a65a51b`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a65a51bb67b0bdc6f21bd05066eb1a669674f8f0))
 
 ### Features
 
