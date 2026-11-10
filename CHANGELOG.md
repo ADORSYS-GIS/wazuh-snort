@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[2a66e47](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[da28ab3](https://github.com/ADORSYS-GIS/wazuh-snort/commit/da28ab342f686d24059b08e043842062d11ef357)
 
 ### Bug Fixes
 
@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Update ADR-0001 implementation status to Closed and Merged (#51) ([`408e58f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/408e58f0b138470ac0aa92d8ae4225bc487aff5c))
 - Update CHANGELOG.md and checksums [skip ci] ([`1baf332`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/1baf3329f974e0b491b9e8028b8af29feea069d2))
 - Record solution implementation for ADR-0002 ([`2a66e47`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d))
+- Update CHANGELOG.md and checksums [skip ci] ([`801ed2e`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/801ed2e18641b2220e5afd3888623143602fe539))
 
 ### Features
 
@@ -62,6 +63,7 @@ All notable changes to this project will be documented in this file.
 - Pin GitHub Actions to specific commit SHAs ([`a2c7b74`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a2c7b74ca53ecb02700db639ca25e4da847e163f))
 - Address recomendations from sonarquibe ([`4cc386d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42))
 - Add dependabot configuration and ADR-0001 (#38) ([`546e9d7`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/546e9d724be9c8e505518ef1c1a2db35b4ed88b2)), Co-authored-by:GitHub Action <action@github.com>
+- Pin test runner to ubuntu-24.04 for python 3.9 ([`da28ab3`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/da28ab342f686d24059b08e043842062d11ef357))
 
 ### Refactor
 
