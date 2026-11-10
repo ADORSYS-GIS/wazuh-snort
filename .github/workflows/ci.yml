@@ -72,7 +72,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest] 
+        os: [ubuntu-24.04, macos-latest] 
     
     steps:
       - name: Checkout code
@@ -88,7 +88,7 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y curl gnupg2 iproute2
@@ -102,7 +102,7 @@ jobs:
           pip install pytest pytest-testinfra
 
       - name: Install Wazuh agent (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           curl -sfL https://raw.githubusercontent.com/adorsys-gis/wazuh-agent/${{ env.WAZUH_AGENT_REPO_REF }}/scripts/linux/install.sh | sudo env WAZUH_AGENT_REPO_REF=${{ env.WAZUH_AGENT_REPO_REF }} WAZUH_AGENT_VERSION=4.14.2-1 WAZUH_MANAGER=127.0.0.1 bash
 
@@ -112,7 +112,7 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/adorsys-gis/wazuh-agent/${{ env.WAZUH_AGENT_REPO_REF }}/scripts/macos/install.sh | sudo env WAZUH_AGENT_REPO_REF=${{ env.WAZUH_AGENT_REPO_REF }} WAZUH_AGENT_VERSION=4.14.2-1 WAZUH_MANAGER=127.0.0.1 bash
 
       - name: Run Snort install script (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo env WAZUH_SNORT_REPO_REF=${{ env.WAZUH_SNORT_REPO_REF }} bash scripts/linux/install.sh
 
@@ -122,7 +122,7 @@ jobs:
           sudo env WAZUH_SNORT_REPO_REF=${{ env.WAZUH_SNORT_REPO_REF }} bash scripts/macos/install.sh
 
       - name: Run tests (Linux/MacOS)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo $(which pytest) -vv scripts/tests/test.py
 

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[7b9857d](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7b9857deb1becb0e16adcbae980b709d2c470615)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[da28ab3](https://github.com/ADORSYS-GIS/wazuh-snort/commit/da28ab342f686d24059b08e043842062d11ef357)
 
 ### Bug Fixes
 
@@ -34,11 +34,10 @@ All notable changes to this project will be documented in this file.
 - Standardize docs folder to SDLC-based structure ([`ac1994d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac1994d16fd2f21ba3496f0fd3c40bc545da33d0))
 - Add architecture, installation, and reference documentation ([`8715c5b`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/8715c5b71853cc3cbf5b90a1ae4f3fd2bc413761))
 - Address review feedback on snort documentation ([`64f8b8d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/64f8b8d7ee748ee4d62f697e3dd67eef80ce6933))
-- Update CHANGELOG.md and checksums [skip ci] ([`a5ac317`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a5ac31729ddb9eced1d896bfbbf6d4c0138ca031))
-- Align ADR-0001 with central specification template ([`297afd6`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/297afd68ebb1f39a5acb660137969afa0c71184a))
-- Update CHANGELOG.md and checksums [skip ci] ([`fc4067f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/fc4067ffa9ab4c045df7fc28058d6d7d7be8b24a))
-- Add Dependabot status badge to README ([`200df55`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/200df553e34db3b366c4ecaf824e190381dcba9c))
-- Update CHANGELOG.md and checksums [skip ci] ([`0635b52`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/0635b521b702d1fa4728c5e663601a226a69b9f5))
+- Update ADR-0001 implementation status to Closed and Merged (#51) ([`408e58f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/408e58f0b138470ac0aa92d8ae4225bc487aff5c))
+- Update CHANGELOG.md and checksums [skip ci] ([`1baf332`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/1baf3329f974e0b491b9e8028b8af29feea069d2))
+- Record solution implementation for ADR-0002 ([`2a66e47`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d))
+- Update CHANGELOG.md and checksums [skip ci] ([`801ed2e`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/801ed2e18641b2220e5afd3888623143602fe539))
 
 ### Features
 
@@ -46,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Add silent installation switch to Windows install script ([`fe3ee34`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/fe3ee3457b880b19a29aa5daaa03b0d41c9f8519))
 - Support silent installation in PowerShell script and pin checkout branch to main in release workflow ([`7c78282`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7c78282bdc8ad6a6f7e00271d8a623a2cdca0100))
 - Add silent installation/uninstallation support to Windows scripts and update release workflow to automate changelog and checksum generation. ([`23a3e70`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/23a3e7009dd7f4b83614da18eecd636f24b0375f))
+- Add gitleaks secret scanning and CI job ([`61279a0`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/61279a03ea0ba2869255d1d187fc66e89baf94b4))
 
 ### Miscellaneous Tasks
 
@@ -62,8 +62,8 @@ All notable changes to this project will be documented in this file.
 - Consolidate CI and release workflows into a single unified pipeline ([`15a9adc`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/15a9adc09c9a9211edca4af42c368915edbe36c2))
 - Pin GitHub Actions to specific commit SHAs ([`a2c7b74`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/a2c7b74ca53ecb02700db639ca25e4da847e163f))
 - Address recomendations from sonarquibe ([`4cc386d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4cc386d99c9c8dfd2795ab06ab974ec14399bd42))
-- Configure dependabot updates and document ADR-0001 ([`ac3675d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/ac3675d8da4dd42ea18db86baea2f9f27fa2e058))
-- Align dependabot.yml, revert checksum reordering, and scope changelog ([`7b9857d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/7b9857deb1becb0e16adcbae980b709d2c470615))
+- Add dependabot configuration and ADR-0001 (#38) ([`546e9d7`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/546e9d724be9c8e505518ef1c1a2db35b4ed88b2)), Co-authored-by:GitHub Action <action@github.com>
+- Pin test runner to ubuntu-24.04 for python 3.9 ([`da28ab3`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/da28ab342f686d24059b08e043842062d11ef357))
 
 ### Refactor
 
