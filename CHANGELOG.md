@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[61279a0](https://github.com/ADORSYS-GIS/wazuh-snort/commit/61279a03ea0ba2869255d1d187fc66e89baf94b4)
+[4d6d262](https://github.com/ADORSYS-GIS/wazuh-snort/commit/4d6d2623019861341b869ecd4a87debaad2c3ad2)...[2a66e47](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d)
 
 ### Bug Fixes
 
@@ -35,6 +35,8 @@ All notable changes to this project will be documented in this file.
 - Add architecture, installation, and reference documentation ([`8715c5b`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/8715c5b71853cc3cbf5b90a1ae4f3fd2bc413761))
 - Address review feedback on snort documentation ([`64f8b8d`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/64f8b8d7ee748ee4d62f697e3dd67eef80ce6933))
 - Update ADR-0001 implementation status to Closed and Merged (#51) ([`408e58f`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/408e58f0b138470ac0aa92d8ae4225bc487aff5c))
+- Update CHANGELOG.md and checksums [skip ci] ([`1baf332`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/1baf3329f974e0b491b9e8028b8af29feea069d2))
+- Record solution implementation for ADR-0002 ([`2a66e47`](https://github.com/ADORSYS-GIS/wazuh-snort/commit/2a66e47d60bcb62537745ece8373d5e4e666519d))
 
 ### Features
 
